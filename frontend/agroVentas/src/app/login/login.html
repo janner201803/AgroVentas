@@ -46,13 +46,15 @@
       <button
         type="submit"
         class="btn-primary"
-        [disabled]="form.invalid || cargando"
+        [disabled]="cargando"
       >
         {{ cargando ? 'Ingresando...' : 'Iniciar sesión →' }}
       </button>
     </form>
 
-    <div class="separator"><span>¿Todavía no tienes cuenta?</span></div>
+    <div class="separator">
+      <span>¿Todavía no tienes cuenta?</span>
+    </div>
 
     <a routerLink="/register" class="btn-secondary">
       Crear una cuenta
@@ -65,9 +67,20 @@
 
   <div class="side-panel">
     <span class="side-tag">AGROVENTAS · PRODUCTOS DEL CAMPO</span>
+
     <div class="fruit">🍍</div>
-    <h2>Una cosecha de<br />nuevas oportunidades.</h2>
-    <p>Conectamos el campo con quienes buscan lo mejor de cada cosecha.</p>
-    <div class="side-decoration">FRESCO · NATURAL · DE CALIDAD</div>
+
+    <h2>
+      Una cosecha de<br />
+      nuevas oportunidades.
+    </h2>
+
+    <p>
+      Conectamos el campo con quienes buscan lo mejor de cada cosecha.
+    </p>
+
+    <div class="side-decoration">
+      FRESCO · NATURAL · DE CALIDAD
+    </div>
   </div>
 </div>

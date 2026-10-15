@@ -60,7 +60,7 @@
       <button
         type="submit"
         class="btn-primary"
-        [disabled]="form.invalid || cargando"
+        [disabled]="cargando"
       >
         {{ cargando ? 'Creando cuenta...' : 'Registrarme →' }}
       </button>
