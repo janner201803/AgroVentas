@@ -25,7 +25,14 @@ export class Login {
   cargando = signal(false);
 
   
-  
+    async iniciarConGoogle(): Promise<void> {
+    this.error.set('');
+    try {
+      await this.authService.iniciarSesionConGoogle();
+    } catch {
+      this.error.set('No pudimos conectar con Google. Intenta nuevamente.');
+    }
+  }
 
   async iniciarSesion(): Promise<void> {
     if (this.cargando()) return;

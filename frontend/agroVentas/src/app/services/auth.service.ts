@@ -68,6 +68,16 @@ export class AuthService {
     return data;
   }
 
+  // Redirige al usuario a Google. No devuelve sesión: al volver a la app,
+  // onAuthStateChange la detecta solo, así que el guard no cambia.
+  async iniciarSesionConGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/inicio` }
+    });
+    if (error) throw error;
+  }
+
   async cerrarSesion() {
     const {error} = await supabase.auth.signOut();
     if(error) throw error;
