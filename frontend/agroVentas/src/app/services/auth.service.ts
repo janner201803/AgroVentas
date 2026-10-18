@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import {createUserWithEmailAndPassword,onAuthStateChanged,signInWithEmailAndPassword,signOut,User} from 'firebase/auth';
-import { auth } from '../services/firebase.config';
+import {User} from '@supabase/supabase-js';
+import { supabase }  from './supabase.config';
 
 @Injectable({
   providedIn: 'root'
@@ -15,32 +15,27 @@ export class AuthService {
     ((usuario: User | null) => void) | null = null;
 
   constructor() {
-    this.primeraCarga = new Promise<User | null>((resolve) => {
+    this.primeraCarga = new Promise<User | null>((resolve) =>{
       this.resolverPrimeraCarga = resolve;
+    })
+
+    // Supabase avisa en cada cambio de sesión (login, logout, token renovado).
+    // Al suscribirse emite además un evento inicial con la sesión guardada
+    // en el navegador, que equivale a la primera respuesta de Firebase.
+
+    supabase.auth.onAuthStateChange((_evento, sesion)=> {
+      const usuario = sesion?.user ?? null;
+
+      this.usuario.set(usuario);
+      this.authCargado.set(true)
+
+      //resolver la espera solamente con la primera respuesta
+      if(this.resolverPrimeraCarga){
+        this.resolverPrimeraCarga(usuario);
+        this.resolverPrimeraCarga = null;
+      }
     });
 
-    onAuthStateChanged(
-      auth,
-      usuario => {
-        this.usuario.set(usuario);
-        this.authCargado.set(true);
-
-        // Resolver la espera solamente con la primera respuesta.
-        if (this.resolverPrimeraCarga) {
-          this.resolverPrimeraCarga(usuario);
-          this.resolverPrimeraCarga = null;
-        }
-      },
-      error => {
-        console.error('Error al comprobar la sesión:', error);
-        this.authCargado.set(true);
-
-        if (this.resolverPrimeraCarga) {
-          this.resolverPrimeraCarga(null);
-          this.resolverPrimeraCarga = null;
-        }
-      }
-    );
   }
 
   async esperarUsuario(): Promise<User | null> {
@@ -53,23 +48,34 @@ export class AuthService {
     return this.usuario();
   }
 
-  registrar(email: string, password: string) {
-    return createUserWithEmailAndPassword(
-      auth,
-      email.trim(),
-      password
-    );
+  async registrar(email: string, password: string) {
+    const {data, error} = await supabase.auth.signUp({
+      email: email.trim(),
+      password: password
+    });
+
+    if(error) throw error;
+    return data;
   }
 
-  iniciarSesion(email: string, password: string) {
-    return signInWithEmailAndPassword(
-      auth,
-      email.trim(),
-      password
-    );
+  async iniciarSesion(email: string, password: string) {
+    const {data, error} = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password: password
+    });
+
+    if(error) throw error;
+    return data;
   }
 
-  cerrarSesion() {
-    return signOut(auth);
+  async cerrarSesion() {
+    const {error} = await supabase.auth.signOut();
+    if(error) throw error;
   }
 }
+
+
+  
+
+  
+

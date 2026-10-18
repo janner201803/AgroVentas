@@ -1,32 +1,17 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { onAuthStateChanged } from 'firebase/auth';
 
-import { auth } from '../services/firebase.config';
+import { AuthService } from '../services/auth.service';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = async() => {
+  const authService = inject(AuthService);
   const router = inject(Router);
 
-  return new Promise<boolean | ReturnType<Router['createUrlTree']>>(
-    resolve => {
-      const unsubscribe = onAuthStateChanged(
-        auth,
-        usuario => {
-          unsubscribe();
+  //Esperar a que supabase restaure la sesión guardada
+  //
 
-          resolve(
-            usuario
-              ? true
-              : router.createUrlTree(['/login'])
-          );
-        },
-        error => {
-          console.error('Error al comprobar la sesión:', error);
-          unsubscribe();
+  const usuario = await authService.esperarUsuario();
 
-          resolve(router.createUrlTree(['/login']));
-        }
-      );
-    }
-  );
-};
+  return usuario ? true: router.createUrlTree(['/login'])
+}
+

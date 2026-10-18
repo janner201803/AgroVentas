@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+
 
 @Component({
   selector: 'app-login',
@@ -17,14 +18,20 @@ export class Login {
 
   email = '';
   password = '';
-  error = '';
-  cargando = false;
+
+  // se cambiaron a signals para que la vista se actualice automáticamente cuando cambien sus valores
+
+  error = signal('');
+  cargando = signal(false);
+
+  
+  
 
   async iniciarSesion(): Promise<void> {
-    if (this.cargando) return;
+    if (this.cargando()) return;
 
-    this.error = '';
-    this.cargando = true;
+    this.error.set('');
+    this.cargando.set(true);
 
     try {
       await this.authService.iniciarSesion(
@@ -34,23 +41,25 @@ export class Login {
 
       await this.router.navigate(['/inicio']);
     } catch (error: any) {
+      console.log('Error de login:', error.code, error.status, error.message);
       switch (error.code) {
-        case 'auth/invalid-credential':
-        case 'auth/wrong-password':
-        case 'auth/user-not-found':
-          this.error = 'Correo o contraseña incorrectos.';
+        // Supabase no distingue "usuario inexistente" de "contraseña mala"
+        // a propósito, para no revelar qué correos están registrados.
+        case 'invalid_credentials':
+          this.error.set('Correo o contraseña incorrectos.');
           break;
-        case 'auth/invalid-email':
-          this.error = 'Ingresa un correo válido.';
+        case 'email_address_invalid':
+        case 'validation_failed':
+          this.error.set('Ingresa un correo válido.');
           break;
-        case 'auth/too-many-requests':
-          this.error = 'Demasiados intentos. Intenta más tarde.';
+        case 'over_request_rate_limit':
+          this.error.set('Demasiados intentos. Intenta más tarde.');
           break;
         default:
-          this.error = 'No pudimos iniciar sesión. Intenta nuevamente.';
+          this.error.set('No pudimos iniciar sesión. Intenta nuevamente.');
       }
     } finally {
-      this.cargando = false;
+      this.cargando.set(false);
     }
   }
 }

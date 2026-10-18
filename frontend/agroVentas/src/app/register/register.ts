@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -18,25 +18,28 @@ export class Register {
   email = '';
   password = '';
   confirmarPassword = '';
-  error = '';
-  cargando = false;
+
+  // Señales: la vista se actualiza sola cuando cambian (Angular 21 no usa zone.js).
+  // En el HTML se leen con paréntesis: error(), cargando().
+  error = signal('');
+  cargando = signal(false);
 
   async registrar(): Promise<void> {
-    if (this.cargando) return;
+    if (this.cargando()) return;
 
-    this.error = '';
+    this.error.set('');
 
     if (this.password.length < 6) {
-      this.error = 'La contraseña debe tener al menos 6 caracteres.';
+      this.error.set('La contraseña debe tener al menos 6 caracteres.');
       return;
     }
 
     if (this.password !== this.confirmarPassword) {
-      this.error = 'Las contraseñas no coinciden.';
+      this.error.set('Las contraseñas no coinciden.');
       return;
     }
 
-    this.cargando = true;
+    this.cargando.set(true);
 
     try {
       await this.authService.registrar(
@@ -47,20 +50,28 @@ export class Register {
       await this.router.navigate(['/inicio']);
     } catch (error: any) {
       switch (error.code) {
-        case 'auth/email-already-in-use':
-          this.error = 'Este correo ya está registrado.';
+        // Solo aparece con "Confirm email" desactivado. Si se activa,
+        // Supabase no revela si el correo ya existe.
+        case 'user_already_exists':
+        case 'email_exists':
+          this.error.set('Este correo ya está registrado.');
           break;
-        case 'auth/invalid-email':
-          this.error = 'Ingresa un correo electrónico válido.';
+        case 'email_address_invalid':
+        case 'validation_failed':
+          this.error.set('Ingresa un correo electrónico válido.');
           break;
-        case 'auth/weak-password':
-          this.error = 'La contraseña es demasiado débil.';
+        case 'weak_password':
+          this.error.set('La contraseña es demasiado débil.');
+          break;
+        case 'over_request_rate_limit':
+        case 'over_email_send_rate_limit':
+          this.error.set('Demasiados intentos. Intenta más tarde.');
           break;
         default:
-          this.error = 'No fue posible crear la cuenta. Intenta nuevamente.';
+          this.error.set('No fue posible crear la cuenta. Intenta nuevamente.');
       }
     } finally {
-      this.cargando = false;
+      this.cargando.set(false);
     }
   }
 }

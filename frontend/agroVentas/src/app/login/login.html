@@ -39,16 +39,16 @@
         />
       </div>
 
-      <div class="error" *ngIf="error" role="alert">
-        {{ error }}
+      <div class="error" *ngIf="error()" role="alert">
+        {{ error() }}
       </div>
 
       <button
         type="submit"
         class="btn-primary"
-        [disabled]="cargando"
+        [disabled]="cargando()"
       >
-        {{ cargando ? 'Ingresando...' : 'Iniciar sesión →' }}
+        {{ cargando() ? 'Ingresando...' : 'Iniciar sesión →' }}
       </button>
     </form>
 
