@@ -1,0 +1,28 @@
+{
+  "name": "agroventas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently -n back,front -c green,cyan \"npm --prefix backend run dev\" \"npm --prefix frontend start\"",
+    "start:back": "npm --prefix backend start",
+    "start:front": "npm --prefix frontend start",
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/janner201803/AgroVentas.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/janner201803/AgroVentas/issues"
+  },
+  "homepage": "https://github.com/janner201803/AgroVentas#readme",
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}

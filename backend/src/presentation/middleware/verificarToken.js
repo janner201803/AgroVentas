@@ -1,35 +1,21 @@
-const { createClient } = require('@supabase/supabase-js');
-
-const supabaseAuth = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false
-    }
-  }
-);
+const supabase = require('../../infraestructure/database/supabase');
 
 async function verificarToken(req, res, next) {
   try {
     const authorization = req.headers.authorization;
 
     if (!authorization || !authorization.startsWith('Bearer ')) {
-      return res.status(401).json({
-        mensaje: 'Debes iniciar sesión'
-      });
+      return res.status(401).json({ mensaje: 'Debes iniciar sesión' });
     }
 
     const token = authorization.substring(7);
 
-    const { data, error } = await supabaseAuth.auth.getUser(token);
+    const { data, error } = await supabase.auth.getUser(token);
 
     if (error || !data.user) {
-      return res.status(401).json({
-        mensaje: 'Token inválido o sesión expirada'
-      });
+      return res
+        .status(401)
+        .json({ mensaje: 'Token inválido o sesión expirada' });
     }
 
     req.user = {
@@ -39,9 +25,9 @@ async function verificarToken(req, res, next) {
 
     next();
   } catch (error) {
-    return res.status(401).json({
-      mensaje: 'No se pudo verificar la autenticación'
-    });
+    return res
+      .status(401)
+      .json({ mensaje: 'No se pudo verificar la autenticación' });
   }
 }
 
