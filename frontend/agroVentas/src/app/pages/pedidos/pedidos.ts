@@ -1,12 +1,18 @@
-import { Component, inject, OnInit } from '@angular/core';
+
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { PedidoService } from '../../core/services/pedido.service';
 
-import {
-  PedidoService,
-  Producto
-} from '../../core/services/pedido.service';
+interface Producto {
+  id: number;
+  nombre: string;
+  unidad: 'kg' | 'unidad';
+  precio: number;
+  peso_kg: number;
+  activo: boolean;
+}
 
 @Component({
   selector: 'app-pedidos',
@@ -15,10 +21,20 @@ import {
   templateUrl: './pedidos.html',
   styleUrl: './pedidos.css'
 })
-export class Pedidos implements OnInit {
+export class Pedidos {
   private pedidoService = inject(PedidoService);
 
-  productos: Producto[] = [];
+  productos: Producto[] = [
+    { id: 1, nombre: 'Piña pepa', unidad: 'kg', precio: 5000, peso_kg: 1, activo: true },
+    { id: 2, nombre: 'Piña primera', unidad: 'kg', precio: 4000, peso_kg: 1, activo: true },
+    { id: 3, nombre: 'Piña segunda', unidad: 'kg', precio: 3000, peso_kg: 1, activo: true },
+    { id: 4, nombre: 'Piña tercera', unidad: 'unidad', precio: 2500, peso_kg: 1, activo: true },
+    { id: 5, nombre: 'Piña cuarta', unidad: 'unidad', precio: 2000, peso_kg: 0.8, activo: true },
+    { id: 6, nombre: 'Piña quinta', unidad: 'unidad', precio: 1500, peso_kg: 0.6, activo: true },
+    { id: 7, nombre: 'Piña delgada', unidad: 'unidad', precio: 1200, peso_kg: 0.4, activo: true },
+    { id: 8, nombre: 'Piña huevo', unidad: 'unidad', precio: 500, peso_kg: 0.2, activo: true }
+  ];
+
   productoId: number | null = null;
   cantidad: number | null = null;
 
@@ -29,23 +45,9 @@ export class Pedidos implements OnInit {
   mensaje = '';
   error = '';
 
-  ngOnInit(): void {
-    this.pedidoService.obtenerProductos().subscribe({
-      next: (productos) => {
-        this.productos = productos.filter(
-          (producto) => producto.activo
-        );
-      },
-      error: (err) => {
-        console.error('Error al cargar productos:', err);
-        this.error = 'No fue posible cargar los productos.';
-      }
-    });
-  }
-
   get productoSeleccionado(): Producto | undefined {
     return this.productos.find(
-      (producto) => producto.id === Number(this.productoId)
+      producto => producto.id === Number(this.productoId)
     );
   }
 

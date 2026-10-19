@@ -1,3 +1,4 @@
+
 <main class="pagina">
   <header class="encabezado">
     <a routerLink="/inicio" class="volver">← Volver a inicio</a>
@@ -6,16 +7,26 @@
 
   <section class="formulario">
     <span class="etiqueta">NUEVO PEDIDO</span>
+
     <h1>Haz tu pedido de piña</h1>
+
     <p class="descripcion">
       Selecciona la variedad y la cantidad que necesitas.
       Los pedidos se organizan para que puedas recogerlos.
     </p>
 
-    <div *ngIf="error" class="alerta error">{{ error }}</div>
-    <div *ngIf="mensaje" class="alerta exito">{{ mensaje }}</div>
+    <!-- Mensajes -->
+    <div *ngIf="error" class="alerta error">
+      {{ error }}
+    </div>
+
+    <div *ngIf="mensaje" class="alerta exito">
+      {{ mensaje }}
+    </div>
 
     <form (ngSubmit)="enviarPedido()">
+
+      <!-- Tipo de piña -->
       <label for="producto">Tipo de piña</label>
 
       <select
@@ -24,23 +35,32 @@
         [(ngModel)]="productoId"
         required
       >
-        <option [ngValue]="null">Selecciona una variedad</option>
+        <option [ngValue]="null">
+          Selecciona una variedad
+        </option>
 
         <option
           *ngFor="let producto of productos"
           [ngValue]="producto.id"
         >
-          {{ producto.nombre }} — {{ producto.unidad }}
+          {{ producto.nombre }} —
+          {{ producto.unidad === 'kg' ? 'Por kilogramo' : 'Por unidad' }}
         </option>
       </select>
 
+      <!-- Información del producto seleccionado -->
       <div *ngIf="productoSeleccionado" class="producto-info">
-        <span>Precio por {{ productoSeleccionado.unidad }}</span>
+        <span>
+          Precio
+          {{ productoSeleccionado.unidad === 'kg' ? 'por kilogramo' : 'por unidad' }}
+        </span>
+
         <strong>
           {{ productoSeleccionado.precio | currency:'COP':'symbol-narrow':'1.0-0' }}
         </strong>
       </div>
 
+      <!-- Cantidad -->
       <label for="cantidad">
         Cantidad
         <span *ngIf="productoSeleccionado">
@@ -59,22 +79,34 @@
         placeholder="Ingresa la cantidad"
       />
 
-      <div class="resumen" *ngIf="productoSeleccionado && cantidad && cantidad > 0">
+      <!-- Resumen del pedido -->
+      <div
+        class="resumen"
+        *ngIf="productoSeleccionado && cantidad && cantidad > 0"
+      >
         <div>
           <span>Peso aproximado</span>
-          <strong>{{ pesoTotalKg | number:'1.0-2' }} kg</strong>
+
+          <strong>
+            {{ pesoTotalKg | number:'1.0-2' }} kg
+          </strong>
         </div>
 
         <div>
           <span>Valor estimado</span>
-          <strong>{{ valorEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+
+          <strong>
+            {{ valorEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}
+          </strong>
         </div>
       </div>
 
+      <!-- Aviso de peso -->
       <p class="aviso" *ngIf="pesoTotalKg > 2000">
         El pedido supera el límite de 2.000 kg.
       </p>
 
+      <!-- Método de pago -->
       <label for="pago">Método de pago</label>
 
       <select
@@ -84,38 +116,54 @@
         required
       >
         <option value="efectivo">Efectivo</option>
-        <option value="consignacion">Consignación bancaria</option>
+
+        <option value="consignacion">
+          Consignación bancaria
+        </option>
       </select>
 
-      <div *ngIf="metodoPago === 'consignacion'" class="comprobante">
+      <!-- Comprobante de pago -->
+      <div
+        *ngIf="metodoPago === 'consignacion'"
+        class="comprobante"
+      >
         <label for="archivo">Comprobante de pago</label>
+
         <input
           id="archivo"
+          name="archivo"
           type="file"
           accept=".pdf,.jpg,.jpeg,.png"
           (change)="seleccionarComprobante($event)"
         />
-        <small>PDF, JPG o PNG. Máximo 5 MB.</small>
+
+        <small>
+          PDF, JPG o PNG. Máximo 5 MB.
+        </small>
 
         <p *ngIf="comprobante">
           Archivo seleccionado: {{ comprobante.name }}
         </p>
       </div>
 
+      <!-- Recogida -->
       <div class="recogida">
         <strong>Recogida del pedido</strong>
+
         <p>
           Los pedidos se organizan para que los clientes los recojan.
           La fecha y la disponibilidad deberán confirmarse.
         </p>
       </div>
 
+      <!-- Botón -->
       <button
         type="submit"
         [disabled]="enviando || pesoTotalKg > 2000"
       >
         {{ enviando ? 'Registrando...' : 'Registrar pedido' }}
       </button>
+
     </form>
   </section>
 </main>

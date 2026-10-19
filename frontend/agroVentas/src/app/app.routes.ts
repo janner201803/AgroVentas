@@ -1,3 +1,4 @@
+
 import { Routes } from '@angular/router';
 
 import { Login } from '../app/pages/login/login';
@@ -21,6 +22,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'pedidos',
+    component: Pedidos,
+    canActivate: [authGuard]
+  },
+  {
     path: '',
     redirectTo: 'inicio',
     pathMatch: 'full'
@@ -28,9 +34,5 @@ export const routes: Routes = [
   {
     path: '**',
     redirectTo: 'inicio'
-  },
-  {
-    path: 'pedidos',
-    component: Pedidos
   }
 ];
