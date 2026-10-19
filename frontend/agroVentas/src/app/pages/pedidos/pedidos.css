@@ -1,0 +1,168 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f6f8f4;
+  color: #24352a;
+  font-family: Arial, sans-serif;
+}
+
+.pagina {
+  max-width: 900px;
+  margin: auto;
+  padding: 24px;
+}
+
+.encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  font-weight: bold;
+}
+
+.volver {
+  color: #287344;
+  text-decoration: none;
+}
+
+.formulario {
+  max-width: 600px;
+  margin: auto;
+  padding: 32px;
+  border: 1px solid #e2e9df;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 8px 30px #20352a0a;
+}
+
+.etiqueta {
+  color: #287344;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+
+.descripcion {
+  color: #6c786e;
+  line-height: 1.6;
+  margin-bottom: 26px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+label {
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+input,
+select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #d7dfd5;
+  border-radius: 9px;
+  background: white;
+  font: inherit;
+}
+
+.producto-info,
+.resumen {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.producto-info {
+  padding: 12px;
+  border-radius: 8px;
+  background: #f3f7f0;
+}
+
+.resumen {
+  flex-wrap: wrap;
+  margin: 8px 0;
+  padding: 16px;
+  background: #edf6e9;
+  border-radius: 10px;
+}
+
+.resumen div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resumen span,
+.producto-info span,
+small {
+  color: #647367;
+  font-size: 13px;
+}
+
+.comprobante,
+.recogida {
+  padding: 15px;
+  border-radius: 10px;
+  background: #f7f9f6;
+}
+
+.recogida p {
+  margin-bottom: 0;
+  color: #657166;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+button {
+  margin-top: 12px;
+  padding: 15px;
+  border: 0;
+  border-radius: 9px;
+  background: #287344;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.alerta {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.error,
+.aviso {
+  color: #a52c2c;
+  background: #fff0f0;
+}
+
+.exito {
+  color: #176b39;
+  background: #eaf8ed;
+}
+
+@media (max-width: 600px) {
+  .pagina {
+    padding: 12px;
+  }
+
+  .formulario {
+    padding: 20px;
+  }
+}

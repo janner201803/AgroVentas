@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
 
-import { Login } from '../app/login/login';
-import { Register } from '../app/register/register';
-import { Inicio } from '../app/inicio/inicio';
-import { authGuard } from './guards/auth.guard';
+import { Login } from '../app/pages/login/login';
+import { Register } from '../app/pages/register/register';
+import { Inicio } from '../app/pages/inicio/inicio';
+import { Pedidos } from '../app/pages/pedidos/pedidos';
+import { authGuard } from '../app/core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -27,5 +28,9 @@ export const routes: Routes = [
   {
     path: '**',
     redirectTo: 'inicio'
+  },
+  {
+    path: 'pedidos',
+    component: Pedidos
   }
 ];

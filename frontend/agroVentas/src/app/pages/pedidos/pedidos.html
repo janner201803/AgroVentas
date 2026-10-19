@@ -1,0 +1,121 @@
+<main class="pagina">
+  <header class="encabezado">
+    <a routerLink="/inicio" class="volver">← Volver a inicio</a>
+    <span>AgroVentas 🍍</span>
+  </header>
+
+  <section class="formulario">
+    <span class="etiqueta">NUEVO PEDIDO</span>
+    <h1>Haz tu pedido de piña</h1>
+    <p class="descripcion">
+      Selecciona la variedad y la cantidad que necesitas.
+      Los pedidos se organizan para que puedas recogerlos.
+    </p>
+
+    <div *ngIf="error" class="alerta error">{{ error }}</div>
+    <div *ngIf="mensaje" class="alerta exito">{{ mensaje }}</div>
+
+    <form (ngSubmit)="enviarPedido()">
+      <label for="producto">Tipo de piña</label>
+
+      <select
+        id="producto"
+        name="producto"
+        [(ngModel)]="productoId"
+        required
+      >
+        <option [ngValue]="null">Selecciona una variedad</option>
+
+        <option
+          *ngFor="let producto of productos"
+          [ngValue]="producto.id"
+        >
+          {{ producto.nombre }} — {{ producto.unidad }}
+        </option>
+      </select>
+
+      <div *ngIf="productoSeleccionado" class="producto-info">
+        <span>Precio por {{ productoSeleccionado.unidad }}</span>
+        <strong>
+          {{ productoSeleccionado.precio | currency:'COP':'symbol-narrow':'1.0-0' }}
+        </strong>
+      </div>
+
+      <label for="cantidad">
+        Cantidad
+        <span *ngIf="productoSeleccionado">
+          ({{ productoSeleccionado.unidad }})
+        </span>
+      </label>
+
+      <input
+        id="cantidad"
+        name="cantidad"
+        type="number"
+        [(ngModel)]="cantidad"
+        [min]="productoSeleccionado?.unidad === 'kg' ? 0.1 : 1"
+        [step]="productoSeleccionado?.unidad === 'kg' ? 0.1 : 1"
+        required
+        placeholder="Ingresa la cantidad"
+      />
+
+      <div class="resumen" *ngIf="productoSeleccionado && cantidad && cantidad > 0">
+        <div>
+          <span>Peso aproximado</span>
+          <strong>{{ pesoTotalKg | number:'1.0-2' }} kg</strong>
+        </div>
+
+        <div>
+          <span>Valor estimado</span>
+          <strong>{{ valorEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+      </div>
+
+      <p class="aviso" *ngIf="pesoTotalKg > 2000">
+        El pedido supera el límite de 2.000 kg.
+      </p>
+
+      <label for="pago">Método de pago</label>
+
+      <select
+        id="pago"
+        name="pago"
+        [(ngModel)]="metodoPago"
+        required
+      >
+        <option value="efectivo">Efectivo</option>
+        <option value="consignacion">Consignación bancaria</option>
+      </select>
+
+      <div *ngIf="metodoPago === 'consignacion'" class="comprobante">
+        <label for="archivo">Comprobante de pago</label>
+        <input
+          id="archivo"
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          (change)="seleccionarComprobante($event)"
+        />
+        <small>PDF, JPG o PNG. Máximo 5 MB.</small>
+
+        <p *ngIf="comprobante">
+          Archivo seleccionado: {{ comprobante.name }}
+        </p>
+      </div>
+
+      <div class="recogida">
+        <strong>Recogida del pedido</strong>
+        <p>
+          Los pedidos se organizan para que los clientes los recojan.
+          La fecha y la disponibilidad deberán confirmarse.
+        </p>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="enviando || pesoTotalKg > 2000"
+      >
+        {{ enviando ? 'Registrando...' : 'Registrar pedido' }}
+      </button>
+    </form>
+  </section>
+</main>
