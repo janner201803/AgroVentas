@@ -10,9 +10,10 @@ async function verificarToken(req, res, next) {
 
     const token = authorization.substring(7);
 
-    const { data, error } = await supabase.auth.getUser(token);
+    const { data, error: errorAuth } = await supabase.auth.getUser(token);
 
-    if (error || !data.user) {
+    if (errorAuth || !data?.user) {
+      console.log('Error Supabase:', errorAuth?.message, '| status:', errorAuth?.status);
       return res
         .status(401)
         .json({ mensaje: 'Token inválido o sesión expirada' });
@@ -24,7 +25,8 @@ async function verificarToken(req, res, next) {
     };
 
     next();
-  } catch (error) {
+  } catch (err) {
+    console.log('Error catch:', err.message);
     return res
       .status(401)
       .json({ mensaje: 'No se pudo verificar la autenticación' });

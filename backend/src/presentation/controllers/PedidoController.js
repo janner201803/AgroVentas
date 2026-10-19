@@ -5,6 +5,7 @@ const pedidoService = require(
 class PedidoController {
   async crear(req, res) {
     try {
+      console.log('Body recibido:', req.body);
       // Por ahora, este valor debe proceder
       // de una autenticación validada.
       const idUsuario = req.user.id;
