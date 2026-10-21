@@ -18,7 +18,7 @@ class PedidoService {
       !id ||
       valor == null ||
       cantidad == null ||
-      !fecha_entrega ||
+      !fecha_entrega || 
       !metodo_pago ||
       !id_producto
     ) {
