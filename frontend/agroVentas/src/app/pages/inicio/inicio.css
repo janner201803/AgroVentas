@@ -25,6 +25,23 @@
   margin-bottom: 36px;
 }
 
+.acciones-cuenta { display: flex; align-items: center; gap: 14px; }
+.cuenta { display: flex; flex-direction: column; gap: 4px; text-align: right; }
+.cuenta strong { color: #304435; font-size: 13px; }
+.cuenta span { color: #728074; font-size: 12px; }
+.cerrar-sesion {
+  padding: 10px 14px;
+  border: 1px solid #cbdac8;
+  border-radius: 9px;
+  color: #287344;
+  background: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cerrar-sesion:hover { color: white; background: #287344; }
+.cerrar-sesion:disabled { opacity: .6; cursor: wait; }
+.error-sesion { padding: 10px 14px; border-radius: 8px; color: #8e3328; background: #fff0ed; }
+
 .marca {
   align-items: center;
 }
@@ -97,6 +114,23 @@
 
 .boton:hover {
   background: #1c5833;
+}
+
+.boton-secundario {
+  margin-left: 10px;
+  color: #287344;
+  background: white;
+  border: 1px solid #b9d1b8;
+}
+
+.boton-secundario:hover {
+  color: white;
+}
+
+@media (max-width: 680px) {
+  .acciones-cuenta { align-items: flex-end; flex-direction: column; gap: 8px; }
+  .cuenta { text-align: right; }
+  .boton-secundario { margin-left: 0; }
 }
 
 .ilustracion {

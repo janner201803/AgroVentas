@@ -1,0 +1,69 @@
+<main class="pagina">
+  <header class="encabezado">
+    <a routerLink="/inicio" class="volver">← Volver a inicio</a>
+    <span>AgroVentas 🍍</span>
+  </header>
+
+  <section class="intro">
+    <span class="etiqueta">ADMINISTRACIÓN</span>
+    <h1>Inventario</h1>
+    <p>Registra productos y mantén sus cantidades y precios actualizados para que estén disponibles al crear pedidos.</p>
+  </section>
+
+  <div *ngIf="error" class="alerta error" role="alert">{{ error }}</div>
+  <div *ngIf="mensaje" class="alerta exito" role="status">{{ mensaje }}</div>
+
+  <section *ngIf="esAdministrador" class="panel formulario">
+    <div>
+      <span class="etiqueta">NUEVO PRODUCTO</span>
+      <h2>Agregar al inventario</h2>
+    </div>
+    <form (ngSubmit)="agregarProducto()">
+      <label for="nombre">Nombre del producto</label>
+      <input id="nombre" name="nombre" [(ngModel)]="producto.nombre" maxlength="120" required placeholder="Ej. Piña primera" />
+
+      <div class="campos-dos">
+        <div>
+          <label for="presentacion">Presentación (referencia visual)</label>
+          <select id="presentacion" name="presentacion" [(ngModel)]="presentacionVisual">
+            <option value="kg">Kilogramos (kg)</option>
+            <option value="unidad">Unidades (und)</option>
+          </select>
+        </div>
+        <div>
+          <label for="cantidad">{{ presentacionVisual === 'kg' ? 'Kg a agregar' : 'Unidades a agregar' }}</label>
+          <input id="cantidad" name="cantidad" type="number" min="0.01" step="any" [(ngModel)]="producto.cantidad" required placeholder="Ingresa la cantidad" />
+        </div>
+        <div>
+          <label for="precio">Precio unitario (COP)</label>
+          <input id="precio" name="precio" type="number" min="1" step="100" [(ngModel)]="producto.precio" required />
+        </div>
+      </div>
+
+      <button type="submit" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Agregar producto' }}</button>
+    </form>
+  </section>
+
+  <section *ngIf="!esAdministrador" class="aviso-acceso">
+    <strong>Acceso de consulta</strong>
+    <p>Solo el administrador puede agregar productos. Puedes consultar aquí los productos registrados.</p>
+  </section>
+
+  <section class="panel listado">
+    <div class="listado-titulo"><div><span class="etiqueta">CATÁLOGO</span><h2>Productos registrados</h2></div><span class="contador">{{ productos.length }} productos</span></div>
+    <p *ngIf="cargando">Cargando inventario…</p>
+    <p *ngIf="!cargando && productos.length === 0" class="vacio">Aún no hay productos en inventario. Agrégalos para que aparezcan en el formulario de pedidos.</p>
+    <div class="tabla-wrap" *ngIf="!cargando && productos.length > 0">
+      <table>
+        <thead><tr><th>Producto</th><th>Precio unitario</th><th>Cantidad disponible</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let item of productos">
+            <td><strong>{{ item.nombre }}</strong></td>
+            <td>{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td>{{ item.cantidad }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>

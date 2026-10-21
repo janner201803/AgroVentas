@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 
 const pedidoRoutes = require('./presentation/routes/pedidoRoutes');
+const inventarioRoutes = require('./presentation/routes/inventarioRoutes');
 
 const app = express();
 
@@ -20,5 +21,6 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/pedidos', pedidoRoutes);
+app.use('/api/inventario', inventarioRoutes);
 
 module.exports = app;

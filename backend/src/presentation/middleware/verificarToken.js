@@ -23,6 +23,7 @@ async function verificarToken(req, res, next) {
       id: data.user.id,
       email: data.user.email
     };
+    req.supabase = supabase.forUser(token);
 
     next();
   } catch (err) {

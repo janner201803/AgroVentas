@@ -35,6 +35,96 @@
   box-shadow: 0 8px 30px #20352a0a;
 }
 
+.agenda,
+.horarios {
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid #e4ebe1;
+  border-radius: 14px;
+  background: #fbfcfa;
+}
+
+.agenda-titulo,
+.horarios-titulo,
+.mes-controles {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mes-controles { color: #294632; text-transform: capitalize; }
+.mes-controles button {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #d7e1d4;
+  border-radius: 9px;
+  color: #287344;
+  background: white;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.calendario {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.dia-semana { padding: 5px 0; color: #758176; text-align: center; font-size: 12px; font-weight: 700; }
+.dia-vacio { min-height: 38px; }
+.dia {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #304435;
+  background: white;
+  cursor: pointer;
+}
+.dia:hover:not(:disabled) { border-color: #86ad87; background: #f0f7ed; }
+.dia.seleccionado { color: white; background: #287344; font-weight: 700; }
+.dia:disabled { color: #b7beb7; background: transparent; cursor: default; }
+.fecha-elegida { margin: 5px 0 0; color: #69766b; font-size: 13px; text-transform: capitalize; }
+.leyenda { margin: 12px 0 0; color: #738074; font-size: 13px; line-height: 1.5; }
+.fecha-mini { max-width: 50%; color: #69766b; font-size: 12px; text-align: right; text-transform: capitalize; }
+.horas-grid { display: flex; gap: 9px; margin-top: 15px; overflow-x: auto; padding: 2px 1px 10px; scroll-snap-type: x mandatory; }
+.hora {
+  box-sizing: border-box;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px;
+  min-height: 46px;
+  padding: 8px 10px;
+  border: 1px solid #cbdac8;
+  border-radius: 10px;
+  color: #2e5237;
+  background: white;
+  cursor: pointer;
+  flex: 0 0 132px;
+  scroll-snap-align: start;
+}
+.hora small { color: #718073; font-size: 10px; }
+.hora.seleccionada { border-color: #287344; color: white; background: #287344; }
+.hora.seleccionada small { color: #e1f2e3; }
+.hora.ocupada { border-color: #eceeeb; color: #a1a7a1; background: #f2f3f1; cursor: not-allowed; }
+.hora.ocupada small { color: #929992; }
+.hora.no-disponible { border-color: #eceeeb; color: #a1a7a1; background: #f2f3f1; cursor: not-allowed; }
+
+@media (max-width: 520px) {
+  .agenda, .horarios { padding: 13px; }
+  .hora { flex-basis: 120px; }
+  .fecha-mini { display: none; }
+}
+
 .etiqueta {
   color: #287344;
   font-size: 12px;

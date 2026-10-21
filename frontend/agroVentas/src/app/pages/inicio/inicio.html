@@ -8,8 +8,18 @@
       </div>
     </div>
 
-    <span class="estado">Portal de clientes</span>
+    <div class="acciones-cuenta">
+      <div class="cuenta">
+        <strong>{{ usuario()?.email }}</strong>
+        <span>{{ esAdministrador ? 'Administrador' : 'Portal de clientes' }}</span>
+      </div>
+      <button type="button" class="cerrar-sesion" [disabled]="cerrandoSesion" (click)="cerrarSesion()">
+        {{ cerrandoSesion ? 'Cerrando…' : 'Cerrar sesión' }}
+      </button>
+    </div>
   </header>
+
+  <p *ngIf="errorSesion" class="error-sesion" role="alert">{{ errorSesion }}</p>
 
   <section class="bienvenida">
     <div class="contenido">
@@ -26,6 +36,10 @@
         Hacer pedido
         <span>→</span>
       </a>
+      <a *ngIf="esAdministrador" routerLink="/inventario" class="boton boton-secundario">
+        Ver inventario / agregar productos
+        <span>→</span>
+      </a>
     </div>
 
     <div class="ilustracion" aria-hidden="true">
@@ -37,7 +51,7 @@
     <article class="tarjeta">
       <span class="icono">🌱</span>
       <h3>Variedad de piñas</h3>
-      <p>Escoge la presentación que necesitas, por kilogramo o unidad.</p>
+      <p>Escoge el producto y la cantidad que necesitas.</p>
     </article>
 
     <article class="tarjeta">

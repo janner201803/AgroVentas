@@ -5,14 +5,12 @@ const pedidoService = require(
 class PedidoController {
   async crear(req, res) {
     try {
-      console.log('Body recibido:', req.body);
-      // Por ahora, este valor debe proceder
-      // de una autenticación validada.
       const idUsuario = req.user.id;
 
       const pedido = await pedidoService.crear(
         req.body,
-        idUsuario
+        idUsuario,
+        req.supabase
       );
 
       return res.status(201).json({
@@ -20,9 +18,18 @@ class PedidoController {
         pedido
       });
     } catch (error) {
-      return res.status(400).json({
+      return res.status(error.status || 400).json({
         mensaje: error.message
       });
+    }
+  }
+
+  async horarios(req, res) {
+    try {
+      const horarios = await pedidoService.horariosDisponibles(req.query.fecha, req.supabase);
+      return res.status(200).json(horarios);
+    } catch (error) {
+      return res.status(error.status || 400).json({ mensaje: error.message });
     }
   }
 
@@ -31,7 +38,8 @@ class PedidoController {
       const idUsuario = req.user.id;
 
       const pedidos = await pedidoService.listarPorUsuario(
-        idUsuario
+        idUsuario,
+        req.supabase
       );
 
       return res.status(200).json(pedidos);

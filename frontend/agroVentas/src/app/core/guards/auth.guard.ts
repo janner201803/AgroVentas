@@ -7,11 +7,8 @@ export const authGuard: CanActivateFn = async() => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  //Esperar a que supabase restaure la sesión guardada
-  //
-
   const usuario = await authService.esperarUsuario();
 
-  return usuario ? true: router.createUrlTree(['/login'])
+  return usuario ? true : router.createUrlTree(['/login']);
 }
 

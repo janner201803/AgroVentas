@@ -7,6 +7,10 @@ const pedidoController = require(
 
 const verificarToken = require('../middleware/verificarToken');
 
+router.get('/horarios', verificarToken, (req, res) =>
+  pedidoController.horarios(req, res)
+);
+
 router.post('/', verificarToken, (req, res) =>
   pedidoController.crear(req, res)
 );

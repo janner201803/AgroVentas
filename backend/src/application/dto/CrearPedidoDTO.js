@@ -4,6 +4,8 @@ class CrearPedidoDTO {
     this.cantidad = Number(datos.cantidad);
     this.metodo_pago = datos.metodo_pago;
     this.comprobante_url = datos.comprobante_url || null;
+    this.fecha_entrega = datos.fecha_entrega;
+    this.hora_entrega = datos.hora_entrega;
   }
 
   validar() {
@@ -17,6 +19,16 @@ class CrearPedidoDTO {
 
     if (!['efectivo', 'consignacion'].includes(this.metodo_pago)) {
       throw new Error('Selecciona un método de pago válido');
+    }
+
+    const fechaParsed = new Date(`${this.fecha_entrega}T00:00:00Z`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(this.fecha_entrega || '') ||
+      Number.isNaN(fechaParsed.getTime()) || fechaParsed.toISOString().slice(0, 10) !== this.fecha_entrega) {
+      throw new Error('Selecciona una fecha de entrega válida');
+    }
+
+    if (!/^(0[89]|1[0-6]):00$/.test(this.hora_entrega || '')) {
+      throw new Error('Selecciona un horario disponible entre 8:00 y 16:00');
     }
 
     if (

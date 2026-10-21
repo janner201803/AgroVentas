@@ -29,11 +29,17 @@
       <!-- Tipo de piña -->
       <label for="producto">Tipo de piña</label>
 
+      <p *ngIf="cargandoProductos">Cargando productos disponibles…</p>
+      <p *ngIf="!cargandoProductos && productos.length === 0">
+        No hay productos disponibles para pedir. Revisa el catálogo y sus precios en inventario.
+      </p>
+
       <select
         id="producto"
         name="producto"
         [(ngModel)]="productoId"
         required
+        [disabled]="cargandoProductos || productos.length === 0"
       >
         <option [ngValue]="null">
           Selecciona una variedad
@@ -44,15 +50,14 @@
           [ngValue]="producto.id"
         >
           {{ producto.nombre }} —
-          {{ producto.unidad === 'kg' ? 'Por kilogramo' : 'Por unidad' }}
+          {{ producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }} por unidad
         </option>
       </select>
 
       <!-- Información del producto seleccionado -->
       <div *ngIf="productoSeleccionado" class="producto-info">
         <span>
-          Precio
-          {{ productoSeleccionado.unidad === 'kg' ? 'por kilogramo' : 'por unidad' }}
+          Precio por unidad
         </span>
 
         <strong>
@@ -63,9 +68,6 @@
       <!-- Cantidad -->
       <label for="cantidad">
         Cantidad
-        <span *ngIf="productoSeleccionado">
-          ({{ productoSeleccionado.unidad }})
-        </span>
       </label>
 
       <input
@@ -73,25 +75,22 @@
         name="cantidad"
         type="number"
         [(ngModel)]="cantidad"
-        [min]="productoSeleccionado?.unidad === 'kg' ? 0.1 : 1"
-        [step]="productoSeleccionado?.unidad === 'kg' ? 0.1 : 1"
+        min="0.01"
+        [max]="productoSeleccionado?.cantidad ?? null"
+        step="any"
         required
         placeholder="Ingresa la cantidad"
       />
+
+      <small *ngIf="productoSeleccionado">
+        Inventario disponible: {{ productoSeleccionado.cantidad }}
+      </small>
 
       <!-- Resumen del pedido -->
       <div
         class="resumen"
         *ngIf="productoSeleccionado && cantidad && cantidad > 0"
       >
-        <div>
-          <span>Peso aproximado</span>
-
-          <strong>
-            {{ pesoTotalKg | number:'1.0-2' }} kg
-          </strong>
-        </div>
-
         <div>
           <span>Valor estimado</span>
 
@@ -101,65 +100,68 @@
         </div>
       </div>
 
-      <!-- Aviso de peso -->
-      <p class="aviso" *ngIf="pesoTotalKg > 2000">
-        El pedido supera el límite de 2.000 kg.
-      </p>
-
       <!-- Método de pago -->
       <label for="pago">Método de pago</label>
 
-      <select
-        id="pago"
-        name="pago"
-        [(ngModel)]="metodoPago"
-        required
-      >
-        <option value="efectivo">Efectivo</option>
-
-        <option value="consignacion">
-          Consignación bancaria
-        </option>
+      <select id="pago" name="pago" [(ngModel)]="metodoPago" required>
+        <option value="efectivo">Efectivo al recoger</option>
       </select>
+      <small>El pago por consignación estará disponible cuando se habilite la carga segura del comprobante.</small>
 
-      <!-- Comprobante de pago -->
-      <div
-        *ngIf="metodoPago === 'consignacion'"
-        class="comprobante"
-      >
-        <label for="archivo">Comprobante de pago</label>
+      <section class="agenda">
+        <div class="agenda-titulo">
+          <div>
+            <label>Fecha de entrega</label>
+            <p class="fecha-elegida" *ngIf="fechaEntrega">{{ fechaSeleccionadaTexto }}</p>
+          </div>
+          <div class="mes-controles">
+            <button type="button" aria-label="Mes anterior" (click)="cambiarMes(-1)">‹</button>
+            <strong>{{ nombreMes }}</strong>
+            <button type="button" aria-label="Mes siguiente" (click)="cambiarMes(1)">›</button>
+          </div>
+        </div>
+        <div class="calendario">
+          <span class="dia-semana" *ngFor="let dia of diasSemana">{{ dia }}</span>
+          <ng-container *ngFor="let celda of diasCalendario">
+            <span *ngIf="!celda.fecha" class="dia-vacio"></span>
+            <button *ngIf="celda.fecha" type="button" class="dia"
+              [class.seleccionado]="celda.fecha === fechaEntrega"
+              [disabled]="celda.fecha < fechaMinima"
+              [attr.aria-pressed]="celda.fecha === fechaEntrega"
+              (click)="seleccionarFecha(celda.fecha || '')">{{ celda.dia }}</button>
+          </ng-container>
+        </div>
+        <p class="leyenda">Elige una fecha para consultar los bloques disponibles.</p>
+      </section>
 
-        <input
-          id="archivo"
-          name="archivo"
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          (change)="seleccionarComprobante($event)"
-        />
-
-        <small>
-          PDF, JPG o PNG. Máximo 5 MB.
-        </small>
-
-        <p *ngIf="comprobante">
-          Archivo seleccionado: {{ comprobante.name }}
-        </p>
-      </div>
-
-      <!-- Recogida -->
-      <div class="recogida">
-        <strong>Recogida del pedido</strong>
-
-        <p>
-          Los pedidos se organizan para que los clientes los recojan.
-          La fecha y la disponibilidad deberán confirmarse.
-        </p>
-      </div>
+      <section class="horarios">
+        <div class="horarios-titulo">
+          <div>
+            <label>Hora de entrega</label>
+            <p class="leyenda">Bloques de una hora · 8:00 a. m. a 5:00 p. m.</p>
+          </div>
+          <span class="fecha-mini" *ngIf="fechaEntrega">{{ fechaSeleccionadaTexto }}</span>
+        </div>
+        <p *ngIf="cargandoHorarios" class="leyenda">Actualizando disponibilidad…</p>
+        <div class="horas-grid" *ngIf="horarios.length">
+          <button *ngFor="let horario of horarios" type="button" class="hora"
+            [class.seleccionada]="horario.hora === horaEntrega"
+            [class.ocupada]="horario.ocupado"
+            [class.no-disponible]="!horario.ocupado && !horario.disponible"
+            [disabled]="!horario.disponible"
+            [attr.aria-pressed]="horario.hora === horaEntrega"
+            (click)="seleccionarHora(horario.hora)">
+            <strong>{{ horario.hora }}</strong>
+            <small>{{ horario.ocupado ? 'Ocupado' : (horario.disponible ? 'Disponible' : 'Hora pasada') }}</small>
+          </button>
+        </div>
+        <p *ngIf="error && horarios.length" class="leyenda">No se pudo cargar la ocupación desde el servidor; al guardar se verificará que el bloque siga libre.</p>
+      </section>
 
       <!-- Botón -->
       <button
         type="submit"
-        [disabled]="enviando || pesoTotalKg > 2000"
+        [disabled]="enviando || cargandoProductos || cargandoHorarios || productos.length === 0 || !horaEntrega"
       >
         {{ enviando ? 'Registrando...' : 'Registrar pedido' }}
       </button>

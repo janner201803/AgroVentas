@@ -2,6 +2,8 @@ import { Injectable, signal } from '@angular/core';
 import {User} from '@supabase/supabase-js';
 import { supabase }  from './supabase.config';
 
+export const ADMIN_EMAIL = 'admin@gmail.com';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -9,43 +11,42 @@ export class AuthService {
   usuario = signal<User | null>(null);
   authCargado = signal(false);
 
-  private primeraCarga: Promise<User | null>;
-
-  private resolverPrimeraCarga:
-    ((usuario: User | null) => void) | null = null;
-
   constructor() {
-    this.primeraCarga = new Promise<User | null>((resolve) =>{
-      this.resolverPrimeraCarga = resolve;
-    })
-
-    // Supabase avisa en cada cambio de sesión (login, logout, token renovado).
-    // Al suscribirse emite además un evento inicial con la sesión guardada
-    // en el navegador, que equivale a la primera respuesta de Firebase.
-
-    supabase.auth.onAuthStateChange((_evento, sesion)=> {
+    supabase.auth.onAuthStateChange((evento, sesion)=> {
       const usuario = sesion?.user ?? null;
 
       this.usuario.set(usuario);
-      this.authCargado.set(true)
+      this.authCargado.set(true);
 
-      //resolver la espera solamente con la primera respuesta
-      if(this.resolverPrimeraCarga){
-        this.resolverPrimeraCarga(usuario);
-        this.resolverPrimeraCarga = null;
+      if (evento === 'SIGNED_IN') {
+        console.info('[AgroVentas] Sesión iniciada', {
+          autenticado: Boolean(sesion?.access_token),
+          expiraEn: sesion?.expires_at
+            ? new Date(sesion.expires_at * 1000).toLocaleString()
+            : 'desconocido'
+        });
       }
     });
-
   }
 
   async esperarUsuario(): Promise<User | null> {
-    if (this.authCargado()) {
-      return this.usuario();
+    // getUser valida el token con Supabase; getSession/onAuthStateChange
+    // solo restauran el estado local del navegador.
+    let usuario: User | null = null;
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      usuario = error ? null : data.user;
+    } catch {
+      // Si no se puede validar la sesión, se deniega la navegación protegida.
+      usuario = null;
     }
+    this.usuario.set(usuario);
+    this.authCargado.set(true);
+    return usuario;
+  }
 
-    await this.primeraCarga;
-
-    return this.usuario();
+  esAdministrador(usuario: User | null = this.usuario()): boolean {
+    return usuario?.email?.trim().toLowerCase() === ADMIN_EMAIL;
   }
 
   async registrar(email: string, password: string) {

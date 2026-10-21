@@ -22,4 +22,16 @@ const supabase = createClient(url, key, {
   }
 });
 
+// A client per request keeps Supabase RLS scoped to the authenticated user.
+supabase.forUser = (accessToken) => createClient(url, key, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+    detectSessionInUrl: false
+  },
+  global: {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  }
+});
+
 module.exports = supabase;
