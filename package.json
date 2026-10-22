@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently -n back,front -c green,cyan \"npm --prefix backend run dev\" \"npm --prefix frontend start\"",
+    "dev": "concurrently -n back,front -c green,cyan \"npm --prefix backend run dev\" \"npm --prefix frontend/agroVentas start\"",
     "start:back": "npm --prefix backend start",
-    "start:front": "npm --prefix frontend start",
-    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "start:front": "npm --prefix frontend/agroVentas start",
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend/agroVentas install",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
