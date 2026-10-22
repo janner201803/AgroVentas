@@ -1,105 +1,140 @@
-<div class="auth-page">
-  <div class="auth-card">
-    <a routerLink="/login" class="brand">
-      <span class="brand-icon">🍍</span>
-      <span>agro<span class="brand-light">Ventas</span></span>
-    </a>
 
-    <div class="heading">
-      <span class="eyebrow">BIENVENIDO DE NUEVO</span>
-      <h1>¡Qué bueno verte!</h1>
-      <p>Ingresa a tu cuenta y sigue creciendo con nosotros.</p>
-    </div>
+<main class="login-page">
+  <section class="login-card">
+    <div class="photo-panel">
+      <div class="yellow-shape"></div>
 
-    <form #form="ngForm" (ngSubmit)="iniciarSesion()">
-      <div class="field">
-        <label for="email">Correo electrónico</label>
-        <input
-          id="email"
-          type="email"
-          name="email"
-          [(ngModel)]="email"
-          placeholder="tucorreo@ejemplo.com"
-          autocomplete="email"
-          required
-          email
-        />
+      <img
+        class="pineapple-photo"
+        src="../../img/piña.jpg"
+        alt="Piñas frescas recién cosechadas"
+      />
+
+      <div class="photo-copy">
+        <span class="decorative-line"></span>
+        <h2>¡Qué bueno<br />verte!</h2>
       </div>
 
-      <div class="field">
-        <label for="password">Contraseña</label>
-        <input
-          id="password"
-          type="password"
-          name="password"
-          [(ngModel)]="password"
-          placeholder="Ingresa tu contraseña"
-          autocomplete="current-password"
-          required
-        />
+      <span class="leaf-decoration leaf-decoration-one"></span>
+      <span class="leaf-decoration leaf-decoration-two"></span>
+    </div>
+
+    <div class="form-panel">
+      <span class="top-corner"></span>
+      <span class="bottom-corner"></span>
+
+      <div class="login-content">
+        <header class="brand">
+          <img
+            src="/img/logo.jpg"
+            alt="AgroVentas"
+            class="brand-logo"
+          />
+        </header>
+
+        <form class="login-form" (ngSubmit)="iniciarSesion()">
+          <label class="field-label" for="email">
+            Correo electrónico
+          </label>
+
+          <div class="input-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+              <path d="m4 7 8 6 8-6"></path>
+            </svg>
+
+            <input
+              id="email"
+              type="email"
+              name="email"
+              [(ngModel)]="email"
+              placeholder="tucorreo@ejemplo.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+
+          <label class="field-label" for="password">
+            Contraseña
+          </label>
+
+          <div class="input-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="10" width="14" height="11" rx="2"></rect>
+              <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+            </svg>
+
+            <input
+              id="password"
+              [type]="mostrarPassword() ? 'text' : 'password'"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="Ingresa tu contraseña"
+              autocomplete="current-password"
+              required
+            />
+
+            <button
+              class="password-toggle"
+              type="button"
+              (click)="alternarPassword()"
+              [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+
+          <button
+            class="login-button"
+            type="submit"
+            [disabled]="cargando()"
+          >
+            {{ cargando() ? 'Iniciando sesión...' : 'Iniciar sesión' }}
+            @if (!cargando()) {
+              <span>→</span>
+            }
+          </button>
+
+          <div class="forgot-password">
+            <a routerLink="/recuperar-contrasena">¿Olvidaste tu contraseña?</a>
+          </div>
+
+          @if (error()) {
+            <p class="error-message" role="alert">
+              {{ error() }}
+            </p>
+          }
+
+          <div class="separator">
+            <span></span>
+            <small>o</small>
+            <span></span>
+          </div>
+
+          <button
+            class="google-button"
+            type="button"
+            (click)="iniciarConGoogle()"
+          >
+            <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.2 5.5-4.7 7.2l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.6z"/>
+              <path fill="#FBBC05" d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z"/>
+              <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/>
+            </svg>
+
+            Continuar con Google
+          </button>
+
+          <p class="register-text">
+            ¿No tienes una cuenta?
+            <a routerLink="/registro">Crear cuenta</a>
+          </p>
+        </form>
       </div>
-
-      <div class="error" *ngIf="error()" role="alert">
-        {{ error() }}
-      </div>
-
-      <button
-        type="submit"
-        class="btn-primary"
-        [disabled]="cargando()"
-      >
-        {{ cargando() ? 'Ingresando...' : 'Iniciar sesión →' }}
-      </button>
-    </form>
-
-    <div class="separator">
-      <span>o</span>
     </div>
-
-    <!-- type="button": evita que envíe el formulario de correo y contraseña -->
-    <button
-      type="button"
-      class="btn-google"
-      (click)="iniciarConGoogle()"
-    >
-      <svg class="google-icon" viewBox="0 0 48 48" aria-hidden="true">
-        <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/>
-        <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.2 5.5-4.7 7.2l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.6z"/>
-        <path fill="#FBBC05" d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z"/>
-        <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/>
-      </svg>
-      Continuar con Google
-    </button>
-
-    <div class="separator">
-      <span>¿Todavía no tienes cuenta?</span>
-    </div>
-
-    <a routerLink="/register" class="btn-secondary">
-      Crear una cuenta
-    </a>
-
-    <p class="bottom-text">
-      🍃 Frescura, calidad y confianza del campo a tu negocio.
-    </p>
-  </div>
-
-  <div class="side-panel">
-    <span class="side-tag">AGROVENTAS · PRODUCTOS DEL CAMPO</span>
-
-    <div class="fruit">🍍</div>
-
-    <h2>
-      Una cosecha de<br />
-      nuevas oportunidades.
-    </h2>
-
-    <p>
-      Conectamos el campo con quienes buscan lo mejor de cada cosecha.
-    </p>
-
-    <div class="side-decoration">
-      FRESCO · NATURAL · DE CALIDAD
-    </div>
-  </div>
-</div>
+  </section>
+</main>

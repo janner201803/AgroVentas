@@ -1,9 +1,9 @@
+
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-
 
 @Component({
   selector: 'app-login',
@@ -19,18 +19,23 @@ export class Login {
   email = '';
   password = '';
 
-  // se cambiaron a signals para que la vista se actualice automáticamente cuando cambien sus valores
-
   error = signal('');
   cargando = signal(false);
+  mostrarPassword = signal(false);
 
-  
-    async iniciarConGoogle(): Promise<void> {
+  alternarPassword(): void {
+    this.mostrarPassword.set(!this.mostrarPassword());
+  }
+
+  async iniciarConGoogle(): Promise<void> {
     this.error.set('');
+
     try {
       await this.authService.iniciarSesionConGoogle();
     } catch {
-      this.error.set('No pudimos conectar con Google. Intenta nuevamente.');
+      this.error.set(
+        'No pudimos conectar con Google. Intenta nuevamente.'
+      );
     }
   }
 
@@ -48,22 +53,26 @@ export class Login {
 
       await this.router.navigate(['/inicio']);
     } catch (error: any) {
-      console.log('Error de login:', error.code, error.status, error.message);
       switch (error.code) {
-        // Supabase no distingue "usuario inexistente" de "contraseña mala"
-        // a propósito, para no revelar qué correos están registrados.
         case 'invalid_credentials':
           this.error.set('Correo o contraseña incorrectos.');
           break;
+
         case 'email_address_invalid':
         case 'validation_failed':
           this.error.set('Ingresa un correo válido.');
           break;
+
         case 'over_request_rate_limit':
-          this.error.set('Demasiados intentos. Intenta más tarde.');
+          this.error.set(
+            'Demasiados intentos. Intenta más tarde.'
+          );
           break;
+
         default:
-          this.error.set('No pudimos iniciar sesión. Intenta nuevamente.');
+          this.error.set(
+            'No pudimos iniciar sesión. Intenta nuevamente.'
+          );
       }
     } finally {
       this.cargando.set(false);
