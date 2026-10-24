@@ -19,6 +19,15 @@ class PedidoService {
     if (!Number.isFinite(Number(producto.precio)) || Number(producto.precio) <= 0) {
       throw new Error('El producto no tiene un precio válido configurado');
     }
+    if (!['kg', 'und'].includes(producto.und)) {
+      throw new Error('El producto no tiene una unidad válida configurada');
+    }
+    if (producto.und === 'und' && !Number.isInteger(dto.cantidad)) {
+      throw new Error('La cantidad solicitada debe ser un número entero de unidades');
+    }
+    if (producto.und === 'kg' && Math.abs(dto.cantidad * 10 - Math.round(dto.cantidad * 10)) > 1e-8) {
+      throw new Error('La cantidad en kg debe usar incrementos de 0,1 kg');
+    }
     if (Number.isFinite(Number(producto.cantidad)) && dto.cantidad > Number(producto.cantidad)) {
       throw new Error('La cantidad solicitada supera el inventario disponible');
     }

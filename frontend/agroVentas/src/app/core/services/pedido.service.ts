@@ -16,6 +16,7 @@ export interface ProductoPedido {
   nombre: string;
   cantidad: number;
   precio: number;
+  und: 'kg' | 'und';
 }
 
 export interface HorarioEntrega {

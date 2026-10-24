@@ -24,18 +24,18 @@
 
       <div class="campos-dos">
         <div>
-          <label for="presentacion">Presentación (referencia visual)</label>
-          <select id="presentacion" name="presentacion" [(ngModel)]="presentacionVisual">
+          <label for="presentacion">Unidad de medida</label>
+          <select id="presentacion" name="presentacion" [(ngModel)]="producto.und" required>
             <option value="kg">Kilogramos (kg)</option>
-            <option value="unidad">Unidades (und)</option>
+            <option value="und">Unidades (und)</option>
           </select>
         </div>
         <div>
-          <label for="cantidad">{{ presentacionVisual === 'kg' ? 'Kg a agregar' : 'Unidades a agregar' }}</label>
-          <input id="cantidad" name="cantidad" type="number" min="0.01" step="any" [(ngModel)]="producto.cantidad" required placeholder="Ingresa la cantidad" />
+          <label for="cantidad">{{ producto.und === 'kg' ? 'Kg a agregar' : 'Unidades a agregar' }}</label>
+          <input id="cantidad" name="cantidad" type="number" [min]="producto.und === 'kg' ? 0.1 : 1" [step]="producto.und === 'kg' ? 0.1 : 1" [(ngModel)]="producto.cantidad" required placeholder="Ingresa la cantidad" />
         </div>
         <div>
-          <label for="precio">Precio unitario (COP)</label>
+          <label for="precio">Precio por {{ producto.und }} (COP)</label>
           <input id="precio" name="precio" type="number" min="1" step="100" [(ngModel)]="producto.precio" required />
         </div>
       </div>
@@ -52,15 +52,16 @@
   <section class="panel listado">
     <div class="listado-titulo"><div><span class="etiqueta">CATÁLOGO</span><h2>Productos registrados</h2></div><span class="contador">{{ productos.length }} productos</span></div>
     <p *ngIf="cargando">Cargando inventario…</p>
-    <p *ngIf="!cargando && productos.length === 0" class="vacio">Aún no hay productos en inventario. Agrégalos para que aparezcan en el formulario de pedidos.</p>
+    <p *ngIf="!cargando && !error && productos.length === 0" class="vacio">Aún no hay productos en inventario. Agrégalos para que aparezcan en el formulario de pedidos.</p>
     <div class="tabla-wrap" *ngIf="!cargando && productos.length > 0">
       <table>
-        <thead><tr><th>Producto</th><th>Precio unitario</th><th>Cantidad disponible</th></tr></thead>
+        <thead><tr><th>Producto</th><th>Unidad</th><th>Precio</th><th>Cantidad disponible</th></tr></thead>
         <tbody>
           <tr *ngFor="let item of productos">
             <td><strong>{{ item.nombre }}</strong></td>
-            <td>{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td>{{ item.cantidad }}</td>
+            <td>{{ item.und }}</td>
+            <td>{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ item.und }}</td>
+            <td>{{ item.cantidad }} {{ item.und }}</td>
           </tr>
         </tbody>
       </table>

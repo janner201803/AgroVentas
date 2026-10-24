@@ -147,6 +147,14 @@ export class Pedidos implements OnInit {
       this.error = 'La cantidad solicitada supera el inventario disponible.';
       return;
     }
+    if (producto.und === 'und' && !Number.isInteger(this.cantidad)) {
+      this.error = 'La cantidad solicitada debe ser un número entero de unidades.';
+      return;
+    }
+    if (producto.und === 'kg' && Math.abs(this.cantidad * 10 - Math.round(this.cantidad * 10)) > 1e-8) {
+      this.error = 'La cantidad en kg debe usar incrementos de 0,1 kg.';
+      return;
+    }
     if (!this.fechaEntrega || !this.horaEntrega || !this.horarios.some(item => item.hora === this.horaEntrega && item.disponible)) {
       this.error = 'Selecciona una fecha y un horario disponible.';
       return;

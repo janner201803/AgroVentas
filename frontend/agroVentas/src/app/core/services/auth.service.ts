@@ -4,12 +4,13 @@ import { Router } from '@angular/router';
 import { supabase } from './supabase.config';
 
 export const ADMIN_EMAIL = 'admin@gmail.com';
+type UsuarioAutenticado = { id: string; email?: string };
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  usuario = signal<User | null>(null);
+  usuario = signal<UsuarioAutenticado | null>(null);
   authCargado = signal(false);
 
   private router = inject(Router);
@@ -53,23 +54,27 @@ export class AuthService {
     });
   }
 
-  async esperarUsuario(): Promise<User | null> {
-    // getUser valida el token con Supabase; getSession/onAuthStateChange
-    // solo restauran el estado local del navegador.
-    let usuario: User | null = null;
+  async esperarUsuario(): Promise<UsuarioAutenticado | null> {
     try {
-      const { data, error } = await supabase.auth.getUser();
-      usuario = error ? null : data.user;
+      const { data, error } = await supabase.auth.getClaims();
+      const claims = data?.claims;
+      const usuario = !error && typeof claims?.sub === 'string' && claims.role === 'authenticated'
+        ? {
+            id: claims.sub,
+            email: typeof claims.email === 'string' ? claims.email : undefined
+          }
+        : null;
+      this.usuario.set(usuario);
+      this.authCargado.set(true);
+      return usuario;
     } catch {
-      // Si no se puede validar la sesión, se deniega la navegación protegida.
-      usuario = null;
+      this.usuario.set(null);
+      this.authCargado.set(true);
+      return null;
     }
-    this.usuario.set(usuario);
-    this.authCargado.set(true);
-    return usuario;
   }
 
-  esAdministrador(usuario: User | null = this.usuario()): boolean {
+  esAdministrador(usuario: UsuarioAutenticado | null = this.usuario()): boolean {
     return usuario?.email?.trim().toLowerCase() === ADMIN_EMAIL;
   }
 

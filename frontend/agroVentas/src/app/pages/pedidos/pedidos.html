@@ -50,14 +50,14 @@
           [ngValue]="producto.id"
         >
           {{ producto.nombre }} —
-          {{ producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }} por unidad
+          {{ producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ producto.und }}
         </option>
       </select>
 
       <!-- Información del producto seleccionado -->
       <div *ngIf="productoSeleccionado" class="producto-info">
         <span>
-          Precio por unidad
+          Precio por {{ productoSeleccionado.und }}
         </span>
 
         <strong>
@@ -67,7 +67,7 @@
 
       <!-- Cantidad -->
       <label for="cantidad">
-        Cantidad
+        Cantidad ({{ productoSeleccionado?.und || 'unidades' }})
       </label>
 
       <input
@@ -75,15 +75,15 @@
         name="cantidad"
         type="number"
         [(ngModel)]="cantidad"
-        min="0.01"
+        [min]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
         [max]="productoSeleccionado?.cantidad ?? null"
-        step="any"
+        [step]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
         required
         placeholder="Ingresa la cantidad"
       />
 
       <small *ngIf="productoSeleccionado">
-        Inventario disponible: {{ productoSeleccionado.cantidad }}
+        Inventario disponible: {{ productoSeleccionado.cantidad }} {{ productoSeleccionado.und }}
       </small>
 
       <!-- Resumen del pedido -->

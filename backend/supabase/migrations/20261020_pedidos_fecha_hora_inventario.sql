@@ -1,10 +1,15 @@
 -- Preparación para catálogo real y reserva de bloques de entrega.
--- El precio registrado en inventario corresponde al valor de una unidad del producto.
+-- El precio corresponde a una unidad de medida del producto (kg o und).
 
 alter table public.inventario
-  add column if not exists precio numeric(12, 2);
+  add column if not exists precio numeric(12, 2),
+  add column if not exists und text not null default 'kg';
 
--- El inventario usa únicamente id, nombre, cantidad y precio.
+update public.inventario set und = 'kg' where und is null;
+alter table public.inventario alter column und set default 'kg';
+alter table public.inventario alter column und set not null;
+
+-- Retira los nombres anteriores si quedaron de pruebas del esquema.
 alter table public.inventario
   drop column if exists unidad,
   drop column if exists activo;

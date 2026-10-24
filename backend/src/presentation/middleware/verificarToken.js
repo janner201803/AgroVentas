@@ -2,6 +2,8 @@ const supabase = require('../../infraestructure/database/supabase');
 
 async function verificarToken(req, res, next) {
   try {
+    const inicioValidacion = performance.now();
+    req.inicioSolicitudMs = inicioValidacion;
     const authorization = req.headers.authorization;
 
     if (!authorization || !authorization.startsWith('Bearer ')) {
@@ -10,9 +12,26 @@ async function verificarToken(req, res, next) {
 
     const token = authorization.substring(7);
 
-    const { data, error: errorAuth } = await supabase.auth.getUser(token);
+    let temporizador;
+    let resultadoAuth;
+    try {
+      resultadoAuth = await Promise.race([
+        supabase.auth.getClaims(token),
+        new Promise((_, reject) => {
+          temporizador = setTimeout(() => {
+            const error = new Error('La verificación de sesión excedió el tiempo de espera');
+            error.status = 504;
+            reject(error);
+          }, 10_000);
+        })
+      ]);
+    } finally {
+      clearTimeout(temporizador);
+    }
+    const { data, error: errorAuth } = resultadoAuth;
+    const claims = data?.claims;
 
-    if (errorAuth || !data?.user) {
+    if (errorAuth || typeof claims?.sub !== 'string' || claims.role !== 'authenticated') {
       console.log('Error Supabase:', errorAuth?.message, '| status:', errorAuth?.status);
       return res
         .status(401)
@@ -20,17 +39,18 @@ async function verificarToken(req, res, next) {
     }
 
     req.user = {
-      id: data.user.id,
-      email: data.user.email
+      id: claims.sub,
+      email: typeof claims.email === 'string' ? claims.email : undefined
     };
+    req.validacionTokenMs = performance.now() - inicioValidacion;
     req.supabase = supabase.forUser(token);
 
     next();
   } catch (err) {
-    console.log('Error catch:', err.message);
+    console.error('[verificarToken] No se pudo validar la sesión:', err.message);
     return res
-      .status(401)
-      .json({ mensaje: 'No se pudo verificar la autenticación' });
+      .status(err.status || 401)
+      .json({ mensaje: err.message || 'No se pudo verificar la autenticación' });
   }
 }
 

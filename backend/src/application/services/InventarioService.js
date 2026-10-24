@@ -11,11 +11,18 @@ class InventarioService {
   }
 
   async crear(datos, client) {
-    const producto = new CrearProductoDTO(datos).validar();
+    let producto;
+    try {
+      producto = new CrearProductoDTO(datos).validar();
+    } catch (error) {
+      error.status = 400;
+      throw error;
+    }
     return inventarioRepository.crear({
       nombre: producto.nombre,
       cantidad: producto.cantidad,
-      precio: producto.precio
+      precio: producto.precio,
+      und: producto.und
     }, client);
   }
 }
