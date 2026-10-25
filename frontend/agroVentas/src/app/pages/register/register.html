@@ -1,78 +1,207 @@
-<div class="auth-page">
-  <div class="auth-card">
-    <a routerLink="/login" class="brand">
-      <span class="brand-icon">🍍</span>
-      <span>agro<span class="brand-light">Ventas</span></span>
-    </a>
 
-    <div class="heading">
-      <span class="eyebrow">ÚNETE A AGROVENTAS</span>
-      <h1>Crea tu cuenta</h1>
-      <p>Regístrate para comenzar a disfrutar de nuestros productos.</p>
+<main class="login-page">
+  <section class="login-card">
+    <div class="photo-panel">
+      <div class="yellow-shape"></div>
+
+      <img
+        class="pineapple-photo"
+        src="../../img/piña.jpg"
+        alt="Piñas frescas recién cosechadas"
+      />
+
+      <div class="photo-copy">
+        <span class="decorative-line"></span>
+        <h2>¡Qué bueno<br />verte!</h2>
+      </div>
+
+      <span class="leaf-decoration leaf-decoration-one"></span>
+      <span class="leaf-decoration leaf-decoration-two"></span>
     </div>
 
-    <form #form="ngForm" (ngSubmit)="registrar()">
-      <div class="field">
-        <label for="email">Correo electrónico</label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          [(ngModel)]="email"
-          placeholder="tucorreo@ejemplo.com"
-          autocomplete="email"
-          required
-          email
-        />
+    <div class="form-panel">
+      <span class="top-corner"></span>
+      <span class="bottom-corner"></span>
+
+      <div class="register-content">
+        <header class="brand">
+            <img
+              src="/img/logo.png"
+              alt="AgroVentas"
+              class="brand-logo"
+            />
+        </header>
+
+        <div class="heading">
+          <h1>Crea tu cuenta</h1>
+          <p>Regístrate y disfruta de productos frescos del campo.</p>
+        </div>
+
+        <form
+          class="register-form"
+          #form="ngForm"
+          (ngSubmit)="registrar()"
+        >
+          <label class="field-label" for="nombre">
+            Nombre completo
+          </label>
+
+          <div class="input-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M4 21v-2a8 8 0 0 1 16 0v2"></path>
+            </svg>
+
+            <input
+              id="nombre"
+              name="nombre"
+              type="text"
+              [(ngModel)]="nombre"
+              placeholder="Ingresa tu nombre completo"
+              autocomplete="name"
+              maxlength="100"
+              required
+            />
+          </div>
+
+          <label class="field-label" for="celular">
+            Número de celular
+          </label>
+
+          <div class="input-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="6" y="2" width="12" height="20" rx="2"></rect>
+              <path d="M10 18h4"></path>
+            </svg>
+
+            <input
+              id="celular"
+              name="celular"
+              type="tel"
+              [(ngModel)]="celular"
+              placeholder="Ej. 3001234567"
+              autocomplete="tel-national"
+              inputmode="numeric"
+              maxlength="10"
+              pattern="[0-9]{10}"
+              required
+            />
+          </div>
+
+          <label class="field-label" for="email">
+            Correo electrónico
+          </label>
+
+          <div class="input-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+              <path d="m4 7 8 6 8-6"></path>
+            </svg>
+
+            <input
+              id="email"
+              name="email"
+              type="email"
+              [(ngModel)]="email"
+              placeholder="tucorreo@ejemplo.com"
+              autocomplete="email"
+              required
+              email
+            />
+          </div>
+
+          <label class="field-label" for="password">
+            Contraseña
+          </label>
+
+          <div class="input-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="10" width="14" height="11" rx="2"></rect>
+              <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+            </svg>
+
+            <input
+              id="password"
+              [type]="mostrarPassword() ? 'text' : 'password'"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="Mínimo 6 caracteres"
+              autocomplete="new-password"
+              minlength="6"
+              required
+            />
+
+            <button
+              class="password-toggle"
+              type="button"
+              (click)="alternarPassword()"
+              [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+                @if (!mostrarPassword()) {
+                  <path class="eye-slash" d="M4 4 20 20"></path>
+                }
+              </svg>
+            </button>
+          </div>
+
+          <label class="field-label" for="confirmarPassword">
+            Confirmar contraseña
+          </label>
+
+          <div class="input-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="10" width="14" height="11" rx="2"></rect>
+              <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+            </svg>
+
+            <input
+              id="confirmarPassword"
+              [type]="mostrarConfirmarPassword() ? 'text' : 'password'"
+              name="confirmarPassword"
+              [(ngModel)]="confirmarPassword"
+              placeholder="Repite tu contraseña"
+              autocomplete="new-password"
+              required
+            />
+
+            <button
+              class="password-toggle"
+              type="button"
+              (click)="alternarConfirmarPassword()"
+              [attr.aria-label]="mostrarConfirmarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+                @if (!mostrarPassword()) {
+                  <path class="eye-slash" d="M4 4 20 20"></path>
+                }
+              </svg>
+            </button>
+          </div>
+
+          @if (error()) {
+            <p class="error-message" role="alert">
+              {{ error() }}
+            </p>
+          }
+
+          <button
+            class="register-button"
+            type="submit"
+            [disabled]="cargando()"
+          >
+            {{ cargando() ? 'Creando cuenta...' : 'Crear cuenta' }}
+          </button>
+
+          <p class="login-text">
+            ¿Ya tienes una cuenta?
+            <a routerLink="/login">Inicia sesión</a>
+        </form>
       </div>
-
-      <div class="field">
-        <label for="password">Contraseña</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          [(ngModel)]="password"
-          placeholder="Mínimo 6 caracteres"
-          autocomplete="new-password"
-          required
-          minlength="6"
-        />
-      </div>
-
-      <div class="field">
-        <label for="confirmarPassword">Confirmar contraseña</label>
-        <input
-          id="confirmarPassword"
-          name="confirmarPassword"
-          type="password"
-          [(ngModel)]="confirmarPassword"
-          placeholder="Repite tu contraseña"
-          autocomplete="new-password"
-          required
-        />
-      </div>
-
-      <div class="error" *ngIf="error()" role="alert">
-        {{ error() }}
-      </div>
-
-      <button
-        type="submit"
-        class="btn-primary"
-        [disabled]="cargando()"
-      >
-        {{ cargando() ? 'Creando cuenta...' : 'Registrarme →' }}
-      </button>
-    </form>
-
-    <p class="login-text">
-      ¿Ya tienes una cuenta?
-      <a routerLink="/login">Inicia sesión</a>
-    </p>
-
-    <p class="bottom-text">
-      🍃 Del campo a tu negocio.
-    </p>
-  </div>
-</div>
+    </div>
+  </section>
+</main>
