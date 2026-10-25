@@ -1,0 +1,86 @@
+<main class="login-page">
+  <section class="login-card">
+    <div class="photo-panel">
+      <div class="yellow-shape"></div>
+
+      <img
+        class="pineapple-photo"
+        src="../../img/piña.jpg"
+        alt="Piñas frescas recién cosechadas"
+      />
+
+      <div class="photo-copy">
+        <span class="decorative-line"></span>
+        <h2>Recupera<br />tu acceso</h2>
+      </div>
+
+      <span class="leaf-decoration leaf-decoration-one"></span>
+      <span class="leaf-decoration leaf-decoration-two"></span>
+    </div>
+
+    <div class="form-panel">
+      <span class="top-corner"></span>
+      <span class="bottom-corner"></span>
+
+      <div class="login-content">
+        <header class="brand">
+          <img src="/img/logo.png" alt="AgroVentas" class="brand-logo" />
+        </header>
+
+        <div class="recover-heading">
+          <h1>¿Olvidaste tu contraseña?</h1>
+          <p>Escribe tu correo y te enviaremos un enlace para crear una nueva.</p>
+        </div>
+
+        @if (enviado()) {
+          <div class="success-box" role="status">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="m8 12.5 3 3 5-6"></path>
+            </svg>
+            <p>
+              Si el correo está registrado, recibirás un enlace en unos minutos.
+              Revisa también la carpeta de spam.
+            </p>
+          </div>
+
+          <a routerLink="/login" class="back-button">Volver a iniciar sesión</a>
+        } @else {
+          <form class="login-form" (ngSubmit)="enviar()">
+            <label class="field-label" for="email">Correo electrónico</label>
+
+            <div class="input-box">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                <path d="m4 7 8 6 8-6"></path>
+              </svg>
+
+              <input
+                id="email"
+                type="email"
+                name="email"
+                [(ngModel)]="email"
+                placeholder="tucorreo@ejemplo.com"
+                autocomplete="email"
+                required
+              />
+            </div>
+
+            @if (error()) {
+              <p class="error-message" role="alert">{{ error() }}</p>
+            }
+
+            <button class="login-button" type="submit" [disabled]="cargando()">
+              {{ cargando() ? 'Enviando...' : 'Enviar enlace' }}
+            </button>
+
+            <p class="register-text">
+              ¿Ya la recordaste?
+              <a routerLink="/login">Iniciar sesión</a>
+            </p>
+          </form>
+        }
+      </div>
+    </div>
+  </section>
+</main>

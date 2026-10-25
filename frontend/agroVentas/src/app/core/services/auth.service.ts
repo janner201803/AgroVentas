@@ -113,6 +113,22 @@ export class AuthService {
     if (error) throw error;
   }
 
+    // Envía el correo con el enlace de recuperación. Supabase NO da error si el
+  // correo no existe (a propósito, para no revelar qué correos están
+  // registrados), por eso la pantalla siempre muestra un mensaje neutro.
+  async enviarCorreoRecuperacion(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/restablecer`
+    });
+    if (error) throw error;
+  }
+
+    // Cambia la contraseña del usuario con sesión activa. En el flujo de
+  // recuperación, esa sesión es la temporal que crea el enlace del correo.
+  async actualizarContrasena(password: string) {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+  }
   // ---------------------------------------------------------------
   // Inactividad
   // ---------------------------------------------------------------
