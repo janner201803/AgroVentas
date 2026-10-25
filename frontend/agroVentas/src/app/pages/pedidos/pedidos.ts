@@ -1,7 +1,9 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TimeoutError, finalize, timeout } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HorarioEntrega, PedidoService, ProductoPedido } from '../../core/services/pedido.service';
 
 interface DiaCalendario {
@@ -16,8 +18,10 @@ interface DiaCalendario {
   templateUrl: './pedidos.html',
   styleUrl: './pedidos.css'
 })
-export class Pedidos implements OnInit {
+export class Pedidos implements OnInit, OnDestroy {
   private pedidoService = inject(PedidoService);
+  private destroyRef = inject(DestroyRef);
+  private reintentoProductos: ReturnType<typeof setTimeout> | null = null;
 
   productos: ProductoPedido[] = [];
   horarios: HorarioEntrega[] = [];
@@ -52,14 +56,42 @@ export class Pedidos implements OnInit {
 
   ngOnInit(): void {
     this.construirCalendario();
-    this.pedidoService.obtenerProductos().subscribe({
-      next: productos => { this.productos = productos; this.cargandoProductos = false; },
-      error: () => { this.error = 'No fue posible cargar el inventario. Intenta de nuevo más tarde.'; this.cargandoProductos = false; }
-    });
+    this.cargarProductos();
     this.fechaEntrega = this.fechaMinima;
     this.mesCalendario = new Date();
     this.construirCalendario();
     this.cargarHorarios();
+  }
+
+  ngOnDestroy(): void {
+    if (this.reintentoProductos) clearTimeout(this.reintentoProductos);
+  }
+
+  private cargarProductos(): void {
+    if (this.reintentoProductos) clearTimeout(this.reintentoProductos);
+    this.reintentoProductos = null;
+    this.cargandoProductos = true;
+    this.pedidoService.obtenerProductos().pipe(
+      timeout({ first: 35_000 }),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => { this.cargandoProductos = false; })
+    ).subscribe({
+      next: productos => {
+        this.productos = productos.filter(producto => Number(producto.cantidad) > 0 && Number(producto.precio) > 0);
+        if (this.productoId != null && !this.productos.some(producto => producto.id === Number(this.productoId))) {
+          this.productoId = null;
+          this.cantidad = null;
+        }
+        this.error = '';
+      },
+      error: err => {
+        const detalle = err instanceof TimeoutError
+          ? 'La consulta del inventario tardó demasiado.'
+          : err.error?.mensaje || 'No fue posible cargar los productos del inventario.';
+        this.error = `${detalle} Volveré a intentarlo automáticamente.`;
+        this.reintentoProductos = setTimeout(() => this.cargarProductos(), 5_000);
+      }
+    });
   }
 
   private fechaLocal(fecha: Date): string {
@@ -105,18 +137,22 @@ export class Pedidos implements OnInit {
     this.cargandoHorarios = true;
     this.horaEntrega = '';
     this.horarios = this.horasEntrega.map(horario => ({ ...horario }));
-    this.pedidoService.obtenerHorarios(this.fechaEntrega).subscribe({
+    this.pedidoService.obtenerHorarios(this.fechaEntrega).pipe(
+      timeout({ first: 15_000 }),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => { this.cargandoHorarios = false; })
+    ).subscribe({
       next: horarios => {
         const porHora = new Map(horarios.map(horario => [horario.hora.slice(0, 5), horario]));
         this.horarios = this.horasEntrega.map(horario => {
           const remoto = porHora.get(horario.hora);
           return remoto ? { ...horario, ocupado: remoto.ocupado, disponible: remoto.disponible } : horario;
         });
-        this.cargandoHorarios = false;
       },
       error: err => {
-        this.error = err.error?.mensaje || 'No se pudo consultar qué horarios están ocupados. Puedes elegir una hora; el servidor volverá a verificarla al registrar.';
-        this.cargandoHorarios = false;
+        this.error = err instanceof TimeoutError
+          ? 'La consulta de horarios tardó demasiado. Puedes elegir una hora; el servidor verificará que siga libre.'
+          : err.error?.mensaje || 'No se pudo consultar qué horarios están ocupados. Puedes elegir una hora; el servidor volverá a verificarla al registrar.';
       }
     });
   }
@@ -138,6 +174,10 @@ export class Pedidos implements OnInit {
   enviarPedido(): void {
     this.error = '';
     this.mensaje = '';
+    if (this.cargandoProductos || this.cargandoHorarios) {
+      this.error = 'Espera a que terminen de cargar los productos y horarios.';
+      return;
+    }
     const producto = this.productoSeleccionado;
     if (!producto || this.cantidad == null || this.cantidad <= 0) {
       this.error = 'Selecciona un producto e indica una cantidad válida.';
@@ -166,18 +206,24 @@ export class Pedidos implements OnInit {
       metodo_pago: this.metodoPago,
       fecha_entrega: this.fechaEntrega,
       hora_entrega: this.horaEntrega
-    }).subscribe({
+    }).pipe(
+      timeout({ first: 35_000 }),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => { this.enviando = false; })
+    ).subscribe({
       next: () => {
         this.mensaje = 'Tu pedido fue registrado correctamente.';
         this.productoId = null;
         this.cantidad = null;
         this.horaEntrega = '';
-        this.enviando = false;
         this.cargarHorarios();
       },
       error: err => {
-        this.error = err.error?.mensaje || 'No fue posible registrar el pedido.';
-        this.enviando = false;
+        this.error = err instanceof TimeoutError
+          ? 'El registro del pedido tardó demasiado. Consulta tus pedidos antes de volver a enviarlo.'
+          : err.status === 0
+            ? 'No se pudo conectar con el backend. Verifica que esté iniciado y vuelve a intentar.'
+            : err.error?.mensaje || 'No fue posible registrar el pedido.';
         if (err.status === 409) this.cargarHorarios();
       }
     });

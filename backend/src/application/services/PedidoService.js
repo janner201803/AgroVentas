@@ -12,7 +12,12 @@ class PedidoService {
     if (dto.fecha_entrega === this.fechaActualColombia() && dto.hora_entrega <= this.horaActualColombia()) {
       throw new Error('Ese horario ya pasó. Selecciona una hora posterior.');
     }
-    const producto = await inventarioRepository.obtenerPorId(dto.id_producto, client);
+    // Son consultas independientes. Ejecutarlas juntas evita sumar dos viajes
+    // secuenciales a Supabase al crear cada pedido.
+    const [producto, horarioOcupado] = await Promise.all([
+      inventarioRepository.obtenerPorId(dto.id_producto, client),
+      pedidoRepository.horarioOcupado(dto.fecha_entrega, dto.hora_entrega, client)
+    ]);
     if (!producto || Number(producto.cantidad) <= 0) {
       throw new Error('El producto seleccionado no está disponible');
     }
@@ -31,7 +36,7 @@ class PedidoService {
     if (Number.isFinite(Number(producto.cantidad)) && dto.cantidad > Number(producto.cantidad)) {
       throw new Error('La cantidad solicitada supera el inventario disponible');
     }
-    if (await pedidoRepository.horarioOcupado(dto.fecha_entrega, dto.hora_entrega, client)) {
+    if (horarioOcupado) {
       const error = new Error('Ese horario acaba de ser ocupado. Selecciona otro.');
       error.status = 409;
       throw error;
