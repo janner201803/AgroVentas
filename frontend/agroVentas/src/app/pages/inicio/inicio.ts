@@ -18,20 +18,26 @@ export class Inicio {
   usuario = this.authService.usuario;
   cerrandoSesion = false;
   errorSesion = '';
+
+  totalVariedades = 8;
+
   get esAdministrador(): boolean {
     return this.authService.esAdministrador();
   }
 
   async cerrarSesion(): Promise<void> {
     if (this.cerrandoSesion) return;
+
     this.cerrandoSesion = true;
     this.errorSesion = '';
+
     try {
       await this.authService.cerrarSesion();
       await this.router.navigate(['/login']);
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
-      this.errorSesion = 'No fue posible cerrar la sesión. Intenta de nuevo.';
+      this.errorSesion =
+        'No fue posible cerrar la sesión. Intenta de nuevo.';
     } finally {
       this.cerrandoSesion = false;
     }
