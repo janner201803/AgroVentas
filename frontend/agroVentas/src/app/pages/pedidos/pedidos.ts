@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { TimeoutError, finalize, timeout } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HorarioEntrega, PedidoService, ProductoPedido } from '../../core/services/pedido.service';
+import { ChangeDetectorRef } from '@angular/core';
+
 
 interface DiaCalendario {
   fecha: string | null;
@@ -20,6 +22,7 @@ interface DiaCalendario {
 })
 export class Pedidos implements OnInit, OnDestroy {
   private pedidoService = inject(PedidoService);
+  private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
   private reintentoProductos: ReturnType<typeof setTimeout> | null = null;
 
@@ -74,7 +77,7 @@ export class Pedidos implements OnInit, OnDestroy {
     this.pedidoService.obtenerProductos().pipe(
       timeout({ first: 35_000 }),
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => { this.cargandoProductos = false; })
+      finalize(() => { this.cargandoProductos = false; this.cdr.markForCheck(); })
     ).subscribe({
       next: productos => {
         this.productos = productos.filter(producto => Number(producto.cantidad) > 0 && Number(producto.precio) > 0);
