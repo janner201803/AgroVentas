@@ -1,0 +1,112 @@
+<main class="login-page">
+  <section class="login-card">
+    <div class="photo-panel">
+      <div class="yellow-shape"></div>
+      <img class="pineapple-photo" src="../../img/piña.jpg" alt="Piñas frescas recién cosechadas" />
+      <div class="photo-copy">
+        <span class="decorative-line"></span>
+        <h2>Nueva<br />contraseña</h2>
+      </div>
+      <span class="leaf-decoration leaf-decoration-one"></span>
+      <span class="leaf-decoration leaf-decoration-two"></span>
+    </div>
+
+    <div class="form-panel">
+      <span class="top-corner"></span>
+      <span class="bottom-corner"></span>
+
+      <div class="login-content">
+        <header class="brand">
+          <img src="/img/logo.png" alt="AgroVentas" class="brand-logo" />
+        </header>
+
+        @if (verificando()) {
+          <div class="recover-heading"><p>Verificando enlace...</p></div>
+
+        } @else if (!enlaceValido()) {
+          <div class="recover-heading">
+            <h1>Enlace no válido</h1>
+            <p>El enlace venció o ya fue usado. Solicita uno nuevo.</p>
+          </div>
+          <a routerLink="/recuperar-contrasena" class="back-button">Solicitar nuevo enlace</a>
+
+        }  @else if (listo()) {
+          <div class="success-box" role="status">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="m8 12.5 3 3 5-6"></path>
+            </svg>
+            <p>Tu contraseña se cambió correctamente. Inicia sesión con la nueva.</p>
+          </div>
+          <button type="button" class="back-button" (click)="irAlLogin()">
+            Ir a iniciar sesión
+          </button>
+
+        } @else {
+          <div class="recover-heading">
+            <h1>Crea tu nueva contraseña</h1>
+            <p>Elige una contraseña de al menos 6 caracteres.</p>
+          </div>
+
+          <form class="login-form" (ngSubmit)="guardar()">
+            <label class="field-label" for="password">Nueva contraseña</label>
+            <div class="input-box">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="10" width="14" height="11" rx="2"></rect>
+                <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+              </svg>
+              <input
+                id="password"
+                [type]="mostrarPassword() ? 'text' : 'password'"
+                name="password"
+                [(ngModel)]="password"
+                placeholder="Mínimo 6 caracteres"
+                autocomplete="new-password"
+                required
+              />
+              <button
+                class="password-toggle"
+                type="button"
+                (click)="alternarPassword()"
+                [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                  @if (!mostrarPassword()) {
+                    <path class="eye-slash" d="M4 4 20 20"></path>
+                  }
+                </svg>
+              </button>
+            </div>
+
+            <label class="field-label" for="confirmar">Confirmar contraseña</label>
+            <div class="input-box">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="10" width="14" height="11" rx="2"></rect>
+                <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+              </svg>
+              <input
+                id="confirmar"
+                [type]="mostrarPassword() ? 'text' : 'password'"
+                name="confirmar"
+                [(ngModel)]="confirmarPassword"
+                placeholder="Repite tu contraseña"
+                autocomplete="new-password"
+                required
+              />
+            </div>
+
+            @if (error()) {
+              <p class="error-message" role="alert">{{ error() }}</p>
+            }
+
+            <button class="login-button" type="submit" [disabled]="cargando()">
+              {{ cargando() ? 'Guardando...' : 'Guardar contraseña' }}
+            </button>
+          </form>
+        }
+      </div>
+    </div>
+  </section>
+</main>

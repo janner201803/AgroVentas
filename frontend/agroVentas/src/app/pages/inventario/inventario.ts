@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TimeoutError, finalize, timeout } from 'rxjs';
@@ -19,6 +19,7 @@ export class Inventario implements OnInit, OnDestroy {
   private inventarioService = inject(InventarioService);
   private authService = inject(AuthService);
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
   private recargaProgramada: ReturnType<typeof setTimeout> | null = null;
   private consultaEnCurso = false;
   private recargaPendiente = false;
@@ -60,12 +61,14 @@ export class Inventario implements OnInit, OnDestroy {
     this.consultaEnCurso = true;
     // En las actualizaciones en segundo plano se conserva el catálogo visible.
     if (this.productos.length === 0) this.cargando = true;
+    this.cdr.markForCheck();
     this.inventarioService.listar(forzar).pipe(
       timeout({ first: 38_000 }),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => {
         this.consultaEnCurso = false;
         this.cargando = false;
+        this.cdr.markForCheck
         if (this.recargaPendiente && !this.destruido) {
           this.recargaPendiente = false;
           queueMicrotask(() => this.cargarInventario(true));
@@ -75,6 +78,7 @@ export class Inventario implements OnInit, OnDestroy {
       next: productos => {
         this.productos = productos;
         this.error = '';
+        this.cdr.markForCheck();
         this.programarRecarga(this.intervaloActualizacionMs);
       },
       error: err => {
@@ -84,6 +88,7 @@ export class Inventario implements OnInit, OnDestroy {
         this.error = this.productos.length > 0
           ? `${detalle} Se volverá a intentar automáticamente.`
           : `${detalle} Reintentando automáticamente…`;
+          this.cdr.markForCheck();
         this.programarRecarga(this.esperaReintentoMs);
       }
     });

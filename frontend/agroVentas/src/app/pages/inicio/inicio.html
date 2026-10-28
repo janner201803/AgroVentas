@@ -1,73 +1,199 @@
 <main class="inicio">
   <header class="encabezado">
-    <div class="marca">
-      <span class="logo">🍍</span>
-      <div>
-        <h1>AgroVentas</h1>
-        <p>Pedidos de piña fresca</p>
-      </div>
-    </div>
+    <a class="marca" routerLink="/inicio" aria-label="AgroVentas">
+      <img src="/img/logo.png" alt="Logo de AgroVentas" class="brand-logo" />
+    </a>
 
     <div class="acciones-cuenta">
       <div class="cuenta">
+        <span class="estado-cuenta">
+          {{ esAdministrador ? 'PANEL ADMINISTRATIVO' : 'PORTAL DE CLIENTES' }}
+        </span>
         <strong>{{ usuario()?.email }}</strong>
-        <span>{{ esAdministrador ? 'Administrador' : 'Portal de clientes' }}</span>
       </div>
-      <button type="button" class="cerrar-sesion" [disabled]="cerrandoSesion" (click)="cerrarSesion()">
-        {{ cerrandoSesion ? 'Cerrando…' : 'Cerrar sesión' }}
+
+      <button
+        type="button"
+        class="cerrar-sesion"
+        [disabled]="cerrandoSesion"
+        (click)="cerrarSesion()"
+      >
+        {{ cerrandoSesion ? 'Cerrando...' : 'Cerrar sesión' }}
       </button>
     </div>
   </header>
 
-  <p *ngIf="errorSesion" class="error-sesion" role="alert">{{ errorSesion }}</p>
+  <p *ngIf="errorSesion" class="error-sesion" role="alert">
+    {{ errorSesion }}
+  </p>
 
-  <section class="bienvenida">
-    <div class="contenido">
-      <span class="etiqueta">BIENVENIDO A AGROVENTAS</span>
+  <div class="contenido-principal">
+    <aside class="navegacion">
+      <div class="nav-cabecera">
+        <span class="nav-titulo">TU ESPACIO</span>
+        <span class="contador">{{ totalVariedades }} variedades</span>
+      </div>
 
-      <h2>Tu próxima cosecha comienza aquí.</h2>
-
-      <p>
-        Consulta nuestras variedades de piña y realiza tus pedidos
-        de manera fácil y organizada.
-      </p>
-
-      <a routerLink="/pedidos" class="boton">
-        Hacer pedido
-        <span>→</span>
+      <a routerLink="/inicio" class="nav-enlace activo">
+        <span class="nav-icono">⌂</span>
+        Inicio
       </a>
-      <a *ngIf="esAdministrador" routerLink="/inventario" class="boton boton-secundario">
-        Ver inventario / agregar productos
-        <span>→</span>
+
+      <a routerLink="/pedidos" class="nav-enlace">
+        <span class="nav-icono">🧺</span>
+        {{ esAdministrador ? 'Consultar pedidos' : 'Mis pedidos' }}
       </a>
-    </div>
 
-    <div class="ilustracion" aria-hidden="true">
-      🍍
-    </div>
-  </section>
+      <a *ngIf="esAdministrador" routerLink="/inventario" class="nav-enlace">
+        <span class="nav-icono">📦</span>
+        Inventario
+      </a>
 
-  <section class="informacion">
-    <article class="tarjeta">
-      <span class="icono">🌱</span>
-      <h3>Variedad de piñas</h3>
-      <p>Escoge el producto y la cantidad que necesitas.</p>
-    </article>
+      <div class="ayuda-panel">
+        <span class="ayuda-icono">🍍</span>
+        <h3>Variedad de piñas</h3>
+        <p>Escoge el producto y la cantidad que necesitas.</p>
+      </div>
 
-    <article class="tarjeta">
-      <span class="icono">🧺</span>
-      <h3>Pedidos organizados</h3>
-      <p>Realiza tu pedido para coordinar la recogida.</p>
-    </article>
+      <div class="ayuda-panel">
+        <span class="ayuda-icono">🧺</span>
+        <h3>Pedidos organizados</h3>
+        <p>Realiza tu pedido para coordinar la recogida.</p>
+      </div>
 
-    <article class="tarjeta">
-      <span class="icono">💳</span>
-      <h3>Opciones de pago</h3>
-      <p>Paga en efectivo o por consignación con comprobante.</p>
-    </article>
-  </section>
+      <div class="ayuda-panel">
+        <span class="ayuda-icono">💳</span>
+        <h3>Opciones de pago</h3>
+        <p>Paga en efectivo o por consignación con comprobante.</p>
+      </div>
+    </aside>
 
-  <footer>
-    AgroVentas · Gestión de pedidos agrícolas
-  </footer>
+    <section class="contenido">
+      <section class="catalogo" id="catalogo">
+        <div class="catalogo-encabezado">
+          <span class="etiqueta">DIRECTO DEL CAMPO A TU MESA</span>
+          <h1>¡Conoce nuestras piñas!</h1>
+        </div>
+
+        <div class="productos">
+          <article class="producto">
+            <img src="/img/piñaPepa.jpg" alt="Fotografía de piña pepa" class="producto-foto" />
+            <div class="producto-info">
+              <div class="producto-detalle">
+                <h2>Piña pepa</h2>
+                <span class="producto-unidad">Por kilogramo (kg)</span>
+              </div>
+              <a routerLink="/pedidos" [queryParams]="{ variedad: 'Piña pepa' }" class="producto-enlace">
+                {{ esAdministrador ? 'Consultar variedad' : 'Elegir variedad' }}
+                <span>→</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="producto">
+            <img src="/img/piñaPepa.jpg" alt="Fotografía de piña primera" class="producto-foto" />
+            <div class="producto-info">
+              <div class="producto-detalle">
+                <h2>Piña primera</h2>
+                <span class="producto-unidad">Por kilogramo (kg)</span>
+              </div>
+              <a routerLink="/pedidos" [queryParams]="{ variedad: 'Piña primera' }" class="producto-enlace">
+                {{ esAdministrador ? 'Consultar variedad' : 'Elegir variedad' }}
+                <span>→</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="producto">
+            <img src="/img/piñaPepa.jpg" alt="Fotografía de piña segunda" class="producto-foto" />
+            <div class="producto-info">
+              <div class="producto-detalle">
+                <h2>Piña segunda</h2>
+                <span class="producto-unidad">Por kilogramo (kg)</span>
+              </div>
+              <a routerLink="/pedidos" [queryParams]="{ variedad: 'Piña segunda' }" class="producto-enlace">
+                {{ esAdministrador ? 'Consultar variedad' : 'Elegir variedad' }}
+                <span>→</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="producto">
+            <img src="/img/piñaPepa.jpg" alt="Fotografía de piña tercera" class="producto-foto" />
+            <div class="producto-info">
+              <div class="producto-detalle">
+                <h2>Piña tercera</h2>
+                <span class="producto-unidad">Por unidad</span>
+              </div>
+              <a routerLink="/pedidos" [queryParams]="{ variedad: 'Piña tercera' }" class="producto-enlace">
+                {{ esAdministrador ? 'Consultar variedad' : 'Elegir variedad' }}
+                <span>→</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="producto">
+            <img src="/img/piñaPepa.jpg" alt="Fotografía de piña cuarta" class="producto-foto" />
+            <div class="producto-info">
+              <div class="producto-detalle">
+                <h2>Piña cuarta</h2>
+                <span class="producto-unidad">Por unidad</span>
+              </div>
+              <a routerLink="/pedidos" [queryParams]="{ variedad: 'Piña cuarta' }" class="producto-enlace">
+                {{ esAdministrador ? 'Consultar variedad' : 'Elegir variedad' }}
+                <span>→</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="producto">
+            <img src="/img/piñaPepa.jpg" alt="Fotografía de piña quinta" class="producto-foto" />
+            <div class="producto-info">
+              <div class="producto-detalle">
+                <h2>Piña quinta</h2>
+                <span class="producto-unidad">Por unidad</span>
+              </div>
+              <a routerLink="/pedidos" [queryParams]="{ variedad: 'Piña quinta' }" class="producto-enlace">
+                {{ esAdministrador ? 'Consultar variedad' : 'Elegir variedad' }}
+                <span>→</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="producto">
+            <img src="/img/piñaPepa.jpg" alt="Fotografía de piña delgada" class="producto-foto" />
+            <div class="producto-info">
+              <div class="producto-detalle">
+                <h2>Piña delgada</h2>
+                <span class="producto-unidad">Por unidad</span>
+              </div>
+              <a routerLink="/pedidos" [queryParams]="{ variedad: 'Piña delgada' }" class="producto-enlace">
+                {{ esAdministrador ? 'Consultar variedad' : 'Elegir variedad' }}
+                <span>→</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="producto">
+            <img src="/img/piñaPepa.jpg" alt="Fotografía de piña huevo" class="producto-foto" />
+            <div class="producto-info">
+              <div class="producto-detalle">
+                <h2>Piña huevo</h2>
+                <span class="producto-unidad">Por unidad</span>
+              </div>
+              <a routerLink="/pedidos" [queryParams]="{ variedad: 'Piña huevo' }" class="producto-enlace">
+                {{ esAdministrador ? 'Consultar variedad' : 'Elegir variedad' }}
+                <span>→</span>
+              </a>
+            </div>
+          </article>
+        </div>
+
+        <footer class="pie">
+          <strong>AgroVentas</strong>
+          <span>Frescura y calidad del campo colombiano.</span>
+        </footer>
+      </section>
+    </section>
+  </div>
 </main>

@@ -1,0 +1,66 @@
+.recover-heading {
+  margin: 0 0 18px;
+  text-align: center;
+}
+
+.recover-heading h1 {
+  margin: 0 0 8px;
+  color: #175a3a;
+  font-size: clamp(22px, 2vw, 28px);
+  font-weight: 800;
+}
+
+.recover-heading p {
+  margin: 0;
+  color: #66786d;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.success-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid #b9dcc4;
+  border-radius: 11px;
+  background: #eef8f1;
+  color: #1d5a3b;
+}
+
+.success-box svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: #23664c;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.success-box p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 57px;
+  margin-top: 14px;
+  border: 1px solid #d4dce0;
+  border-radius: 11px;
+  background: #fff;
+  color: #203f31;
+  font-size: 15px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.back-button:hover {
+  background: #f1f7ed;
+}
