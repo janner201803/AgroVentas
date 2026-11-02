@@ -57,6 +57,10 @@ export class PedidoService {
     return this.solicitudProductos;
   }
 
+  invalidarProductos(): void {
+    this.productosCache = null;
+  }
+
   obtenerHorarios(fecha: string): Observable<HorarioEntrega[]> {
     const cache = this.horariosCache.get(fecha);
     if (cache && cache.vence > Date.now()) return of(cache.horarios);

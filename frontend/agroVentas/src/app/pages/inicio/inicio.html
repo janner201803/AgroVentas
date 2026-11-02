@@ -41,7 +41,7 @@
 
       <a routerLink="/pedidos" class="nav-enlace">
         <span class="nav-icono">🧺</span>
-        {{ esAdministrador ? 'Consultar pedidos' : 'Mis pedidos' }}
+        {{ esAdministrador ? 'Realizar pedido' : 'Mis pedidos' }}
       </a>
 
       <a *ngIf="esAdministrador" routerLink="/inventario" class="nav-enlace">
