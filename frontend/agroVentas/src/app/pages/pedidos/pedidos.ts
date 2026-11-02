@@ -143,7 +143,10 @@ export class Pedidos implements OnInit, OnDestroy {
     this.pedidoService.obtenerHorarios(this.fechaEntrega).pipe(
       timeout({ first: 15_000 }),
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => { this.cargandoHorarios = false; })
+      finalize(() => {
+        this.cargandoHorarios = false;
+        this.cdr.markForCheck();
+      })
     ).subscribe({
       next: horarios => {
         const porHora = new Map(horarios.map(horario => [horario.hora.slice(0, 5), horario]));
@@ -151,11 +154,13 @@ export class Pedidos implements OnInit, OnDestroy {
           const remoto = porHora.get(horario.hora);
           return remoto ? { ...horario, ocupado: remoto.ocupado, disponible: remoto.disponible } : horario;
         });
+        this.cdr.markForCheck();
       },
       error: err => {
         this.error = err instanceof TimeoutError
           ? 'La consulta de horarios tardó demasiado. Puedes elegir una hora; el servidor verificará que siga libre.'
           : err.error?.mensaje || 'No se pudo consultar qué horarios están ocupados. Puedes elegir una hora; el servidor volverá a verificarla al registrar.';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -212,13 +217,21 @@ export class Pedidos implements OnInit, OnDestroy {
     }).pipe(
       timeout({ first: 35_000 }),
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => { this.enviando = false; })
+      finalize(() => {
+        this.enviando = false;
+        this.cdr.markForCheck();
+      })
     ).subscribe({
       next: () => {
-        this.mensaje = 'Tu pedido fue registrado correctamente.';
+        this.mensaje = '¡Pedido realizado correctamente! Ya quedó registrado.';
         this.productoId = null;
         this.cantidad = null;
+        this.metodoPago = 'efectivo';
+        this.fechaEntrega = this.fechaMinima;
         this.horaEntrega = '';
+        this.mesCalendario = new Date();
+        this.construirCalendario();
+        this.cdr.markForCheck();
         this.cargarHorarios();
       },
       error: err => {
@@ -228,6 +241,7 @@ export class Pedidos implements OnInit, OnDestroy {
             ? 'No se pudo conectar con el backend. Verifica que esté iniciado y vuelve a intentar.'
             : err.error?.mensaje || 'No fue posible registrar el pedido.';
         if (err.status === 409) this.cargarHorarios();
+        this.cdr.markForCheck();
       }
     });
   }

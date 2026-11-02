@@ -1,6 +1,19 @@
-# Configuración de inventario y pedidos
+# Catálogo de productos e inventario
 
-1. En el SQL Editor del proyecto Supabase, ejecuta `migrations/20261020_pedidos_fecha_hora_inventario.sql`. Si ejecutaste una versión anterior, vuelve a ejecutarla para actualizar la política del administrador y habilitar la consulta de horarios.
-2. Inicia sesión en AgroVentas con `admin@gmail.com` y abre **Ver inventario / agregar productos** desde Inicio. Completa nombre, unidad (`kg` o `und`), cantidad y precio por unidad de medida. Los productos con cantidad y precio mayores que cero aparecen disponibles para pedidos.
+El esquema de la aplicación separa el catálogo de los saldos:
 
-La migración permite consultar el inventario a usuarios autenticados, limita el alta de productos a la cuenta `admin@gmail.com` y evita duplicar una fecha y hora de entrega. La aplicación usa las columnas `id`, `nombre`, `cantidad`, `precio` y `und` en inventario. Completa el precio y selecciona la unidad antes de que los productos se puedan pedir.
+- `public.productos`: `id`, `nombre`, `unidad`, `precio`. Contiene una fila por producto que se vende.
+- `public.inventario`: `id`, `id_producto`, `cantidad`. Contiene como máximo una fila por producto.
+- `public.inventario.id_producto` apunta al identificador de `public.productos`.
+- En el esquema actual, `public.pedidos.id_producto` apunta a `public.inventario.id` (la clave foránea existente confirma esta relación).
+
+## Aplicar en Supabase
+
+1. Si aún no ejecutaste la migración anterior de horarios, ejecuta primero `migrations/20261020_pedidos_fecha_hora_inventario.sql`.
+2. Ejecuta `migrations/20261101_catalogo_productos_inventario_acumulable.sql` en el SQL Editor. Esta migración consolida filas de inventario duplicadas sumando sus cantidades. Se detiene si hay filas sin `id_producto`; en ese caso, asígnales primero un producto del catálogo.
+3. En **Table Editor → public.productos**, registra los productos y su unidad (`kg` o `und`). El nombre ya no se escribe al ingresar existencias; el formulario lo carga del catálogo.
+4. Reinicia el backend y el frontend.
+
+La migración configura RLS solamente para el catálogo `productos`: los usuarios autenticados pueden consultarlo y solo `admin@gmail.com` puede modificarlo. No modifica las políticas RLS de `inventario`. El backend usa `GET /api/productos` para cargar el selector y `POST /api/inventario` para agregar existencias. La función SQL `agregar_existencias` realiza la suma atómicamente: volver a elegir el mismo producto aumenta la cantidad de la fila existente. El precio y la unidad se consultan desde `productos`.
+
+La vista de pedidos obtiene existencias disponibles desde `GET /api/inventario?disponibles=true`. Usa `inventario.id` como `id` para el formulario y lo envía como `pedidos.id_producto`; el backend lee `inventario.id_producto` para obtener el producto del catálogo, el precio y la unidad.

@@ -2,43 +2,41 @@ const inventarioService = require('../../application/services/InventarioService'
 
 class InventarioController {
   async listar(req, res) {
-    const inicioConsulta = performance.now();
+    const inicio = performance.now();
     try {
-      const productos = req.query.disponibles === 'true'
+      const filas = req.query.disponibles === 'true'
         ? await inventarioService.listarDisponibles(req.supabase)
         : await inventarioService.listar(req.supabase);
-      const consultaMs = performance.now() - inicioConsulta;
-      const authMs = req.validacionTokenMs || 0;
-      res.setHeader('Server-Timing', `auth;dur=${authMs.toFixed(1)}, inventario;dur=${consultaMs.toFixed(1)}, api;dur=${(performance.now() - req.inicioSolicitudMs).toFixed(1)}`);
-      return res.status(200).json(productos);
+      const duracion = performance.now() - inicio;
+      res.setHeader('Server-Timing', `auth;dur=${(req.validacionTokenMs || 0).toFixed(1)}, inventario;dur=${duracion.toFixed(1)}`);
+      return res.status(200).json(filas);
     } catch (error) {
-      console.error('[InventarioController.listar] Error consultando Supabase:', {
-        codigo: error.code,
-        error: error.message
-      });
+      console.error('[InventarioController.listar] Error consultando Supabase:', error.message);
       return res.status(error.status || 500).json({ mensaje: error.message || 'No fue posible consultar el inventario' });
     }
   }
 
-  async crear(req, res) {
+  async agregarExistencias(req, res) {
     const inicio = performance.now();
-    console.info('[InventarioController.crear] Solicitud recibida');
     try {
-      const producto = await inventarioService.crear(req.body, req.supabase);
-      console.info('[InventarioController.crear] Producto guardado', {
+      const producto = await inventarioService.agregarExistencias(req.body, req.supabase);
+      const status = producto.creado ? 201 : 200;
+      return res.status(status).json({
+        mensaje: producto.creado
+          ? `Se agregaron existencias de ${producto.nombre} al inventario`
+          : `Se sumaron las existencias de ${producto.nombre}`,
+        producto,
         duracionMs: Math.round(performance.now() - inicio)
       });
-      return res.status(201).json({ mensaje: 'Producto agregado al inventario', producto });
     } catch (error) {
-      console.error('[InventarioController.crear] Falló la inserción:', {
+      console.error('[InventarioController.agregarExistencias] Falló el guardado:', {
         duracionMs: Math.round(performance.now() - inicio),
         codigo: error.code,
         error: error.message
       });
-      return res.status(error.status || 500).json({ mensaje: error.message });
+      return res.status(error.status || 500).json({ mensaje: error.message || 'No fue posible agregar existencias' });
     }
   }
-
 }
 
 module.exports = new InventarioController();

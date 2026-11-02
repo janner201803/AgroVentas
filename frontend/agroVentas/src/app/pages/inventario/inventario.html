@@ -10,12 +10,13 @@
         <strong>{{ usuario()?.email }}</strong>
       </div>
       <button type="button" class="cerrar-sesion" [disabled]="cerrandoSesion" (click)="cerrarSesion()">
-        {{ cerrandoSesion ? 'Cerrando...' : 'Cerrar sesión' }}
+        {{ cerrandoSesion ? 'Cerrando…' : 'Cerrar sesión' }}
       </button>
     </div>
   </header>
+
   <section class="intro">
-    <p>Consulta tus productos y mantén actualizadas las existencias y los precios.</p>
+    <p>Selecciona un producto del catálogo y registra la cantidad recibida. El nombre, la unidad y el precio vienen de Productos.</p>
   </section>
 
   <div *ngIf="error" class="alerta error" role="alert">{{ error }}</div>
@@ -23,216 +24,84 @@
 
   <section class="panel listado">
     <div class="listado-titulo">
-      <div>
-        <h2>Productos registrados</h2>
-      </div>
+      <div><h2>Existencias actuales</h2></div>
       <span class="contador">{{ productos.length }} productos</span>
     </div>
     <p *ngIf="cargando">Cargando inventario…</p>
     <p *ngIf="!cargando && !error && productos.length === 0" class="vacio">
-      Aún no hay productos en inventario. Agrégalos para que aparezcan en el formulario de pedidos.
+      Aún no hay existencias registradas. Usa el formulario de abajo para agregar la primera cantidad.
     </p>
-
     <div class="productos" *ngIf="!cargando && productos.length > 0">
       <article class="producto" *ngFor="let item of productos">
-        <ng-container *ngIf="productoEnEdicion?.id === item.id; else detalleProducto">
-          <div class="producto-cabecera">
-            <span class="etiqueta">EDITANDO</span>
-            <h3>{{ item.nombre }}</h3>
-          </div>
-          <form class="formulario-inline" (ngSubmit)="guardarEdicion()">
-            <div class="campos-dos">
-              <div>
-                <label [for]="'editar-nombre-' + item.id">Nombre del producto</label>
-                <input
-                  [id]="'editar-nombre-' + item.id"
-                  [name]="'editar-nombre-' + item.id"
-                  [(ngModel)]="edicion.nombre"
-                  (ngModelChange)="actualizarUnidadEdicion($event)"
-                  maxlength="120"
-                  required
-                />
-              </div>
-              <div>
-                <label [for]="'editar-und-' + item.id">Unidad de medida</label>
-                <select [id]="'editar-und-' + item.id" [name]="'editar-und-' + item.id" [(ngModel)]="edicion.und" required>
-                  <option value="kg">Kilogramos (kg)</option>
-                  <option value="und">Unidades (und)</option>
-                </select>
-                <small *ngIf="unidadSugerida(edicion.nombre)" class="ayuda-formulario">
-                  Esta variedad se vende por {{ unidadSugerida(edicion.nombre) }}.
-                </small>
-              </div>
-              <div>
-                <label [for]="'editar-cantidad-' + item.id">
-                  Existencias ({{ edicion.und === 'kg' ? 'kg' : 'unidades' }})
-                </label>
-                <input
-                  [id]="'editar-cantidad-' + item.id"
-                  [name]="'editar-cantidad-' + item.id"
-                  type="number"
-                  min="0"
-                  [step]="edicion.und === 'kg' ? 0.1 : 1"
-                  [(ngModel)]="edicion.cantidad"
-                  required
-                />
-              </div>
-              <div>
-                <label [for]="'editar-precio-' + item.id">Precio por {{ edicion.und }} (COP)</label>
-                <input
-                  [id]="'editar-precio-' + item.id"
-                  [name]="'editar-precio-' + item.id"
-                  type="number"
-                  min="1"
-                  step="100"
-                  [(ngModel)]="edicion.precio"
-                  required
-                />
-              </div>
-            </div>
-            <div class="acciones-formulario">
-              <button type="submit" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar cambios' }}</button>
-              <button type="button" class="boton-secundario" (click)="cancelarEdicion()" [disabled]="guardando">
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </ng-container>
-
-        <ng-template #detalleProducto>
-          <div class="producto-cabecera">
-            <h3>{{ item.nombre }}</h3>
-          </div>
-          <dl class="producto-datos">
-            <div><dt>Unidad</dt><dd>{{ item.und }}</dd></div>
-            <div><dt>Precio</dt><dd>{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ item.und }}</dd></div>
-            <div><dt>Existencias</dt><dd>{{ item.cantidad }} {{ item.und }}</dd></div>
-          </dl>
-          <div *ngIf="esAdministrador" class="acciones">
-            <button type="button" class="boton-secundario" [disabled]="guardando" (click)="editarProducto(item)">
-              Editar
-            </button>
-            <button type="button" class="boton-peligro" [disabled]="guardando" (click)="eliminarProducto(item)">
-              Eliminar
-            </button>
-          </div>
-        </ng-template>
+        <div class="producto-cabecera"><h3>{{ item.nombre }}</h3></div>
+        <dl class="producto-datos">
+          <div><dt>Unidad</dt><dd>{{ item.und }}</dd></div>
+          <div><dt>Precio</dt><dd>{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ item.und }}</dd></div>
+          <div><dt>Existencias</dt><dd>{{ item.cantidad }} {{ item.und }}</dd></div>
+        </dl>
       </article>
     </div>
   </section>
 
-  <section *ngIf="esAdministrador" class="formularios">
-    <section class="panel formulario">
-      <div>
-        <h2>Crear producto</h2>
-      </div>
-      <form (ngSubmit)="agregarProducto()">
-        <label for="nombre">Nombre del producto</label>
-        <input
-          id="nombre"
-          name="nombre"
-          [(ngModel)]="producto.nombre"
-          (ngModelChange)="actualizarUnidadProducto($event)"
-          maxlength="120"
+  <section *ngIf="esAdministrador" class="panel formulario formulario-stock">
+    <div class="cabecera-stock">
+      <h2>Agregar productos al inventario</h2>
+    </div>
+
+    <form (ngSubmit)="agregarExistencias()">
+      <div class="campo-stock">
+        <label for="producto-catalogo">Producto</label>
+        <select
+          id="producto-catalogo"
+          name="producto-catalogo"
+          [ngModel]="idProductoSeleccionado"
+          (ngModelChange)="cambiarProducto($event)"
+          [disabled]="cargandoCatalogo || catalogo.length === 0 || guardando"
           required
-          placeholder="Ej. Piña primera"
+        >
+          <option [ngValue]="null" disabled>
+            {{ cargandoCatalogo ? 'Cargando productos…' : 'Selecciona un producto' }}
+          </option>
+          <option *ngFor="let producto of catalogo" [ngValue]="producto.id">
+            {{ producto.nombre }} — {{ producto.unidad }}
+          </option>
+        </select>
+        <small *ngIf="!cargandoCatalogo && catalogo.length === 0" class="ayuda-formulario">
+          El catálogo está vacío. Agrega los productos que vendes en <strong>public.productos</strong>.
+        </small>
+      </div>
+
+      <div *ngIf="productoSeleccionado" class="resumen-stock" aria-live="polite">
+        <div><span>Unidad</span><strong>{{ productoSeleccionado.unidad }}</strong></div>
+        <div><span>Precio definido en Productos</span><strong>{{ productoSeleccionado.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ productoSeleccionado.unidad }}</strong></div>
+        <div><span>Existencia actual</span><strong>{{ existenciasSeleccionadas }} {{ productoSeleccionado.unidad }}</strong></div>
+      </div>
+
+      <div class="campo-stock">
+        <label for="cantidad-agregar">Cantidad a guardar{{ unidadSeleccionada ? ' (' + unidadSeleccionada + ')' : '' }}</label>
+        <input
+          id="cantidad-agregar"
+          name="cantidad-agregar"
+          type="number"
+          [min]="unidadSeleccionada === 'und' ? 1 : 0.1"
+          [step]="unidadSeleccionada === 'und' ? 1 : 0.1"
+          [(ngModel)]="cantidadAgregar"
+          [disabled]="!productoSeleccionado || guardando"
+          required
+          placeholder="Ingresa la cantidad"
         />
+        <small *ngIf="unidadSeleccionada === 'kg'">Puedes ingresar cantidades en incrementos de 0,1 kg.</small>
+        <small *ngIf="unidadSeleccionada === 'und'">Ingresa un número entero de unidades.</small>
+      </div>
 
-        <div class="campos-dos">
-          <div>
-            <label for="presentacion">Unidad de medida</label>
-            <select
-              id="presentacion"
-              name="presentacion"
-              [(ngModel)]="producto.und"
-              [disabled]="!!unidadSugerida(producto.nombre)"
-              required
-            >
-              <option value="kg">Kilogramos (kg)</option>
-              <option value="und">Unidades (und)</option>
-            </select>
-            <small *ngIf="unidadSugerida(producto.nombre); else ayudaUnidadProducto" class="ayuda-formulario">
-              Esta variedad se vende únicamente por {{ unidadSugerida(producto.nombre) }}.
-            </small>
-            <ng-template #ayudaUnidadProducto>
-            </ng-template>
-          </div>
-          <div>
-            <label for="cantidad-inicial">
-              Existencias iniciales ({{ producto.und === 'kg' ? 'kg' : 'unidades' }})
-            </label>
-            <input
-              id="cantidad-inicial"
-              name="cantidad-inicial"
-              type="number"
-              [min]="producto.und === 'kg' ? 0.1 : 1"
-              [step]="producto.und === 'kg' ? 0.1 : 1"
-              [(ngModel)]="producto.cantidad"
-              required
-              placeholder="Ingresa la cantidad"
-            />
-          </div>
-          <div>
-            <label for="precio">Precio por {{ producto.und }} (COP)</label>
-            <input id="precio" name="precio" type="number" min="1" step="100" [(ngModel)]="producto.precio" required />
-          </div>
-        </div>
-        <button type="submit" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Crear producto' }}</button>
-      </form>
-    </section>
-
-    <section class="panel formulario formulario-stock">
-      <div class="cabecera-stock"><h2>Agregar cantidad</h2></div>
-      <form (ngSubmit)="agregarExistencias()">
-        <div class="resumen-stock" aria-live="polite">
-          <span>Existencia actual</span>
-          <strong>{{ productoStock ? productoStock.cantidad + ' ' + productoStock.und : '—' }}</strong>
-        </div>
-
-        <div class="campo-stock">
-          <label for="producto-existencias">Producto existente</label>
-          <select
-            id="producto-existencias"
-            name="producto-existencias"
-            [(ngModel)]="productoStockId"
-            (ngModelChange)="cambiarProductoStock($event)"
-            required
-          >
-            <option [ngValue]="null" disabled>Selecciona un producto</option>
-            <option *ngFor="let item of productos" [ngValue]="item.id">
-              {{ item.nombre }} ({{ item.cantidad }} {{ item.und }})
-            </option>
-          </select>
-        </div>
-
-        <div class="campo-stock campo-cantidad-stock">
-          <label for="cantidad-agregar">
-            Cantidad a sumar{{ productoStock ? ' (' + productoStock.und + ')' : '' }}
-          </label>
-          <input
-            id="cantidad-agregar"
-            name="cantidad-agregar"
-            type="number"
-            [min]="productoStock?.und === 'und' ? 1 : 0.1"
-            [step]="productoStock?.und === 'und' ? 1 : 0.1"
-            [(ngModel)]="cantidadAgregar"
-            required
-            placeholder="Ingresa la cantidad"
-          />
-          <small *ngIf="productoStock">
-            {{ productoStock.und === 'kg' ? 'Puedes agregar cantidades en incrementos de 0,1 kg.' : 'Ingresa una cantidad entera de unidades.' }}
-          </small>
-        </div>
-
-        <button class="boton-stock" type="submit" [disabled]="guardando || !productoStock">
-          {{ guardando ? 'Guardando…' : 'Sumar existencias' }}
-        </button>
-      </form>
-    </section>
+      <button class="boton-stock" type="submit" [disabled]="guardando || cargandoCatalogo || !productoSeleccionado">
+        {{ guardando ? 'Guardando…' : 'Guardar en inventario' }}
+      </button>
+    </form>
   </section>
 
   <section *ngIf="!esAdministrador" class="aviso-acceso">
     <strong>Acceso de consulta</strong>
-    <p>Solo el administrador puede modificar el inventario. Puedes consultar aquí los productos registrados.</p>
+    <p>Solo el administrador puede agregar existencias. Puedes consultar el inventario registrado.</p>
   </section>
 </main>

@@ -1,104 +1,86 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, concat, finalize, of, shareReplay, tap, timeout } from 'rxjs';
-import { PedidoService, ProductoPedido } from './pedido.service';
+import { Observable, finalize, of, shareReplay, tap, timeout } from 'rxjs';
+import { PedidoService } from './pedido.service';
 
-export interface NuevoProducto {
+export interface ProductoCatalogo {
+  id: number;
+  nombre: string;
+  unidad: string;
+  precio: number;
+}
+
+export interface ProductoInventario {
+  id: number;
+  id_producto: number;
   nombre: string;
   cantidad: number;
   precio: number;
   und: 'kg' | 'und';
 }
 
+export interface AgregarExistencias {
+  id_producto: number;
+  cantidad: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class InventarioService {
   private http = inject(HttpClient);
   private pedidoService = inject(PedidoService);
-  private readonly apiUrl = 'http://localhost:3001/api/inventario';
+  private readonly inventarioUrl = 'http://localhost:3001/api/inventario';
+  private readonly productosUrl = 'http://localhost:3001/api/productos';
   private readonly cacheMs = 20_000;
-  private productosCache: ProductoPedido[] | null = null;
-  private cacheCreadaEn = 0;
-  private solicitudEnCurso: Observable<ProductoPedido[]> | null = null;
+  private inventarioCache: ProductoInventario[] | null = null;
+  private inventarioCacheCreado = 0;
+  private solicitudInventario: Observable<ProductoInventario[]> | null = null;
+  private catalogoCache: ProductoCatalogo[] | null = null;
+  private catalogoCacheCreado = 0;
+  private solicitudCatalogo: Observable<ProductoCatalogo[]> | null = null;
 
-  listar(forzar = false): Observable<ProductoPedido[]> {
-    if (!forzar && this.productosCache) {
-      const productosCache = this.productosCache;
-      if (Date.now() - this.cacheCreadaEn < this.cacheMs) return of(productosCache);
-      return concat(of(productosCache), this.cargarDesdeApi());
+  listar(forzar = false): Observable<ProductoInventario[]> {
+    if (!forzar && this.inventarioCache && Date.now() - this.inventarioCacheCreado < this.cacheMs) {
+      return of(this.inventarioCache);
     }
-    return this.cargarDesdeApi();
-  }
-
-  private cargarDesdeApi(): Observable<ProductoPedido[]> {
-    if (this.solicitudEnCurso) return this.solicitudEnCurso;
-
-    this.solicitudEnCurso = this.http.get<ProductoPedido[]>(this.apiUrl).pipe(
-      timeout({ first: 35_000 }),
+    if (this.solicitudInventario) return this.solicitudInventario;
+    this.solicitudInventario = this.http.get<ProductoInventario[]>(this.inventarioUrl).pipe(
+      timeout({ first: 15_000 }),
       tap(productos => {
-        this.productosCache = productos;
-        this.cacheCreadaEn = Date.now();
+        this.inventarioCache = productos;
+        this.inventarioCacheCreado = Date.now();
       }),
-      finalize(() => { this.solicitudEnCurso = null; }),
-      // Si se sale de la página, cancela la consulta para que la siguiente
-      // visita pueda iniciar una petición nueva y no herede una solicitud trabada.
+      finalize(() => { this.solicitudInventario = null; }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
-    return this.solicitudEnCurso;
+    return this.solicitudInventario;
   }
 
-  crear(producto: NuevoProducto): Observable<{ mensaje: string; producto: ProductoPedido }> {
-    return this.http.post<{ mensaje: string; producto: ProductoPedido }>(this.apiUrl, producto).pipe(
-      timeout({ first: 35_000 }),
-      tap(({ producto: nuevo }) => {
-        this.pedidoService.invalidarProductos();
-        if (this.productosCache) {
-          this.productosCache = [...this.productosCache.filter(item => item.id !== nuevo.id), nuevo]
-            .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-          this.cacheCreadaEn = Date.now();
-        }
-      })
+  listarCatalogo(): Observable<ProductoCatalogo[]> {
+    if (this.catalogoCache && Date.now() - this.catalogoCacheCreado < 30_000) return of(this.catalogoCache);
+    if (this.solicitudCatalogo) return this.solicitudCatalogo;
+    this.solicitudCatalogo = this.http.get<ProductoCatalogo[]>(this.productosUrl).pipe(
+      timeout({ first: 15_000 }),
+      tap(productos => {
+        this.catalogoCache = productos;
+        this.catalogoCacheCreado = Date.now();
+      }),
+      finalize(() => { this.solicitudCatalogo = null; }),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
+    return this.solicitudCatalogo;
   }
 
-  actualizar(id: number, producto: NuevoProducto): Observable<{ mensaje: string; producto: ProductoPedido }> {
-    return this.http.patch<{ mensaje: string; producto: ProductoPedido }>(`${this.apiUrl}/${id}`, producto).pipe(
-      timeout({ first: 35_000 }),
-      tap(({ producto: actualizado }) => {
-        this.pedidoService.invalidarProductos();
-        if (this.productosCache) {
-          this.productosCache = [...this.productosCache.filter(item => item.id !== actualizado.id), actualizado]
-            .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-          this.cacheCreadaEn = Date.now();
-        }
-      })
-    );
-  }
-
-  agregarExistencias(id: number, cantidad: number): Observable<{ mensaje: string; producto: ProductoPedido }> {
-    return this.http.post<{ mensaje: string; producto: ProductoPedido }>(
-      `${this.apiUrl}/${id}/existencias`,
-      { cantidad }
-    ).pipe(
-      timeout({ first: 35_000 }),
+  agregarExistencias(datos: AgregarExistencias): Observable<{ mensaje: string; producto: ProductoInventario }> {
+    return this.http.post<{ mensaje: string; producto: ProductoInventario }>(this.inventarioUrl, datos).pipe(
+      timeout({ first: 20_000 }),
       tap(({ producto }) => {
         this.pedidoService.invalidarProductos();
-        if (this.productosCache) {
-          this.productosCache = [...this.productosCache.filter(item => item.id !== producto.id), producto]
-            .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-          this.cacheCreadaEn = Date.now();
-        }
-      })
-    );
-  }
-
-  eliminar(id: number): Observable<{ mensaje: string; producto: Pick<ProductoPedido, 'id'> }> {
-    return this.http.delete<{ mensaje: string; producto: Pick<ProductoPedido, 'id'> }>(`${this.apiUrl}/${id}`).pipe(
-      timeout({ first: 35_000 }),
-      tap(({ producto }) => {
-        this.pedidoService.invalidarProductos();
-        if (this.productosCache) {
-          this.productosCache = this.productosCache.filter(item => item.id !== producto.id);
-          this.cacheCreadaEn = Date.now();
+        if (this.inventarioCache) {
+          this.inventarioCache = [
+            ...this.inventarioCache.filter(item => item.id_producto !== producto.id_producto),
+            producto
+          ].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+          this.inventarioCacheCreado = Date.now();
         }
       })
     );

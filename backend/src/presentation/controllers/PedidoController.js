@@ -18,8 +18,16 @@ class PedidoController {
         pedido
       });
     } catch (error) {
-      return res.status(error.status || 400).json({
-        mensaje: error.message
+      console.error('[PedidoController.crear] Falló la creación del pedido:', {
+        status: error.status || 500,
+        codigo: error.code || null,
+        error: error.message,
+        detalle: error.details || null,
+        sugerencia: error.hint || null
+      });
+      return res.status(error.status || (error.code ? 500 : 400)).json({
+        mensaje: error.message || 'No fue posible registrar el pedido',
+        codigo: error.code || undefined
       });
     }
   }

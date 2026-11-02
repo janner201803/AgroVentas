@@ -4,8 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TimeoutError, finalize, timeout } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { InventarioService, NuevoProducto } from '../../core/services/inventario.service';
-import { ProductoPedido } from '../../core/services/pedido.service';
+import {
+  AgregarExistencias,
+  InventarioService,
+  ProductoCatalogo,
+  ProductoInventario
+} from '../../core/services/inventario.service';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -22,75 +26,58 @@ export class Inventario implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   private recargaProgramada: ReturnType<typeof setTimeout> | null = null;
-  private consultaEnCurso = false;
-  private recargaPendiente = false;
+  private reintentoCatalogo: ReturnType<typeof setTimeout> | null = null;
+  private consultaInventarioEnCurso = false;
+  private recargaInventarioPendiente = false;
   private destruido = false;
 
-  private readonly intervaloActualizacionMs = 30_000;
-  private readonly esperaReintentoMs = 5_000;
-
   usuario = this.authService.usuario;
-  productos: ProductoPedido[] = [];
+  productos: ProductoInventario[] = [];
+  catalogo: ProductoCatalogo[] = [];
   esAdministrador = false;
   cargando = true;
+  cargandoCatalogo = true;
   guardando = false;
   cerrandoSesion = false;
   mensaje = '';
   error = '';
-  producto: NuevoProducto = this.nuevoProducto();
-  productoEnEdicion: ProductoPedido | null = null;
-  edicion: NuevoProducto = this.nuevoProducto();
-  productoStockId: number | null = null;
+  idProductoSeleccionado: number | null = null;
   cantidadAgregar = 1;
 
   ngOnInit(): void {
-    // adminGuard ya validó la sesión en Supabase y el correo permitido.
     this.esAdministrador = this.authService.esAdministrador();
+    this.cargarCatalogo();
     this.cargarInventario();
   }
 
   ngOnDestroy(): void {
     this.destruido = true;
-    this.limpiarRecargaProgramada();
+    this.limpiarTemporizadores();
   }
 
-  private nuevoProducto(): NuevoProducto {
-    return { nombre: '', cantidad: 1, precio: 0, und: 'kg' };
+  get productoSeleccionado(): ProductoCatalogo | undefined {
+    return this.catalogo.find(producto => producto.id === Number(this.idProductoSeleccionado));
   }
 
-  get productoStock(): ProductoPedido | undefined {
-    return this.productos.find(item => item.id === this.productoStockId);
-  }
-
-  unidadSugerida(nombre: string): 'kg' | 'und' | null {
-    const palabras = nombre
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLocaleLowerCase('es-CO')
-      .split(/\s+/);
-
-    if (palabras.includes('pepa') || palabras.includes('primera') || palabras.includes('segunda')) {
-      return 'kg';
-    }
-    if (['tercera', 'cuarta', 'quinta', 'delgada', 'huevo'].some(variedad => palabras.includes(variedad))) {
-      return 'und';
-    }
+  get unidadSeleccionada(): 'kg' | 'und' | null {
+    const unidad = String(this.productoSeleccionado?.unidad || '').trim().toLocaleLowerCase('es-CO');
+    if (['kg', 'kilo', 'kilos', 'kilogramo', 'kilogramos'].includes(unidad)) return 'kg';
+    if (['und', 'unidad', 'unidades'].includes(unidad)) return 'und';
     return null;
   }
 
-  actualizarUnidadProducto(nombre: string): void {
-    const unidad = this.unidadSugerida(nombre);
-    if (unidad) this.producto.und = unidad;
+  get existenciasSeleccionadas(): number {
+    return this.productos.find(producto => producto.id_producto === this.idProductoSeleccionado)?.cantidad ?? 0;
   }
 
-  actualizarUnidadEdicion(nombre: string): void {
-    const unidad = this.unidadSugerida(nombre);
-    if (unidad) this.edicion.und = unidad;
+  cambiarProducto(id: number | null): void {
+    this.idProductoSeleccionado = id;
+    this.cantidadAgregar = 1;
+    this.error = '';
   }
 
   async cerrarSesion(): Promise<void> {
     if (this.cerrandoSesion) return;
-
     this.cerrandoSesion = true;
     this.error = '';
     try {
@@ -104,26 +91,55 @@ export class Inventario implements OnInit, OnDestroy {
     }
   }
 
-  cargarInventario(forzar = false): void {
+  private cargarCatalogo(): void {
     if (this.destruido) return;
-    if (this.consultaEnCurso) {
-      if (forzar) this.recargaPendiente = true;
-      return;
-    }
-    this.limpiarRecargaProgramada();
-    this.consultaEnCurso = true;
-    // En las actualizaciones en segundo plano se conserva el catálogo visible.
-    if (this.productos.length === 0) this.cargando = true;
-    this.cdr.markForCheck();
-    this.inventarioService.listar(forzar).pipe(
-      timeout({ first: 38_000 }),
+    if (this.reintentoCatalogo) clearTimeout(this.reintentoCatalogo);
+    this.reintentoCatalogo = null;
+    this.cargandoCatalogo = true;
+    this.inventarioService.listarCatalogo().pipe(
+      timeout({ first: 18_000 }),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => {
-        this.consultaEnCurso = false;
+        this.cargandoCatalogo = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: catalogo => {
+        this.catalogo = catalogo;
+        if (this.idProductoSeleccionado != null && !catalogo.some(item => item.id === this.idProductoSeleccionado)) {
+          this.cambiarProducto(null);
+        }
+        this.cdr.markForCheck();
+      },
+      error: error => {
+        this.error = error instanceof TimeoutError
+          ? 'El catálogo de productos tardó demasiado en cargar.'
+          : error.error?.mensaje || 'No fue posible cargar el catálogo de productos.';
+        this.reintentoCatalogo = setTimeout(() => this.cargarCatalogo(), 5_000);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  cargarInventario(forzar = false): void {
+    if (this.destruido) return;
+    if (this.consultaInventarioEnCurso) {
+      if (forzar) this.recargaInventarioPendiente = true;
+      return;
+    }
+    if (this.recargaProgramada) clearTimeout(this.recargaProgramada);
+    this.recargaProgramada = null;
+    this.consultaInventarioEnCurso = true;
+    if (this.productos.length === 0) this.cargando = true;
+    this.inventarioService.listar(forzar).pipe(
+      timeout({ first: 18_000 }),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        this.consultaInventarioEnCurso = false;
         this.cargando = false;
         this.cdr.markForCheck();
-        if (this.recargaPendiente && !this.destruido) {
-          this.recargaPendiente = false;
+        if (this.recargaInventarioPendiente && !this.destruido) {
+          this.recargaInventarioPendiente = false;
           queueMicrotask(() => this.cargarInventario(true));
         }
       })
@@ -132,211 +148,79 @@ export class Inventario implements OnInit, OnDestroy {
         this.productos = productos;
         this.error = '';
         this.cdr.markForCheck();
-        this.programarRecarga(this.intervaloActualizacionMs);
+        this.recargaProgramada = setTimeout(() => this.cargarInventario(true), 30_000);
       },
-      error: err => {
-        const detalle = err instanceof TimeoutError
-          ? 'La consulta tardó demasiado.'
-          : err.error?.mensaje || 'No se pudo consultar el inventario.';
-        this.error = this.productos.length > 0
-          ? `${detalle} Se volverá a intentar automáticamente.`
-          : `${detalle} Reintentando automáticamente…`;
-          this.cdr.markForCheck();
-        this.programarRecarga(this.esperaReintentoMs);
+      error: error => {
+        this.error = error instanceof TimeoutError
+          ? 'La consulta del inventario tardó demasiado. Se volverá a intentar.'
+          : error.error?.mensaje || 'No fue posible consultar el inventario.';
+        this.cdr.markForCheck();
+        this.recargaProgramada = setTimeout(() => this.cargarInventario(true), 5_000);
       }
     });
-  }
-
-  private programarRecarga(esperaMs: number): void {
-    this.limpiarRecargaProgramada();
-    if (this.destruido) return;
-    this.recargaProgramada = setTimeout(() => {
-      this.recargaProgramada = null;
-      if (this.guardando) {
-        this.programarRecarga(this.esperaReintentoMs);
-        return;
-      }
-      this.cargarInventario(true);
-    }, esperaMs);
-  }
-
-  private limpiarRecargaProgramada(): void {
-    if (this.recargaProgramada) clearTimeout(this.recargaProgramada);
-    this.recargaProgramada = null;
-  }
-
-  agregarProducto(): void {
-    this.error = '';
-    this.mensaje = '';
-    if (!this.esAdministrador) {
-      this.error = 'Solo un administrador puede agregar productos.';
-      return;
-    }
-    const unidadSugerida = this.unidadSugerida(this.producto.nombre);
-    if (unidadSugerida) this.producto.und = unidadSugerida;
-    const cantidadValida = this.producto.und === 'und'
-      ? Number.isInteger(this.producto.cantidad)
-      : Math.abs(this.producto.cantidad * 10 - Math.round(this.producto.cantidad * 10)) < 1e-8;
-    if (!this.producto.nombre.trim() || !cantidadValida || this.producto.cantidad <= 0 || this.producto.precio <= 0) {
-      this.error = 'Completa el nombre, la cantidad válida para la unidad elegida y el precio.';
-      return;
-    }
-
-    this.guardando = true;
-    this.inventarioService.crear({ ...this.producto, nombre: this.producto.nombre.trim() })
-      .pipe(finalize(() => { this.guardando = false; }))
-      .subscribe({
-      next: ({ producto }) => {
-        this.productos = [...this.productos, producto].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-        this.producto = this.nuevoProducto();
-        this.mensaje = 'Producto agregado al inventario.';
-        this.cargarInventario(true);
-      },
-      error: err => {
-        if (err instanceof TimeoutError || err.status === 504) {
-          this.error = err.error?.mensaje || 'El guardado excedió el tiempo de espera. Revisa el catálogo: si el producto no aparece, vuelve a intentarlo.';
-          this.cargarInventario(true);
-          return;
-        }
-        this.error = err.error?.mensaje || 'No fue posible guardar el producto.';
-      }
-    });
-  }
-
-  cambiarProductoStock(id: number | null): void {
-    this.productoStockId = id;
-    this.cantidadAgregar = 1;
   }
 
   agregarExistencias(): void {
     this.error = '';
     this.mensaje = '';
-    const seleccionado = this.productoStock;
-    if (!this.esAdministrador || !seleccionado) {
-      this.error = 'Selecciona un producto existente.';
+    const producto = this.productoSeleccionado;
+    const unidad = this.unidadSeleccionada;
+
+    if (!this.esAdministrador) {
+      this.error = 'Solo el administrador puede modificar el inventario.';
       return;
     }
-    const cantidadValida = seleccionado.und === 'und'
+    if (!producto || !unidad) {
+      this.error = 'Selecciona un producto válido del catálogo.';
+      return;
+    }
+    const cantidadValida = unidad === 'und'
       ? Number.isInteger(this.cantidadAgregar)
       : Math.abs(this.cantidadAgregar * 10 - Math.round(this.cantidadAgregar * 10)) < 1e-8;
     if (!Number.isFinite(this.cantidadAgregar) || this.cantidadAgregar <= 0 || !cantidadValida) {
-      this.error = `Ingresa una cantidad válida para la unidad ${seleccionado.und}.`;
+      this.error = unidad === 'kg'
+        ? 'La cantidad debe ser mayor que cero y usar incrementos de 0,1 kg.'
+        : 'La cantidad debe ser un número entero de unidades mayor que cero.';
       return;
     }
 
-    this.guardando = true;
-    this.inventarioService.agregarExistencias(seleccionado.id, this.cantidadAgregar)
-      .pipe(finalize(() => { this.guardando = false; }))
-      .subscribe({
-        next: ({ producto }) => {
-          this.productos = this.productos.map(item => item.id === producto.id ? producto : item);
-          this.cantidadAgregar = 1;
-          this.mensaje = `Existencias actualizadas para ${producto.nombre}.`;
-          this.cargarInventario(true);
-        },
-        error: err => {
-          this.error = this.mensajeErrorInventario(err, 'No fue posible agregar las existencias.');
-        }
-      });
-  }
-
-  editarProducto(producto: ProductoPedido): void {
-    this.error = '';
-    this.mensaje = '';
-    this.productoEnEdicion = producto;
-    this.edicion = {
-      nombre: producto.nombre,
-      cantidad: producto.cantidad,
-      precio: producto.precio,
-      und: producto.und
+    const datos: AgregarExistencias = {
+      id_producto: producto.id,
+      cantidad: this.cantidadAgregar
     };
-  }
-
-  cancelarEdicion(): void {
-    this.productoEnEdicion = null;
-    this.edicion = this.nuevoProducto();
-  }
-
-  guardarEdicion(): void {
-    this.error = '';
-    this.mensaje = '';
-    const productoActual = this.productoEnEdicion;
-    if (!this.esAdministrador || !productoActual) {
-      this.error = 'Selecciona un producto para editar.';
-      return;
-    }
-    const unidadSugerida = this.unidadSugerida(this.edicion.nombre);
-    if (unidadSugerida && this.edicion.und !== unidadSugerida) {
-      this.error = `${this.edicion.nombre.trim()} se vende por ${unidadSugerida}; selecciona esa unidad antes de guardar.`;
-      return;
-    }
-
-    const cantidadValida = this.edicion.und === 'und'
-      ? Number.isInteger(this.edicion.cantidad)
-      : Math.abs(this.edicion.cantidad * 10 - Math.round(this.edicion.cantidad * 10)) < 1e-8;
-    if (
-      !this.edicion.nombre.trim()
-      || !Number.isFinite(this.edicion.cantidad)
-      || this.edicion.cantidad < 0
-      || !cantidadValida
-      || !Number.isFinite(this.edicion.precio)
-      || this.edicion.precio <= 0
-    ) {
-      this.error = 'Completa el nombre, una cantidad válida (puede ser cero) y un precio mayor que cero.';
-      return;
-    }
-
     this.guardando = true;
-    this.inventarioService.actualizar(productoActual.id, {
-      ...this.edicion,
-      nombre: this.edicion.nombre.trim()
-    }).pipe(finalize(() => { this.guardando = false; })).subscribe({
-      next: ({ producto }) => {
-        this.productos = [...this.productos.filter(item => item.id !== producto.id), producto]
-          .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-        this.cancelarEdicion();
-        this.mensaje = 'Producto actualizado correctamente.';
+    this.inventarioService.agregarExistencias(datos).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        this.guardando = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: respuesta => {
+        const fila = respuesta.producto;
+        this.productos = [
+          ...this.productos.filter(item => item.id_producto !== fila.id_producto),
+          fila
+        ].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+        this.cantidadAgregar = 1;
+        this.mensaje = respuesta.mensaje;
+        this.cdr.markForCheck();
         this.cargarInventario(true);
       },
-      error: err => {
-        this.error = err.error?.mensaje || 'No fue posible actualizar el producto.';
+      error: error => {
+        this.error = error instanceof TimeoutError
+          ? 'El guardado tardó demasiado. Actualiza el inventario antes de volver a enviarlo para evitar sumar dos veces.'
+          : error.error?.mensaje || 'No fue posible agregar existencias.';
+        this.cdr.markForCheck();
+        this.cargarInventario(true);
       }
     });
   }
 
-  eliminarProducto(producto: ProductoPedido): void {
-    this.error = '';
-    this.mensaje = '';
-    if (!this.esAdministrador) {
-      this.error = 'Solo un administrador puede eliminar productos.';
-      return;
-    }
-    if (!window.confirm(`¿Retirar "${producto.nombre}" del inventario? Dejará de aparecer en pedidos nuevos y se conservará en el historial.`)) return;
-
-    this.guardando = true;
-    this.inventarioService.eliminar(producto.id)
-      .pipe(finalize(() => { this.guardando = false; }))
-      .subscribe({
-        next: () => {
-          this.productos = this.productos.filter(item => item.id !== producto.id);
-          if (this.productoStockId === producto.id) this.productoStockId = null;
-          if (this.productoEnEdicion?.id === producto.id) this.cancelarEdicion();
-          this.mensaje = 'Producto retirado del inventario; se conserva en el historial de pedidos.';
-          this.cargarInventario(true);
-        },
-        error: err => {
-          this.error = this.mensajeErrorInventario(err, 'No fue posible eliminar el producto.');
-        }
-      });
-  }
-
-  private mensajeErrorInventario(err: { status?: number; error?: { mensaje?: string } }, alternativo: string): string {
-      if (err.status === 403) {
-        return 'Supabase rechazó el cambio. Aplica la migración 20261101_inventario_edicion_eliminacion.sql y verifica que la sesión sea de administrador.';
-      }
-      if (err.status === 409) {
-        return err.error?.mensaje || 'No se pudo eliminar: el producto tiene pedidos asociados.';
-      }
-      return err.error?.mensaje || alternativo;
+  private limpiarTemporizadores(): void {
+    if (this.recargaProgramada) clearTimeout(this.recargaProgramada);
+    if (this.reintentoCatalogo) clearTimeout(this.reintentoCatalogo);
+    this.recargaProgramada = null;
+    this.reintentoCatalogo = null;
   }
 }
