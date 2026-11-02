@@ -1,10 +1,9 @@
 const { randomUUID } = require('crypto');
 const pedidoRepository = require('../../infraestructure/repositories/PedidoRepository');
-const inventarioRepository = require('../../infraestructure/repositories/InventarioRepository');
 const CrearPedidoDTO = require('../dto/CrearPedidoDTO');
 
 class PedidoService {
-  async crear(datos, idUsuario, client) {
+  async crear(datos, client) {
     const dto = new CrearPedidoDTO(datos).validar();
     if (dto.fecha_entrega < this.fechaActualColombia()) {
       throw new Error('La fecha de entrega no puede estar en el pasado');
@@ -12,48 +11,16 @@ class PedidoService {
     if (dto.fecha_entrega === this.fechaActualColombia() && dto.hora_entrega <= this.horaActualColombia()) {
       throw new Error('Ese horario ya pasó. Selecciona una hora posterior.');
     }
-    // Son consultas independientes. Ejecutarlas juntas evita sumar dos viajes
-    // secuenciales a Supabase al crear cada pedido.
-    const [producto, horarioOcupado] = await Promise.all([
-      inventarioRepository.obtenerPorId(dto.id_producto, client),
-      pedidoRepository.horarioOcupado(dto.fecha_entrega, dto.hora_entrega, client)
-    ]);
-    if (!producto || Number(producto.cantidad) <= 0) {
-      throw new Error('El producto seleccionado no está disponible');
-    }
-    if (!Number.isFinite(Number(producto.precio)) || Number(producto.precio) <= 0) {
-      throw new Error('El producto no tiene un precio válido configurado');
-    }
-    if (!['kg', 'und'].includes(producto.und)) {
-      throw new Error('El producto no tiene una unidad válida configurada');
-    }
-    if (producto.und === 'und' && !Number.isInteger(dto.cantidad)) {
-      throw new Error('La cantidad solicitada debe ser un número entero de unidades');
-    }
-    if (producto.und === 'kg' && Math.abs(dto.cantidad * 10 - Math.round(dto.cantidad * 10)) > 1e-8) {
-      throw new Error('La cantidad en kg debe usar incrementos de 0,1 kg');
-    }
-    if (Number.isFinite(Number(producto.cantidad)) && dto.cantidad > Number(producto.cantidad)) {
-      throw new Error('La cantidad solicitada supera el inventario disponible');
-    }
-    if (horarioOcupado) {
-      const error = new Error('Ese horario acaba de ser ocupado. Selecciona otro.');
-      error.status = 409;
-      throw error;
-    }
 
     const pedido = {
       id: randomUUID(),
-      valor: Math.round(Number(producto.precio) * dto.cantidad),
+      id_producto: dto.id_producto,
       cantidad: dto.cantidad,
       fecha_entrega: dto.fecha_entrega,
       hora_entrega: dto.hora_entrega,
-      metodo_pago: dto.metodo_pago,
-      estado: 'pendiente',
-      id_producto: dto.id_producto,
-      id_usuario: idUsuario
+      metodo_pago: dto.metodo_pago
     };
-    return pedidoRepository.crear(pedido, client);
+    return pedidoRepository.crearConReserva(pedido, client);
   }
 
   async horariosDisponibles(fecha, client) {

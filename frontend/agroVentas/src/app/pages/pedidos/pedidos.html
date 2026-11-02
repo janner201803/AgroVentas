@@ -168,4 +168,68 @@
 
     </form>
   </section>
+
+  <section class="formulario historial" aria-labelledby="titulo-historial">
+    <div class="agenda-titulo">
+      <div>
+        <span class="etiqueta">TU ACTIVIDAD</span>
+        <h2 id="titulo-historial">Mis pedidos</h2>
+        <p class="descripcion">Consulta tus compras y próximas recogidas.</p>
+      </div>
+      <span class="total-pedidos">{{ pedidos.length }} {{ pedidos.length === 1 ? 'pedido' : 'pedidos' }}</span>
+    </div>
+
+    <div *ngIf="cargandoPedidos" class="producto-info" role="status">
+      <span class="indicador-carga" aria-hidden="true">⌛</span>
+      <span>Cargando tu historial…</span>
+    </div>
+
+    <div *ngIf="!cargandoPedidos && errorPedidos" class="alerta error" role="alert">
+      <p>{{ errorPedidos }}</p>
+      <button type="button" (click)="cargarPedidos()">Intentar de nuevo</button>
+    </div>
+
+    <div *ngIf="!cargandoPedidos && !errorPedidos && pedidos.length === 0" class="recogida vacio-historial">
+      <span aria-hidden="true">🧺</span>
+      <strong>Aún no tienes pedidos</strong>
+      <p>Cuando registres uno, aparecerá aquí con los detalles de entrega.</p>
+    </div>
+
+    <div *ngIf="!cargandoPedidos && !errorPedidos && pedidos.length > 0" class="lista-pedidos">
+      <article class="agenda pedido-card" *ngFor="let pedido of pedidos">
+        <div class="agenda-titulo">
+          <div class="producto-info pedido-producto">
+            <span aria-hidden="true">🍍</span>
+            <div>
+              <h3>{{ pedido.producto_nombre || 'Producto de inventario' }}</h3>
+              <span class="pedido-referencia">Pedido #{{ pedido.id }}</span>
+            </div>
+          </div>
+          <span class="etiqueta" [ngClass]="claseVisualEstado(pedido.estado)">
+            {{ etiquetaEstado(pedido.estado) }}
+          </span>
+        </div>
+
+        <div class="resumen pedido-detalles">
+          <div>
+            <span class="detalle-etiqueta">Cantidad</span>
+            <strong>{{ pedido.cantidad }} {{ pedido.producto_unidad || 'unidades' }}</strong>
+          </div>
+          <div>
+            <span class="detalle-etiqueta">Entrega</span>
+            <strong>{{ formatearFecha(pedido.fecha_entrega) }}</strong>
+            <small>{{ formatearHora(pedido.hora_entrega) }}</small>
+          </div>
+          <div>
+            <span class="detalle-etiqueta">Total</span>
+            <strong>{{ pedido.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          </div>
+          <div>
+            <span class="detalle-etiqueta">Pago</span>
+            <strong>{{ pedido.metodo_pago === 'efectivo' ? 'Efectivo' : 'Consignación' }}</strong>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
 </main>

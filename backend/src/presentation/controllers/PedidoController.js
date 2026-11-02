@@ -5,11 +5,8 @@ const pedidoService = require(
 class PedidoController {
   async crear(req, res) {
     try {
-      const idUsuario = req.user.id;
-
       const pedido = await pedidoService.crear(
         req.body,
-        idUsuario,
         req.supabase
       );
 

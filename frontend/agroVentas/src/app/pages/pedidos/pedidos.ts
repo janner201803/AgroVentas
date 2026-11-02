@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TimeoutError, finalize, timeout } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { HorarioEntrega, PedidoService, ProductoPedido } from '../../core/services/pedido.service';
+import { HorarioEntrega, PedidoHistorial, PedidoService, ProductoPedido } from '../../core/services/pedido.service';
+import { InventarioService } from '../../core/services/inventario.service';
 import { ChangeDetectorRef } from '@angular/core';
 
 
@@ -22,11 +23,13 @@ interface DiaCalendario {
 })
 export class Pedidos implements OnInit, OnDestroy {
   private pedidoService = inject(PedidoService);
+  private inventarioService = inject(InventarioService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
   private reintentoProductos: ReturnType<typeof setTimeout> | null = null;
 
   productos: ProductoPedido[] = [];
+  pedidos: PedidoHistorial[] = [];
   horarios: HorarioEntrega[] = [];
   readonly horasEntrega: HorarioEntrega[] = Array.from({ length: 9 }, (_, indice) => ({
     hora: `${String(indice + 8).padStart(2, '0')}:00`, ocupado: false, disponible: true
@@ -38,7 +41,9 @@ export class Pedidos implements OnInit, OnDestroy {
   mensaje = '';
   error = '';
   cargandoProductos = true;
+  cargandoPedidos = true;
   cargandoHorarios = false;
+  errorPedidos = '';
   fechaEntrega = '';
   horaEntrega = '';
   readonly fechaMinima = this.fechaLocal(new Date());
@@ -60,6 +65,7 @@ export class Pedidos implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.construirCalendario();
     this.cargarProductos();
+    this.cargarPedidos();
     this.fechaEntrega = this.fechaMinima;
     this.mesCalendario = new Date();
     this.construirCalendario();
@@ -95,6 +101,61 @@ export class Pedidos implements OnInit, OnDestroy {
         this.reintentoProductos = setTimeout(() => this.cargarProductos(), 5_000);
       }
     });
+  }
+
+  cargarPedidos(): void {
+    this.errorPedidos = '';
+    this.cargandoPedidos = true;
+    this.pedidoService.listarPedidos().pipe(
+      timeout({ first: 20_000 }),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        this.cargandoPedidos = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: pedidos => {
+        this.pedidos = pedidos;
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        this.errorPedidos = err instanceof TimeoutError
+          ? 'La consulta de tus pedidos tardó demasiado.'
+          : err.error?.mensaje || 'No fue posible cargar tu historial de pedidos.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  etiquetaEstado(estado: string): string {
+    const etiquetas: Record<string, string> = {
+      pendiente: 'Pendiente',
+      confirmado: 'Confirmado',
+      preparado: 'Preparado',
+      entregado: 'Entregado',
+      cancelado: 'Cancelado',
+      rechazado: 'Rechazado'
+    };
+    const normalizado = estado?.trim().toLowerCase();
+    return etiquetas[normalizado] ?? (normalizado || 'Sin estado');
+  }
+
+  claseVisualEstado(estado: string): string {
+    const normalizado = estado?.trim().toLowerCase();
+    if (['confirmado', 'preparado', 'entregado'].includes(normalizado)) return 'exito';
+    if (['cancelado', 'rechazado'].includes(normalizado)) return 'error';
+    return '';
+  }
+
+  formatearHora(hora: string): string {
+    return hora?.slice(0, 5) ?? '';
+  }
+
+  formatearFecha(fecha: string): string {
+    return new Intl.DateTimeFormat('es-CO', {
+      dateStyle: 'long',
+      timeZone: 'UTC'
+    }).format(new Date(`${fecha}T12:00:00Z`));
   }
 
   private fechaLocal(fecha: Date): string {
@@ -231,6 +292,10 @@ export class Pedidos implements OnInit, OnDestroy {
         this.horaEntrega = '';
         this.mesCalendario = new Date();
         this.construirCalendario();
+        this.pedidoService.invalidarProductos();
+        this.inventarioService.invalidarInventario();
+        this.cargarProductos();
+        this.cargarPedidos();
         this.cdr.markForCheck();
         this.cargarHorarios();
       },

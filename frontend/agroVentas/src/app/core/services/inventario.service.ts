@@ -55,6 +55,11 @@ export class InventarioService {
     return this.solicitudInventario;
   }
 
+  invalidarInventario(): void {
+    this.inventarioCache = null;
+    this.inventarioCacheCreado = 0;
+  }
+
   listarCatalogo(): Observable<ProductoCatalogo[]> {
     if (this.catalogoCache && Date.now() - this.catalogoCacheCreado < 30_000) return of(this.catalogoCache);
     if (this.solicitudCatalogo) return this.solicitudCatalogo;

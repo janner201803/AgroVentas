@@ -247,6 +247,8 @@ button:disabled {
   background: #eaf8ed;
 }
 
+.historial { margin-top: 24px; }
+
 @media (max-width: 600px) {
   .pagina {
     padding: 12px;
@@ -255,4 +257,6 @@ button:disabled {
   .formulario {
     padding: 20px;
   }
+
+  .historial { margin-top: 18px; }
 }

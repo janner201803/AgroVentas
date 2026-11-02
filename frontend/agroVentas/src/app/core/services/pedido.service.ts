@@ -19,6 +19,19 @@ export interface ProductoPedido {
   und: 'kg' | 'und';
 }
 
+export interface PedidoHistorial {
+  id: string;
+  id_producto: number;
+  producto_nombre: string | null;
+  producto_unidad: string | null;
+  cantidad: number;
+  valor: number;
+  estado: string;
+  metodo_pago: string;
+  fecha_entrega: string;
+  hora_entrega: string;
+}
+
 export interface HorarioEntrega {
   hora: string;
   ocupado: boolean;
@@ -82,11 +95,14 @@ export class PedidoService {
   crearPedido(pedido: NuevoPedido): Observable<any> {
     return this.http.post(this.apiUrl, pedido).pipe(
       timeout({ first: 25_000 }),
-      tap(() => { this.horariosCache.delete(pedido.fecha_entrega); })
+      tap(() => {
+        this.horariosCache.delete(pedido.fecha_entrega);
+        this.productosCache = null;
+      })
     );
   }
 
-  listarPedidos(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl);
+  listarPedidos(): Observable<PedidoHistorial[]> {
+    return this.http.get<PedidoHistorial[]>(this.apiUrl);
   }
 }
