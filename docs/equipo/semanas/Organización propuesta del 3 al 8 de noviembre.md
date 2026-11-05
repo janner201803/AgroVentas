@@ -115,14 +115,17 @@ Los documentos adjuntos sirven como base para las historias y sus estimaciones o
 
 ### Responsables funcionales por historia
 
-Las asignaciones siguientes son propuestas que deben confirmar los integrantes. Ser responsable de una historia significa asegurar sus criterios y evidencias; no significa implementarla sin ayuda ni poder aprobar unilateralmente las reglas del negocio.
+Las asignaciones oficiales son las del documento de historias de usuario elaborado por Juan Steban (versión del 5 de noviembre de 2026). La asignación que figuraba antes en este plan era de prueba y queda sin efecto. Ser responsable de una historia significa asegurar sus criterios y evidencias; no significa implementarla sin ayuda ni aprobar por sí solo las reglas del negocio.
 
-| Historia | Resultado acotado de esta semana | Responsable propuesto | Apoyo | Revisión |
-|---|---|---|---|---|
-| HU-07: Crear pedido desde el portal | Registrar pedido válido con disponibilidad consistente y errores comprensibles. | `@miguelararat` | `@jeissonnarvaez-design` en datos; `@melpl1310` en interfaz. | `@LeWonnn` y QA independiente. |
-| HU-08: Consultar estado de pedidos | Mostrar al cliente únicamente sus pedidos con estado, datos, recarga y manejo de errores. | `@Juanse0818` | `@melpl1310` en presentación; `@JJHG-p` en criterios. | `@LeWonnn` y `@InfinixCox`. |
-| HU-17: Registrar entrada de inventario | Agregar existencias de catálogo con permisos y validaciones; verificar lo que falte de la historia completa. | `@janner201803` | `@jeissonnarvaez-design` en migraciones; `@melpl1310` en UI. | `@LeWonnn` y `@InfinixCox`. |
-| HU-18: Consultar inventario | Consultar disponibilidad por producto/unidad, búsqueda y actualización; distinguir comprometido y disponible. | `@sebastianocampo-lab` | Responsables de HU-07 y HU-17. | `@LeWonnn` y `@InfinixCox`. |
+| Historia | Resultado acotado de esta semana | Responsable |
+|---|---|---|
+| HU-01: Iniciar sesión | Acceso según el rol del usuario. | Miguel Ángel Ararat |
+| HU-07: Crear pedido desde el portal | Registrar pedido válido con disponibilidad consistente y errores comprensibles. | Janner Hoyos |
+| HU-08: Consultar estado de pedidos | Mostrar al cliente únicamente sus pedidos con estado, datos, recarga y manejo de errores. | Por asignar |
+| HU-17: Registrar entrada de inventario | Agregar existencias de catálogo con permisos y validaciones; verificar lo que falte de la historia completa. | Janner Hoyos |
+| HU-18: Consultar inventario | Consultar disponibilidad por producto y unidad; registrar lo pendiente (búsqueda, última actualización, comprometido). | Sebastián Ocampo |
+
+Apoyos y revisores de cada historia: por definir por coordinación.
 
 ### Trazabilidad y aceptación propuesta para validar con el usuario real
 
@@ -139,20 +142,16 @@ Como referencia, las estimaciones originales del archivo adjunto son HU-07: 11 h
 
 ### Distribución propuesta del equipo
 
-| Cuenta | Encargo principal | Entregable revisable |
-|---|---|---|
-| `@Steban-B` | Coordinación, aceptación de asignaciones, capacidad y seguimiento. | Plan acordado, recuperación de la semana anterior y balance final. |
-| `@LeWonnn` | Liderazgo técnico, integración y resolución de dependencias. | Decisiones técnicas, revisión de PR y diagnóstico de bloqueos. |
-| `@miguelararat` | HU-07 y consistencia de reserva al crear pedidos. | Ajustes necesarios y casos de éxito, rechazo y concurrencia. |
-| `@janner201803` | HU-17 y conexión catálogo/inventario. | Flujo administrativo verificado y pendientes explícitos de la historia. |
-| `@Juanse0818` | HU-08 e integración de consulta del cliente. | Historial propio, persistencia tras recarga y manejo de errores. |
-| `@sebastianocampo-lab` | HU-18 y controles transversales acordados con sus responsables. | Consulta de disponibilidad, búsqueda/actualización y pruebas de consistencia. |
-| `@melpl1310` | Interfaz de inventario/pedidos y ajuste de pruebas del frontend. | UI coherente, spec actualizado y regresión de acceso. |
-| `@jeissonnarvaez-design` | Datos, migraciones y entorno autorizado. | Registro de migraciones, configuración revisada y datos de prueba sin secretos. |
-| `@InfinixCox` | QA y trazabilidad de resultados. | Matriz ejecutada, defectos reproducibles y evidencias independientes. |
-| `@JJHG-p` | Requisitos, criterios y documentación de decisiones de negocio. | Trazabilidad requisito–HU–issue–prueba y preguntas pendientes registradas. |
+### Distribución del equipo
 
-El plan anterior reportaba once integrantes pero solo identificaba diez cuentas; la revisión de colaboradores también identificó diez cuentas, por lo que no se inventa una undécima asignación ([antecedente del equipo](https://github.com/janner201803/AgroVentas/blob/main/docs/equipo/roles.md)). Coordinación debe confirmar el censo actual y redistribuir trabajo si existe otro integrante o alguna persona no está disponible.
+| Rol o encargo | Persona |
+|---|---|
+| Coordinación | Juan Steban, `@Steban-B` |
+| Liderazgo técnico | David Santiago, `@LeWonnn` |
+| Historias asignadas | Según la tabla de responsables por historia (documento de historias de usuario del 5 de noviembre de 2026). |
+| Demás encargos (interfaz, datos y migraciones, QA, requisitos) | Por definir por coordinación. |
+
+La distribución por cuentas que figuraba antes en este plan era de prueba y no es oficial. Coordinación debe confirmar el censo actual del equipo (se reportan once integrantes) y asignar las historias pendientes.
 
 ## Backlog operativo propuesto
 
