@@ -25,14 +25,33 @@
   <section class="panel listado">
     <div class="listado-titulo">
       <div><h2>Existencias actuales</h2></div>
-      <span class="contador">{{ productos.length }} productos</span>
+      <span class="contador">
+        {{ busqueda ? productosFiltrados.length + ' de ' + productos.length : productos.length }} productos
+      </span>
+    </div>
+    <div class="buscador" *ngIf="productos.length > 0">
+      <label for="buscar-producto">Buscar producto</label>
+      <div class="buscador-campo">
+        <input
+          id="buscar-producto"
+          name="buscar-producto"
+          type="search"
+          [(ngModel)]="busqueda"
+          placeholder="Escribe el nombre, por ejemplo: piña"
+          autocomplete="off"
+        />
+        <button *ngIf="busqueda" type="button" class="limpiar-busqueda" (click)="limpiarBusqueda()">Limpiar</button>
+      </div>
     </div>
     <p *ngIf="cargando">Cargando inventario…</p>
     <p *ngIf="!cargando && !error && productos.length === 0" class="vacio">
       Aún no hay existencias registradas. Usa el formulario de abajo para agregar la primera cantidad.
     </p>
-    <div class="productos" *ngIf="!cargando && productos.length > 0">
-      <article class="producto" *ngFor="let item of productos">
+    <p *ngIf="!cargando && productos.length > 0 && productosFiltrados.length === 0" class="vacio" role="status">
+      Ningún producto coincide con «{{ busqueda }}».
+    </p>
+    <div class="productos" *ngIf="!cargando && productosFiltrados.length > 0">
+      <article class="producto" *ngFor="let item of productosFiltrados; trackBy: porIdProducto">
         <div class="producto-cabecera"><h3>{{ item.nombre }}</h3></div>
         <dl class="producto-datos">
           <div><dt>Unidad</dt><dd>{{ item.und }}</dd></div>
