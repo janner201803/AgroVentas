@@ -33,6 +33,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'mis-pedidos',
+    loadComponent: () => import('../app/pages/mis-pedidos/mis-pedidos').then(modulo => modulo.MisPedidos),
+    canActivate: [authGuard]
+  },
+  {
     path: 'inventario',
     loadComponent: () => import('../app/pages/inventario/inventario').then(modulo => modulo.Inventario),
     canActivate: [adminGuard]
