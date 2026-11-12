@@ -2,9 +2,34 @@ const inventarioRepository = require('../../infraestructure/repositories/Inventa
 const productosRepository = require('../../infraestructure/repositories/ProductosRepository');
 const AgregarExistenciasDTO = require('../dto/AgregarExistenciasDTO');
 
+const FUNCION_NO_INSTALADA = ['PGRST202', '42883'];
+
 class InventarioService {
   async listar(client) {
     return inventarioRepository.listar(client);
+  }
+
+  /**
+   * HU-18: resumen administrativo. Si la función SQL todavía no está instalada,
+   * responde con el listado básico y deja comprometido, total y fecha en null,
+   * para que la pantalla siga funcionando mientras se aplica la migración.
+   */
+  async listarResumen(client) {
+    try {
+      return { migracionPendiente: false, productos: await inventarioRepository.listarResumen(client) };
+    } catch (error) {
+      if (!FUNCION_NO_INSTALADA.includes(error.code)) throw error;
+      const productos = await inventarioRepository.listar(client);
+      return {
+        migracionPendiente: true,
+        productos: productos.map(producto => ({
+          ...producto,
+          comprometido: null,
+          total: null,
+          actualizado_en: null
+        }))
+      };
+    }
   }
 
   async listarDisponibles(client) {

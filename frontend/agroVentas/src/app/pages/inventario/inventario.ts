@@ -7,6 +7,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AgregarExistencias,
   InventarioService,
+  combinarFila,
   ProductoCatalogo,
   ProductoInventario
 } from '../../core/services/inventario.service';
@@ -44,6 +45,7 @@ export class Inventario implements OnInit, OnDestroy {
   idProductoSeleccionado: number | null = null;
   cantidadAgregar = 1;
   busqueda = '';
+  migracionPendiente = false;
 
   ngOnInit(): void {
     this.esAdministrador = this.authService.esAdministrador();
@@ -160,8 +162,9 @@ export class Inventario implements OnInit, OnDestroy {
         }
       })
     ).subscribe({
-      next: productos => {
-        this.productos = ordenarPorNombre(productos);
+      next: resumen => {
+        this.productos = ordenarPorNombre(resumen.productos);
+        this.migracionPendiente = resumen.migracionPendiente;
         this.error = '';
         this.cdr.markForCheck();
         this.recargaProgramada = setTimeout(() => this.cargarInventario(true), 30_000);
@@ -214,9 +217,10 @@ export class Inventario implements OnInit, OnDestroy {
     ).subscribe({
       next: respuesta => {
         const fila = respuesta.producto;
+        const anterior = this.productos.find(item => item.id_producto === fila.id_producto);
         this.productos = ordenarPorNombre([
           ...this.productos.filter(item => item.id_producto !== fila.id_producto),
-          fila
+          combinarFila(anterior, fila)
         ]);
         this.cantidadAgregar = 1;
         this.mensaje = respuesta.mensaje;

@@ -74,6 +74,25 @@ class InventarioRepository {
       .filter(producto => producto.precio > 0);
   }
 
+  // HU-18: disponible, comprometido, total y última actualización (solo administrador).
+  // Requiere la migración 20261109_inventario_actualizacion_comprometido.sql.
+  async listarResumen(client = supabase) {
+    const signal = AbortSignal.timeout(12_000);
+    const { data, error } = await client.rpc('inventario_resumen').abortSignal(signal);
+    if (error) throw convertirError(error, signal, 'consultar el resumen del inventario');
+    return data.map(fila => ({
+      id: fila.id,
+      id_producto: fila.id_producto,
+      nombre: fila.nombre,
+      cantidad: Number(fila.disponible),
+      precio: Number(fila.precio),
+      und: unidadAplicacion(fila.unidad),
+      comprometido: Number(fila.comprometido),
+      total: Number(fila.total),
+      actualizado_en: fila.actualizado_en ?? null
+    }));
+  }
+
   async agregarExistencias(datos, client = supabase) {
     const signal = AbortSignal.timeout(12_000);
     const { data, error } = await client.rpc('agregar_existencias', {
