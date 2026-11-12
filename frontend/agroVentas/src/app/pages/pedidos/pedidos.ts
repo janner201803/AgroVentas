@@ -19,7 +19,19 @@ interface DiaCalendario {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './pedidos.html',
-  styleUrl: './pedidos.css'
+  styleUrl: './pedidos.css',
+  // HU-08: estilos del botón "Actualizar" aquí, para no modificar pedidos.css (PR #11).
+  styles: [`
+    .actualizar-pedidos {
+      margin: 0;
+      padding: 8px 14px;
+      border: 1px solid #287344;
+      background: #fff;
+      color: #287344;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+  `]
 })
 export class Pedidos implements OnInit, OnDestroy {
   private pedidoService = inject(PedidoService);
@@ -44,6 +56,7 @@ export class Pedidos implements OnInit, OnDestroy {
   cargandoPedidos = true;
   cargandoHorarios = false;
   errorPedidos = '';
+  actualizandoPedidos = false;
   fechaEntrega = '';
   horaEntrega = '';
   readonly fechaMinima = this.fechaLocal(new Date());
@@ -125,6 +138,39 @@ export class Pedidos implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  /**
+   * HU-08: vuelve a consultar el historial para ver el estado más reciente
+   * sin recargar la página. Mantiene la lista visible mientras consulta.
+   */
+  actualizarPedidos(): void {
+    if (this.cargandoPedidos || this.actualizandoPedidos) return;
+    this.actualizandoPedidos = true;
+    this.pedidoService.listarPedidos().pipe(
+      timeout({ first: 20_000 }),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        this.actualizandoPedidos = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: pedidos => {
+        this.pedidos = pedidos;
+        this.errorPedidos = '';
+      },
+      error: err => {
+        // Un fallo se muestra como error, nunca como historial vacío.
+        this.errorPedidos = err instanceof TimeoutError
+          ? 'La consulta de tus pedidos tardó demasiado.'
+          : err.error?.mensaje || 'No fue posible actualizar tu historial de pedidos.';
+      }
+    });
+  }
+
+  /** HU-08: los primeros 8 caracteres del id, suficientes para reconocer el pedido. */
+  idCorto(id: string | number | null | undefined): string {
+    return String(id ?? '').slice(0, 8).toUpperCase();
   }
 
   etiquetaEstado(estado: string): string {
