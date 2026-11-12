@@ -494,3 +494,45 @@ button:disabled {
   background: #fff7d6;
   font-size: 14px;
 }
+
+/* Botón "Volver a inicio", igual al de la pantalla de pedidos */
+.volver {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 9px 14px;
+  border: 1px solid #c5df8b;
+  border-radius: 9px;
+  color: #176b43;
+  background: #f0f5dc;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.volver:hover {
+  background: #e0f0b6;
+}
+
+/* En pantallas pequeñas el botón pasa a una segunda línea, debajo de la cuenta */
+@media (max-width: 620px) {
+  .acciones-cuenta {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 8px;
+  }
+
+  .acciones-cuenta .volver {
+    order: 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .volver {
+    min-height: 32px;
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+}
