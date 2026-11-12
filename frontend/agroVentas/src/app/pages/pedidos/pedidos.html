@@ -177,6 +177,7 @@
         <p class="descripcion">Consulta tus compras y próximas recogidas.</p>
       </div>
       <span class="total-pedidos">{{ pedidos.length }} {{ pedidos.length === 1 ? 'pedido' : 'pedidos' }}</span>
+      <button type="button" class="actualizar-pedidos" (click)="actualizarPedidos()" [disabled]="cargandoPedidos || actualizandoPedidos" aria-label="Actualizar mis pedidos">{{ actualizandoPedidos ? 'Actualizando…' : 'Actualizar' }}</button>
     </div>
 
     <div *ngIf="cargandoPedidos" class="producto-info" role="status">
@@ -202,7 +203,7 @@
             <span aria-hidden="true">🍍</span>
             <div>
               <h3>{{ pedido.producto_nombre || 'Producto de inventario' }}</h3>
-              <span class="pedido-referencia">Pedido #{{ pedido.id }}</span>
+              <span class="pedido-referencia" [title]="pedido.id">Pedido #{{ idCorto(pedido.id) }}</span>
             </div>
           </div>
           <span class="etiqueta" [ngClass]="claseVisualEstado(pedido.estado)">

@@ -49,8 +49,20 @@ class PedidoController {
 
       return res.status(200).json(pedidos);
     } catch (error) {
-      return res.status(500).json({
-        mensaje: 'Error al consultar los pedidos'
+      // HU-08: se conserva el estado real (403, 504...) y se registra el detalle
+      // en el servidor para poder diagnosticar, sin exponerlo al cliente si es un 500.
+      const status = error.status || 500;
+      console.error('[PedidoController.listar] Falló la consulta del historial:', {
+        status,
+        codigo: error.code || null,
+        error: error.message,
+        detalle: error.details || null
+      });
+      return res.status(status).json({
+        mensaje: status === 500
+          ? 'No fue posible consultar tus pedidos. Intenta de nuevo en un momento.'
+          : error.message,
+        codigo: error.code || undefined
       });
     }
   }
