@@ -480,3 +480,17 @@ button:disabled {
   font: inherit;
   cursor: pointer;
 }
+
+/* HU-18: comprometido, total y última actualización */
+.dato-fecha dd {
+  font-weight: 400;
+}
+
+.aviso-migracion {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #6b5a12;
+  background: #fff7d6;
+  font-size: 14px;
+}

@@ -29,6 +29,9 @@
         {{ busqueda ? productosFiltrados.length + ' de ' + productos.length : productos.length }} productos
       </span>
     </div>
+    <p *ngIf="migracionPendiente" class="aviso-migracion" role="status">
+      El stock comprometido y la fecha de última actualización se mostrarán cuando se aplique la migración de HU-18 en Supabase.
+    </p>
     <div class="buscador" *ngIf="productos.length > 0">
       <label for="buscar-producto">Buscar producto</label>
       <div class="buscador-campo">
@@ -56,7 +59,15 @@
         <dl class="producto-datos">
           <div><dt>Unidad</dt><dd>{{ item.und }}</dd></div>
           <div><dt>Precio</dt><dd>{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ item.und }}</dd></div>
-          <div><dt>Existencias</dt><dd>{{ item.cantidad }} {{ item.und }}</dd></div>
+          <div><dt>Disponible</dt><dd>{{ item.cantidad }} {{ item.und }}</dd></div>
+          <ng-container *ngIf="!migracionPendiente">
+            <div><dt>Comprometido en pedidos</dt><dd>{{ item.comprometido ?? 0 }} {{ item.und }}</dd></div>
+            <div><dt>Total en bodega</dt><dd>{{ item.total ?? item.cantidad }} {{ item.und }}</dd></div>
+            <div class="dato-fecha">
+              <dt>Última actualización</dt>
+              <dd>{{ item.actualizado_en ? (item.actualizado_en | date:'dd/MM/yyyy HH:mm') : 'Sin registro' }}</dd>
+            </div>
+          </ng-container>
         </dl>
       </article>
     </div>
