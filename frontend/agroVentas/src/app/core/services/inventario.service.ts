@@ -17,6 +17,18 @@ export interface ProductoInventario {
   cantidad: number;
   precio: number;
   und: 'kg' | 'und';
+  /** HU-18: reservado en pedidos activos. null si la migración aún no está aplicada. */
+  comprometido?: number | null;
+  /** HU-18: disponible + comprometido. */
+  total?: number | null;
+  /** HU-18: fecha ISO del último cambio de cantidad. null = sin registro. */
+  actualizado_en?: string | null;
+}
+
+export interface ResumenInventario {
+  /** true si el backend no encontró la función SQL de HU-18 y respondió con el listado básico. */
+  migracionPendiente: boolean;
+  productos: ProductoInventario[];
 }
 
 export interface AgregarExistencias {
@@ -31,22 +43,23 @@ export class InventarioService {
   private readonly inventarioUrl = 'http://localhost:3001/api/inventario';
   private readonly productosUrl = 'http://localhost:3001/api/productos';
   private readonly cacheMs = 20_000;
-  private inventarioCache: ProductoInventario[] | null = null;
+  private inventarioCache: ResumenInventario | null = null;
   private inventarioCacheCreado = 0;
-  private solicitudInventario: Observable<ProductoInventario[]> | null = null;
+  private solicitudInventario: Observable<ResumenInventario> | null = null;
   private catalogoCache: ProductoCatalogo[] | null = null;
   private catalogoCacheCreado = 0;
   private solicitudCatalogo: Observable<ProductoCatalogo[]> | null = null;
 
-  listar(forzar = false): Observable<ProductoInventario[]> {
+  /** Resumen administrativo del inventario (GET /api/inventario/resumen, solo administrador). */
+  listar(forzar = false): Observable<ResumenInventario> {
     if (!forzar && this.inventarioCache && Date.now() - this.inventarioCacheCreado < this.cacheMs) {
       return of(this.inventarioCache);
     }
     if (this.solicitudInventario) return this.solicitudInventario;
-    this.solicitudInventario = this.http.get<ProductoInventario[]>(this.inventarioUrl).pipe(
+    this.solicitudInventario = this.http.get<ResumenInventario>(`${this.inventarioUrl}/resumen`).pipe(
       timeout({ first: 15_000 }),
-      tap(productos => {
-        this.inventarioCache = productos;
+      tap(resumen => {
+        this.inventarioCache = resumen;
         this.inventarioCacheCreado = Date.now();
       }),
       finalize(() => { this.solicitudInventario = null; }),
@@ -81,13 +94,32 @@ export class InventarioService {
       tap(({ producto }) => {
         this.pedidoService.invalidarProductos();
         if (this.inventarioCache) {
-          this.inventarioCache = [
-            ...this.inventarioCache.filter(item => item.id_producto !== producto.id_producto),
-            producto
-          ].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+          const anterior = this.inventarioCache.productos.find(item => item.id_producto === producto.id_producto);
+          this.inventarioCache = {
+            ...this.inventarioCache,
+            productos: [
+              ...this.inventarioCache.productos.filter(item => item.id_producto !== producto.id_producto),
+              combinarFila(anterior, producto)
+            ].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+          };
           this.inventarioCacheCreado = Date.now();
         }
       })
     );
   }
+}
+
+/**
+ * Une la fila que devuelve agregar_existencias (sin comprometido ni fecha) con la
+ * que ya se mostraba, para no perder esos datos mientras llega la recarga.
+ */
+export function combinarFila(anterior: ProductoInventario | undefined, nueva: ProductoInventario): ProductoInventario {
+  const comprometido = nueva.comprometido ?? anterior?.comprometido ?? null;
+  return {
+    ...anterior,
+    ...nueva,
+    comprometido,
+    total: comprometido == null ? null : nueva.cantidad + comprometido,
+    actualizado_en: nueva.actualizado_en ?? anterior?.actualizado_en ?? null
+  };
 }

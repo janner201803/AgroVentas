@@ -16,6 +16,18 @@ class InventarioController {
     }
   }
 
+  async resumen(req, res) {
+    const inicio = performance.now();
+    try {
+      const resultado = await inventarioService.listarResumen(req.supabase);
+      res.setHeader('Server-Timing', `auth;dur=${(req.validacionTokenMs || 0).toFixed(1)}, inventario;dur=${(performance.now() - inicio).toFixed(1)}`);
+      return res.status(200).json(resultado);
+    } catch (error) {
+      console.error('[InventarioController.resumen] Error consultando Supabase:', error.message);
+      return res.status(error.status || 500).json({ mensaje: error.message || 'No fue posible consultar el resumen del inventario' });
+    }
+  }
+
   async agregarExistencias(req, res) {
     const inicio = performance.now();
     try {
