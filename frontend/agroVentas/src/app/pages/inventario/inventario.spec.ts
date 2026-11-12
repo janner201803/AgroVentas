@@ -118,6 +118,16 @@ describe('Inventario', () => {
     expect(html.textContent).not.toContain('Última actualización');
     fixture.destroy();
   });
+
+  it('muestra el botón "Volver a inicio" que lleva a /inicio', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const enlace = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('a.volver');
+    expect(enlace).not.toBeNull();
+    expect(enlace!.textContent).toContain('Volver a inicio');
+    expect(enlace!.getAttribute('href')).toBe('/inicio');
+    fixture.destroy();
+  });
 });
 
 describe('combinarFila', () => {
