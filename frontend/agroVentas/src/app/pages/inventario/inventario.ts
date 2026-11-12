@@ -43,6 +43,7 @@ export class Inventario implements OnInit, OnDestroy {
   error = '';
   idProductoSeleccionado: number | null = null;
   cantidadAgregar = 1;
+  busqueda = '';
 
   ngOnInit(): void {
     this.esAdministrador = this.authService.esAdministrador();
@@ -53,6 +54,21 @@ export class Inventario implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destruido = true;
     this.limpiarTemporizadores();
+  }
+
+  /** HU-18: existencias ordenadas por nombre y filtradas por el texto de búsqueda. */
+  get productosFiltrados(): ProductoInventario[] {
+    const termino = normalizarTexto(this.busqueda);
+    return ordenarPorNombre(this.productos)
+      .filter(producto => !termino || normalizarTexto(producto.nombre).includes(termino));
+  }
+
+  limpiarBusqueda(): void {
+    this.busqueda = '';
+  }
+
+  porIdProducto(_indice: number, producto: ProductoInventario): number {
+    return producto.id_producto;
   }
 
   get productoSeleccionado(): ProductoCatalogo | undefined {
@@ -145,7 +161,7 @@ export class Inventario implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: productos => {
-        this.productos = productos;
+        this.productos = ordenarPorNombre(productos);
         this.error = '';
         this.cdr.markForCheck();
         this.recargaProgramada = setTimeout(() => this.cargarInventario(true), 30_000);
@@ -198,10 +214,10 @@ export class Inventario implements OnInit, OnDestroy {
     ).subscribe({
       next: respuesta => {
         const fila = respuesta.producto;
-        this.productos = [
+        this.productos = ordenarPorNombre([
           ...this.productos.filter(item => item.id_producto !== fila.id_producto),
           fila
-        ].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+        ]);
         this.cantidadAgregar = 1;
         this.mensaje = respuesta.mensaje;
         this.cdr.markForCheck();
@@ -223,4 +239,17 @@ export class Inventario implements OnInit, OnDestroy {
     this.recargaProgramada = null;
     this.reintentoCatalogo = null;
   }
+}
+
+/** Minúsculas y sin tildes, para que "pina" encuentre "Piña". */
+export function normalizarTexto(texto: string | null | undefined): string {
+  return String(texto ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase('es-CO');
+}
+
+export function ordenarPorNombre(productos: ProductoInventario[]): ProductoInventario[] {
+  return [...productos].sort((a, b) => (a.nombre ?? '').localeCompare(b.nombre ?? '', 'es', { sensitivity: 'base' }));
 }
