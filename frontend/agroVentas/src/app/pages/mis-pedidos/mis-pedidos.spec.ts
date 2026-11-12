@@ -5,7 +5,10 @@ import { Observable, of, throwError } from 'rxjs';
 import { MisPedidos } from './mis-pedidos';
 import { PedidoHistorial, PedidoService } from '../../core/services/pedido.service';
 
-/** Pruebas de HU-08 (Consultar estado de pedidos). No se conectan al backend ni a Supabase. */
+/**
+ * Pruebas de HU-08 (Consultar estado de pedidos). No se conectan al backend ni a Supabase.
+ * Las marcadas "(PR #19)" vienen de las pruebas de Juan Sebastián Salguero, adaptadas a esta pantalla.
+ */
 describe('MisPedidos (HU-08)', () => {
   let fixture: ComponentFixture<MisPedidos>;
   let component: MisPedidos;
@@ -63,6 +66,7 @@ describe('MisPedidos (HU-08)', () => {
     expect(tarjetas().length).toBe(1);
     const tarjeta = tarjetas()[0].textContent ?? '';
     expect(tarjeta).toContain('Piña pepa');
+    expect(tarjeta).toContain('Pedido #P-1');
     expect(tarjeta).toContain('3.5 kg');
     expect(tarjeta).toContain('13 de noviembre de 2026');
     expect(tarjeta).toContain('09:00');
@@ -149,5 +153,40 @@ describe('MisPedidos (HU-08)', () => {
     expect(llamadas).toBe(2);
     expect(tarjetas()[0].textContent).toContain('Entregado');
     expect(component.ultimaConsulta).not.toBeNull();
+  });
+
+  it('muestra el número de pedido corto y deja el id completo al pasar el mouse (PR #19)', async () => {
+    await crear(of([pedido({ id: '8f2c1a4e-1111-4000-8000-000000000000' })]));
+
+    const referencia = (fixture.nativeElement as HTMLElement).querySelector('.pedido-referencia') as HTMLElement;
+    expect(referencia.textContent).toContain('Pedido #8F2C1A4E');
+    expect(referencia.textContent).not.toContain('8f2c1a4e-1111');
+    expect(referencia.title).toBe('8f2c1a4e-1111-4000-8000-000000000000');
+  });
+
+  it('si "Actualizar" falla, muestra el error y no presenta el historial como vacío (PR #19)', async () => {
+    await crear(of([pedido()]), throwError(() => ({ status: 0 })));
+
+    await pulsar('Actualizar');
+
+    expect(texto()).toContain('No fue posible actualizar tu historial de pedidos.');
+    expect(texto()).not.toContain('Aún no tienes pedidos');
+    expect(tarjetas().length).toBe(1);
+  });
+
+  it('no lanza una segunda consulta mientras una está en curso (PR #19)', async () => {
+    await crear(of([pedido()]));
+
+    component.actualizando = true;
+    component.actualizar();
+
+    expect(llamadas).toBe(1);
+  });
+
+  it('idCorto tolera valores vacíos (PR #19)', async () => {
+    await crear(of([]));
+
+    expect(component.idCorto(null)).toBe('');
+    expect(component.idCorto(12345)).toBe('12345');
   });
 });

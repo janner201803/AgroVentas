@@ -1,6 +1,8 @@
 # HU-08 — Consultar estado de pedidos
 
 > Estado al 12 de noviembre de 2026: **incremento parcial listo para revisión**. La historia no se da por cerrada (ver "Lo que falta para cerrarla").
+>
+> Integra el PR #19 de Juan Sebastián Salguero (`@Juanse0818`), acordado con él: primero se fusiona su PR y esta rama adopta sus mejoras (número corto de pedido, botón Actualizar que no oculta la lista, manejo de errores del backend y sus pruebas).
 
 ## Historia
 
@@ -12,7 +14,7 @@
 | Prioridad | Según el documento oficial de historias (05/11) |
 | Estimación original | 4 h-persona (preliminar) |
 | Responsable de la historia | Por confirmar por el equipo (el documento oficial del 05/11 la deja sin responsable) |
-| Implementación de este incremento | Juan David Alvarez (`@InfinixCox`) |
+| Implementación de este incremento | Juan David Alvarez (`@InfinixCox`): pantalla `/mis-pedidos`, filtro y separación de `/pedidos`. Juan Sebastián Salguero (`@Juanse0818`, PR #19, issue #18): Actualizar, número corto, errores del backend y pruebas de backend |
 | Revisor | Por definir; debe ser una persona distinta del autor (`docs/equipo/roles.md`) |
 | Depende de | HU-07 (crear pedido) para tener datos; HU-12 (cambio de estado por el personal) para ver el ciclo completo |
 
@@ -27,8 +29,10 @@ En la demo del 29 de octubre la profesora pidió **separar "consultar pedido" de
 | El historial estaba debajo del formulario de `/pedidos`. | Pantalla propia `/mis-pedidos`, solo de consulta, protegida con `authGuard`. |
 | El menú de inicio mostraba un único enlace ("Mis pedidos" o "Realizar pedido" según el rol) que abría `/pedidos`. | Dos enlaces: **Realizar pedido** (`/pedidos`) y **Mis pedidos** (`/mis-pedidos`). |
 | Tras registrar un pedido, la lista se recargaba más abajo en la misma página. | El mensaje de éxito incluye el enlace "Ver mis pedidos →". `/pedidos` ya no consulta el historial. |
-| No se podía filtrar ni refrescar. | Filtro por grupo de estado con contador, botón **Actualizar** y hora de la última consulta. |
-| Sin pruebas de esta historia. | 8 pruebas automáticas (`mis-pedidos.spec.ts`). |
+| No se podía filtrar ni refrescar. | Filtro por grupo de estado con contador, botón **Actualizar** (no oculta la lista y no repite consultas) y hora de la última consulta. |
+| Se mostraba el identificador completo del pedido. | Número corto (`Pedido #8F2C1A4E`); el completo aparece al pasar el mouse. |
+| El backend respondía siempre 500 al fallar la consulta. | Conserva el código real (403, 504…) y registra el detalle en el servidor (PR #19). |
+| Sin pruebas de esta historia. | 12 pruebas en `mis-pedidos.spec.ts`, 3 en `pedidos.spec.ts` y 7 de backend en `backend/test/pedidosHistorial.test.js` (PR #19). |
 
 No cambia el backend, la base de datos ni el contrato de `GET /api/pedidos`.
 
@@ -55,7 +59,7 @@ La pantalla nueva reutiliza `pedidos.css` (misma paleta y tarjetas de la rama `d
 | Entregados | `entregado` |
 | Cancelados | `cancelado`, `rechazado` |
 
-5. **Actualizar** repite la consulta. No hay actualización automática ni en tiempo real.
+5. **Actualizar** repite la consulta sin ocultar la lista; si falla, muestra el error y conserva lo que se veía. No hay actualización automática ni en tiempo real.
 
 ## Criterios de aceptación propuestos
 
@@ -72,7 +76,7 @@ Son una propuesta para validar con el usuario real; no reemplazan su aceptación
 
 ## Pruebas
 
-Ejecución del 12/11/2026, Node 22, `npx ng test --watch=false --include src/app/pages/mis-pedidos/mis-pedidos.spec.ts`. Son pruebas de caja negra sobre el componente con el servicio simulado: no se conectan al backend ni a Supabase.
+Ejecución del 12/11/2026, Node 22, `npx ng test --watch=false --include src/app/pages/mis-pedidos/mis-pedidos.spec.ts`. Tabla de la versión inicial; después de integrar el PR #19 se suman P-HU08-12 a 15. Son pruebas de caja negra sobre el componente con el servicio simulado: no se conectan al backend ni a Supabase.
 
 | ID | Caso | Entrada | Resultado esperado | Resultado obtenido |
 |---|---|---|---|---|
@@ -85,6 +89,13 @@ Ejecución del 12/11/2026, Node 22, `npx ng test --watch=false --include src/app
 | P-HU08-07 | Backend caído | Error de conexión (estado 0) | "No se pudo conectar con el servidor" | Aprobada |
 | P-HU08-08 | Actualizar | Primero `pendiente`, luego `entregado` | Segunda consulta y la tarjeta pasa a "Entregado" | Aprobada |
 
+| P-HU08-12 | Número corto (PR #19) | id `8f2c1a4e-1111-…` | Muestra `Pedido #8F2C1A4E` y el id completo al pasar el mouse | Aprobada |
+| P-HU08-13 | Actualizar falla (PR #19) | Lista cargada y luego error de conexión | Muestra el error, conserva la lista y no dice "Aún no tienes pedidos" | Aprobada |
+| P-HU08-14 | Consulta repetida (PR #19) | Actualizar mientras otra consulta está en curso | No se lanza una segunda consulta | Aprobada |
+| P-HU08-15 | Id vacío (PR #19) | `null` y `12345` | `''` y `'12345'` | Aprobada |
+
+Backend (PR #19): `cd backend && npm test` → 7 aprobadas (sin sesión → 401; solo los pedidos del usuario del token; `?id_usuario=otro` se ignora; error de base → 500 con mensaje; permiso negado → 403).
+
 Además: `npx ng build` y `npx ng build --configuration development` compilan sin errores, y se revisó la pantalla en Chrome a 1280 px y 390 px con datos simulados (sin desplazamiento horizontal, sin errores de consola).
 
 **Pendientes de ejecutar a mano con el entorno del equipo:**
@@ -95,7 +106,7 @@ Además: `npx ng build` y `npx ng build --configuration development` compilan si
 | P-HU08-10 | Registrar un pedido en `/pedidos` y abrir "Ver mis pedidos →" | El pedido aparece como "Pendiente" con los datos registrados |
 | P-HU08-11 | Recargar `/mis-pedidos` (F5) con sesión activa | La lista se vuelve a cargar; sin sesión redirige a `/login` |
 
-Nota: `ng test` completo sigue sin compilar en esta rama por `inventario.spec.ts` (lo corrige el PR #13). Para ejecutar solo estas pruebas antes de que ese PR se fusione hay que apartar temporalmente ese archivo.
+Nota: con el PR #13 fusionado, `ng test` completo ya compila: 23 aprobadas y 4 fallidas (`app`, `inicio`, `login`, `register`), que son los specs generados por Angular sin configurar y no tienen relación con HU-08.
 
 ## Lo que falta para cerrarla
 
@@ -103,5 +114,4 @@ Nota: `ng test` completo sigue sin compilar en esta rama por `inventario.spec.ts
 - **Estados**: el documento de historias habla de 4 estados y el código maneja 6. Hay que acordar la lista con el usuario real; el cambio en la pantalla es una constante (`ESTADOS_POR_FILTRO` y `ETIQUETAS_ESTADO`).
 - **Pedidos con varios productos**: hoy un pedido tiene un solo producto; cuando HU-07 incorpore el carrito habrá que ajustar la tarjeta.
 - **Formato regional**: la aplicación no registra `es-CO`, por eso el valor sale como `$17,500` en lugar de `$17.500`. Afecta a toda la aplicación, no solo a esta pantalla.
-- **Referencia del pedido**: se muestra el identificador completo (UUID). Decidir si se quiere un número corto.
 - Validación de los criterios con el usuario real y revisión del PR por otra persona del equipo.

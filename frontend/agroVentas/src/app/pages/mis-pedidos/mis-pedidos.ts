@@ -61,6 +61,7 @@ export class MisPedidos implements OnInit {
   pedidos: PedidoHistorial[] = [];
   filtro: FiltroPedidos = 'todos';
   cargando = true;
+  actualizando = false;
   error = '';
   ultimaConsulta: Date | null = null;
 
@@ -68,7 +69,7 @@ export class MisPedidos implements OnInit {
     this.cargarPedidos();
   }
 
-  /** Consulta los pedidos del cliente. También lo usa el botón "Actualizar". */
+  /** Primera carga y reintento tras un error: muestra el indicador de carga en lugar de la lista. */
   cargarPedidos(): void {
     this.error = '';
     this.cargando = true;
@@ -100,6 +101,39 @@ export class MisPedidos implements OnInit {
   get ultimaConsultaTexto(): string {
     if (!this.ultimaConsulta) return '';
     return new Intl.DateTimeFormat('es-CO', { hour: 'numeric', minute: '2-digit' }).format(this.ultimaConsulta);
+  }
+
+  /**
+   * Botón "Actualizar" (aporte del PR #19): vuelve a consultar sin ocultar la lista.
+   * Si falla, muestra el error y conserva los pedidos que ya se veían.
+   */
+  actualizar(): void {
+    if (this.cargando || this.actualizando) return;
+    this.actualizando = true;
+    this.pedidoService.listarPedidos().pipe(
+      timeout({ first: 20_000 }),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        this.actualizando = false;
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: pedidos => {
+        this.pedidos = pedidos ?? [];
+        this.error = '';
+        this.ultimaConsulta = new Date();
+      },
+      error: err => {
+        this.error = err instanceof TimeoutError
+          ? 'La consulta de tus pedidos tardó demasiado.'
+          : err.error?.mensaje || 'No fue posible actualizar tu historial de pedidos.';
+      }
+    });
+  }
+
+  /** Número corto del pedido (aporte del PR #19): los primeros 8 caracteres del id, en mayúsculas. */
+  idCorto(id: string | number | null | undefined): string {
+    return String(id ?? '').slice(0, 8).toUpperCase();
   }
 
   seleccionarFiltro(filtro: FiltroPedidos): void {
