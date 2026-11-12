@@ -1,0 +1,63 @@
+/* Estilos propios de "Mis pedidos". La base (paleta, tarjetas, encabezado)
+   viene de ../pedidos/pedidos.css, que este componente también carga. */
+
+.barra-consulta,
+.actualizar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.barra-consulta {
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.enlace-accion {
+  color: #176b43;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.enlace-accion:hover {
+  text-decoration: underline;
+}
+
+.ultima-consulta {
+  color: #82643c;
+}
+
+.boton-secundario,
+.filtro {
+  width: auto;
+  margin: 0;
+  padding: 8px 14px;
+  border: 1px solid #176b43;
+  border-radius: 999px;
+  background: transparent;
+  color: #176b43;
+  font-size: 13px;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.filtro.activo {
+  background: #176b43;
+  color: #fff9e8;
+}
+
+/* El estado es el dato principal de esta pantalla: se muestra como una píldora legible. */
+.estado-pedido {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #ffe9c9;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+}

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { InventarioService } from '../../core/services/inventario.service';
 import { PedidoHistorial, PedidoService } from '../../core/services/pedido.service';
 import { Pedidos } from './pedidos';
@@ -28,12 +28,10 @@ describe('Pedidos', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  const textoHistorial = (html: HTMLElement) => html.querySelector('section.historial')?.textContent ?? '';
-  const botonActualizar = (html: HTMLElement) => html.querySelector<HTMLButtonElement>('button.actualizar-pedidos')!;
-
   beforeEach(async () => {
     consultas = 0;
     respuestaPedidos = () => of([pedido('8f2c1a4e-1111-4000-8000-000000000000', 'pendiente')]);
+    // Las pruebas del historial (botón Actualizar, número corto, errores) pasaron a mis-pedidos.spec.ts.
     await TestBed.configureTestingModule({
       imports: [Pedidos],
       providers: [
@@ -60,65 +58,14 @@ describe('Pedidos', () => {
     expect(component).toBeTruthy();
   });
 
-  it('muestra el historial con número de pedido corto y estado', async () => {
-    const html = await crear();
-    const texto = textoHistorial(html);
-    expect(texto).toContain('Pedido #8F2C1A4E');
-    expect(texto).not.toContain('8f2c1a4e-1111');
-    expect(texto).toContain('Pendiente');
-    expect(texto).toContain('Piña segunda');
-  });
-
-  it('muestra un estado vacío útil cuando no hay pedidos', async () => {
-    respuestaPedidos = () => of([]);
-    const html = await crear();
-    expect(textoHistorial(html)).toContain('Aún no tienes pedidos');
-  });
-
-  it('un error no se presenta como historial vacío', async () => {
-    respuestaPedidos = () => throwError(() => ({ error: { mensaje: 'No fue posible consultar tus pedidos.' } }));
-    const html = await crear();
-    const texto = textoHistorial(html);
-    expect(texto).toContain('No fue posible consultar tus pedidos.');
-    expect(texto).not.toContain('Aún no tienes pedidos');
-  });
-
-  it('"Actualizar" trae el estado más reciente sin recargar la página', async () => {
-    const html = await crear();
-    expect(consultas).toBe(1);
-
-    respuestaPedidos = () => of([pedido('8f2c1a4e-1111-4000-8000-000000000000', 'confirmado')]);
-    botonActualizar(html).click();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(consultas).toBe(2);
-    expect(textoHistorial(html)).toContain('Confirmado');
-    expect(botonActualizar(html).disabled).toBe(false);
-  });
-
-  it('si "Actualizar" falla, muestra el error en vez de dejar la lista vacía', async () => {
-    const html = await crear();
-    respuestaPedidos = () => throwError(() => ({ status: 0 }));
-    botonActualizar(html).click();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const texto = textoHistorial(html);
-    expect(texto).toContain('No fue posible actualizar tu historial de pedidos.');
-    expect(texto).not.toContain('Aún no tienes pedidos');
-  });
-
-  it('no lanza una segunda consulta mientras una está en curso', async () => {
+  it('no consulta el historial: la consulta está en /mis-pedidos (HU-08)', async () => {
     await crear();
-    component.actualizandoPedidos = true;
-    component.actualizarPedidos();
-    expect(consultas).toBe(1);
+    expect(consultas).toBe(0);
   });
 
-  it('idCorto tolera valores vacíos', async () => {
-    await crear();
-    expect(component.idCorto(null)).toBe('');
-    expect(component.idCorto(12345)).toBe('12345');
+  it('enlaza a la pantalla "Mis pedidos"', async () => {
+    const html = await crear();
+    const enlace = html.querySelector<HTMLAnchorElement>('section.historial a.enlace-mis-pedidos');
+    expect(enlace?.getAttribute('href')).toBe('/mis-pedidos');
   });
 });
