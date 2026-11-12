@@ -1,3 +1,66 @@
+/* Bases de la dirección "Finca". Ver DESIGN.md.
+   Los componentes no escriben colores ni tamaños a mano: usan estas variables. */
+
+@import '@fontsource-variable/besley/index.css';
+@import '@fontsource-variable/work-sans/index.css';
+
+:root {
+  /* Color */
+  --papel: #F4EDE0;
+  --pliego: #FBF6EA;
+  --tinta: #2F2A1F;
+  --tinta-suave: #5E5542;
+  --hoja: #4A5D23;
+  --hoja-oscura: #38481A;
+  --panela: #8A5A14;
+  --cascara: #C8862B; /* solo decorativo, nunca texto */
+  --linea: #D9CDB4;   /* solo separadores, no bordes de controles */
+  --borde: #8C8168;
+
+  /* Estados (fondo / texto) */
+  --estado-correcto-fondo: #E3EBCF;
+  --estado-correcto-texto: #33441A;
+  --estado-pendiente-fondo: #F6E3B8;
+  --estado-pendiente-texto: #6B4A0E;
+  --estado-error-fondo: #F6DDD3;
+  --estado-error-texto: #8C2A1B;
+  --estado-neutro-fondo: #E9E1CF;
+  --estado-neutro-texto: #4A4332;
+
+  /* Tipografía */
+  --fuente-rotulo: 'Besley Variable', Georgia, serif;
+  --fuente-texto: 'Work Sans Variable', system-ui, sans-serif;
+  --peso-texto: 400;
+  --peso-texto-fuerte: 500;
+  --peso-rotulo: 500;
+  --peso-rotulo-fuerte: 600;
+  --letra-14: 0.875rem;
+  --letra-16: 1rem;
+  --letra-18: 1.125rem;
+  --letra-22: 1.375rem;
+  --letra-28: 1.75rem;
+  --letra-36: 2.25rem;
+  --interlineado: 1.5;
+
+  /* Espacio */
+  --espacio-4: 4px;
+  --espacio-8: 8px;
+  --espacio-12: 12px;
+  --espacio-16: 16px;
+  --espacio-24: 24px;
+  --espacio-32: 32px;
+  --espacio-48: 48px;
+
+  /* Forma */
+  --radio-control: 4px;
+  --radio-panel: 8px;
+  --ancho-contenido: 1120px;
+  --margen-lateral: var(--espacio-32);
+
+  /* Foco */
+  --foco-grosor: 3px;
+  --foco-separacion: 2px;
+}
 
 html,
 body {
@@ -12,7 +75,9 @@ body {
 }
 
 body {
-  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--fuente-texto);
 }
 
 app-root {
@@ -21,4 +86,20 @@ app-root {
   height: 100%;
   margin: 0;
   padding: 0;
+}
+
+/* Foco visible: se define una sola vez, aquí. */
+:focus-visible {
+  outline: var(--foco-grosor) solid var(--hoja);
+  outline-offset: var(--foco-separacion);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
 }

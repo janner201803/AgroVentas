@@ -409,14 +409,6 @@ button:disabled {
   cursor: not-allowed;
 }
 
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible {
-  outline: 3px solid rgb(23 107 67 / 35%);
-  outline-offset: 2px;
-}
-
 .alerta {
   padding: 12px;
   border-radius: 9px;

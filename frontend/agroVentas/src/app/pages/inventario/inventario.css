@@ -333,7 +333,6 @@ button:disabled {
 .formulario-stock select:focus,
 .formulario-stock input:focus {
   border-color: #287747;
-  outline: 3px solid rgb(40 119 71 / 15%);
 }
 
 .resumen-stock {
@@ -464,11 +463,6 @@ button:disabled {
   font: inherit;
   color: inherit;
   background: #fff;
-}
-
-.buscador-campo input:focus {
-  outline: 2px solid #176b43;
-  outline-offset: 1px;
 }
 
 .limpiar-busqueda {
