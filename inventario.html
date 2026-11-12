@@ -1,0 +1,137 @@
+<main class="pagina">
+  <header class="encabezado">
+    <a routerLink="/inicio" class="marca" aria-label="Volver al inicio">
+      <img src="/img/logo.png" alt="Logo de AgroVentas" class="brand-logo" />
+    </a>
+    <h1 class="titulo-pagina">Inventario</h1>
+    <div class="acciones-cuenta">
+      <div class="cuenta">
+        <span class="encabezado-etiqueta">PANEL ADMINISTRATIVO</span>
+        <strong>{{ usuario()?.email }}</strong>
+      </div>
+      <button type="button" class="cerrar-sesion" [disabled]="cerrandoSesion" (click)="cerrarSesion()">
+        {{ cerrandoSesion ? 'Cerrando…' : 'Cerrar sesión' }}
+      </button>
+    </div>
+  </header>
+
+  <section class="intro">
+    <p>Selecciona un producto del catálogo y registra la cantidad recibida. El nombre, la unidad y el precio vienen de Productos.</p>
+  </section>
+
+  <div *ngIf="error" class="alerta error" role="alert">{{ error }}</div>
+  <div *ngIf="mensaje" class="alerta exito" role="status">{{ mensaje }}</div>
+
+  <section class="panel listado">
+    <div class="listado-titulo">
+      <div><h2>Existencias actuales</h2></div>
+      <span class="contador">
+        {{ busqueda ? productosFiltrados.length + ' de ' + productos.length : productos.length }} productos
+      </span>
+    </div>
+    <p *ngIf="migracionPendiente" class="aviso-migracion" role="status">
+      El stock comprometido y la fecha de última actualización se mostrarán cuando se aplique la migración de HU-18 en Supabase.
+    </p>
+    <div class="buscador" *ngIf="productos.length > 0">
+      <label for="buscar-producto">Buscar producto</label>
+      <div class="buscador-campo">
+        <input
+          id="buscar-producto"
+          name="buscar-producto"
+          type="search"
+          [(ngModel)]="busqueda"
+          placeholder="Escribe el nombre, por ejemplo: piña"
+          autocomplete="off"
+        />
+        <button *ngIf="busqueda" type="button" class="limpiar-busqueda" (click)="limpiarBusqueda()">Limpiar</button>
+      </div>
+    </div>
+    <p *ngIf="cargando">Cargando inventario…</p>
+    <p *ngIf="!cargando && !error && productos.length === 0" class="vacio">
+      Aún no hay existencias registradas. Usa el formulario de abajo para agregar la primera cantidad.
+    </p>
+    <p *ngIf="!cargando && productos.length > 0 && productosFiltrados.length === 0" class="vacio" role="status">
+      Ningún producto coincide con «{{ busqueda }}».
+    </p>
+    <div class="productos" *ngIf="!cargando && productosFiltrados.length > 0">
+      <article class="producto" *ngFor="let item of productosFiltrados; trackBy: porIdProducto">
+        <div class="producto-cabecera"><h3>{{ item.nombre }}</h3></div>
+        <dl class="producto-datos">
+          <div><dt>Unidad</dt><dd>{{ item.und }}</dd></div>
+          <div><dt>Precio</dt><dd>{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ item.und }}</dd></div>
+          <div><dt>Disponible</dt><dd>{{ item.cantidad }} {{ item.und }}</dd></div>
+          <ng-container *ngIf="!migracionPendiente">
+            <div><dt>Comprometido en pedidos</dt><dd>{{ item.comprometido ?? 0 }} {{ item.und }}</dd></div>
+            <div><dt>Total en bodega</dt><dd>{{ item.total ?? item.cantidad }} {{ item.und }}</dd></div>
+            <div class="dato-fecha">
+              <dt>Última actualización</dt>
+              <dd>{{ item.actualizado_en ? (item.actualizado_en | date:'dd/MM/yyyy HH:mm') : 'Sin registro' }}</dd>
+            </div>
+          </ng-container>
+        </dl>
+      </article>
+    </div>
+  </section>
+
+  <section *ngIf="esAdministrador" class="panel formulario formulario-stock">
+    <div class="cabecera-stock">
+      <h2>Agregar productos al inventario</h2>
+    </div>
+
+    <form (ngSubmit)="agregarExistencias()">
+      <div class="campo-stock">
+        <label for="producto-catalogo">Producto</label>
+        <select
+          id="producto-catalogo"
+          name="producto-catalogo"
+          [ngModel]="idProductoSeleccionado"
+          (ngModelChange)="cambiarProducto($event)"
+          [disabled]="cargandoCatalogo || catalogo.length === 0 || guardando"
+          required
+        >
+          <option [ngValue]="null" disabled>
+            {{ cargandoCatalogo ? 'Cargando productos…' : 'Selecciona un producto' }}
+          </option>
+          <option *ngFor="let producto of catalogo" [ngValue]="producto.id">
+            {{ producto.nombre }} — {{ producto.unidad }}
+          </option>
+        </select>
+        <small *ngIf="!cargandoCatalogo && catalogo.length === 0" class="ayuda-formulario">
+          El catálogo está vacío. Agrega los productos que vendes en <strong>public.productos</strong>.
+        </small>
+      </div>
+
+      <div *ngIf="productoSeleccionado" class="resumen-stock" aria-live="polite">
+        <div><span>Unidad</span><strong>{{ productoSeleccionado.unidad }}</strong></div>
+        <div><span>Precio definido en Productos</span><strong>{{ productoSeleccionado.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ productoSeleccionado.unidad }}</strong></div>
+        <div><span>Existencia actual</span><strong>{{ existenciasSeleccionadas }} {{ productoSeleccionado.unidad }}</strong></div>
+      </div>
+
+      <div class="campo-stock">
+        <label for="cantidad-agregar">Cantidad a guardar{{ unidadSeleccionada ? ' (' + unidadSeleccionada + ')' : '' }}</label>
+        <input
+          id="cantidad-agregar"
+          name="cantidad-agregar"
+          type="number"
+          [min]="unidadSeleccionada === 'und' ? 1 : 0.1"
+          [step]="unidadSeleccionada === 'und' ? 1 : 0.1"
+          [(ngModel)]="cantidadAgregar"
+          [disabled]="!productoSeleccionado || guardando"
+          required
+          placeholder="Ingresa la cantidad"
+        />
+        <small *ngIf="unidadSeleccionada === 'kg'">Puedes ingresar cantidades en incrementos de 0,1 kg.</small>
+        <small *ngIf="unidadSeleccionada === 'und'">Ingresa un número entero de unidades.</small>
+      </div>
+
+      <button class="boton-stock" type="submit" [disabled]="guardando || cargandoCatalogo || !productoSeleccionado">
+        {{ guardando ? 'Guardando…' : 'Guardar en inventario' }}
+      </button>
+    </form>
+  </section>
+
+  <section *ngIf="!esAdministrador" class="aviso-acceso">
+    <strong>Acceso de consulta</strong>
+    <p>Solo el administrador puede agregar existencias. Puedes consultar el inventario registrado.</p>
+  </section>
+</main>
