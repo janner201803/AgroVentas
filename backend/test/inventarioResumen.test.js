@@ -9,6 +9,7 @@ const assert = require('node:assert/strict');
 const supabase = require('../src/infraestructure/database/supabase');
 const inventarioRepository = require('../src/infraestructure/repositories/InventarioRepository');
 const inventarioService = require('../src/application/services/InventarioService');
+const perfilRepository = require('../src/infraestructure/repositories/PerfilRepository');
 const app = require('../src/app');
 
 const FILA_RESUMEN = {
@@ -20,7 +21,8 @@ const FILA_BASICA = { id: 7, id_producto: 1, nombre: 'Piña segunda', cantidad: 
 const originales = {
   getClaims: supabase.auth.getClaims,
   listarResumen: inventarioRepository.listarResumen,
-  listar: inventarioRepository.listar
+  listar: inventarioRepository.listar,
+  obtenerPerfil: perfilRepository.obtenerPorId
 };
 
 let servidor;
@@ -31,6 +33,9 @@ before(async () => {
     data: { claims: { sub: `usuario-${token}`, role: 'authenticated', email: token === 'admin' ? 'admin@gmail.com' : 'cliente@prueba.co' } },
     error: null
   });
+  perfilRepository.obtenerPorId = async id => ({
+    id, rol: id === 'usuario-admin' ? 'propietario' : 'cliente', activo: true, nombre: null
+  });
   await new Promise(resolve => { servidor = app.listen(0, resolve); });
   base = `http://127.0.0.1:${servidor.address().port}/api/inventario`;
 });
@@ -39,6 +44,7 @@ after(() => {
   Object.assign(supabase.auth, { getClaims: originales.getClaims });
   inventarioRepository.listarResumen = originales.listarResumen;
   inventarioRepository.listar = originales.listar;
+  perfilRepository.obtenerPorId = originales.obtenerPerfil;
   servidor.close();
 });
 

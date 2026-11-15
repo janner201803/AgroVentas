@@ -1,0 +1,116 @@
+/* HU-21: estilos propios; encabezado, paneles, buscador y alertas vienen de inventario.css. */
+.filtros-rol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.filtro {
+  border: 1px solid #d9cfb3;
+  padding: 7px 12px;
+  color: #174b32;
+  background: #fff;
+  font-weight: 600;
+}
+
+.filtro span {
+  margin-left: 4px;
+  color: #637267;
+  font-weight: 400;
+}
+
+.filtro.activo {
+  border-color: #176b43;
+  color: #fff9e8;
+  background: #176b43;
+}
+
+.filtro.activo span {
+  color: #e7f2dc;
+}
+
+.usuarios {
+  display: grid;
+  gap: 10px;
+}
+
+.usuario {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid #e8dfc7;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.usuario.inactivo {
+  background: #f7f3e8;
+}
+
+.usuario-identidad {
+  min-width: 0;
+}
+
+.usuario-identidad h3 {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.usuario-correo,
+.usuario-celular {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #637267;
+  font-size: 14px;
+}
+
+.etiqueta-propia {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #176b43;
+  background: #e7f2dc;
+  font-size: 12px;
+}
+
+.usuario-controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.usuario-controles label {
+  color: #637267;
+  font-size: 14px;
+}
+
+.usuario-controles select {
+  padding: 9px 10px;
+  border: 1px solid #d9cfb3;
+  border-radius: 9px;
+  color: #174b32;
+  background: #fff;
+  font: inherit;
+}
+
+.usuario-controles select:disabled,
+.boton-estado:disabled {
+  cursor: not-allowed;
+}
+
+.estado {
+  min-width: 92px;
+  color: #28603b;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.estado-inactivo {
+  color: #8e3328;
+}

@@ -19,7 +19,8 @@ export class Login {
   email = '';
   password = '';
 
-  error = signal('');
+  // Si la sesión se cerró porque la cuenta fue desactivada, se explica aquí.
+  error = signal(this.authService.consumirMotivoCierre());
   cargando = signal(false);
   mostrarPassword = signal(false);
 
@@ -54,6 +55,10 @@ export class Login {
       await this.router.navigate(['/inicio']);
     } catch (error: any) {
       switch (error.code) {
+        case 'cuenta_desactivada':
+          this.error.set(error.message);
+          break;
+
         case 'invalid_credentials':
           this.error.set('Correo o contraseña incorrectos.');
           break;

@@ -2,7 +2,7 @@
 import { Routes } from '@angular/router';
 import { OlvideContrasena } from '../app/pages/olvide-contrasena/olvide-contrasena';
 import { authGuard } from '../app/core/guards/auth.guard';
-import { adminGuard } from '../app/core/guards/admin.guard';
+import { rolGuard } from '../app/core/guards/rol.guard';
 import { Restablecer } from '../app/pages/restablecer/restablecer';
 
 export const routes: Routes = [
@@ -40,7 +40,12 @@ export const routes: Routes = [
   {
     path: 'inventario',
     loadComponent: () => import('../app/pages/inventario/inventario').then(modulo => modulo.Inventario),
-    canActivate: [adminGuard]
+    canActivate: [rolGuard('propietario', 'empleado')]
+  },
+  {
+    path: 'usuarios',
+    loadComponent: () => import('../app/pages/usuarios/usuarios').then(modulo => modulo.Usuarios),
+    canActivate: [rolGuard('propietario')]
   },
   {
     path: '',

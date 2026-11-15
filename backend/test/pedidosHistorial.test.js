@@ -8,11 +8,13 @@ const assert = require('node:assert/strict');
 
 const supabase = require('../src/infraestructure/database/supabase');
 const pedidoRepository = require('../src/infraestructure/repositories/PedidoRepository');
+const perfilRepository = require('../src/infraestructure/repositories/PerfilRepository');
 const app = require('../src/app');
 
 const originales = {
   getClaims: supabase.auth.getClaims,
-  listarPorUsuario: pedidoRepository.listarPorUsuario
+  listarPorUsuario: pedidoRepository.listarPorUsuario,
+  obtenerPerfil: perfilRepository.obtenerPorId
 };
 
 let servidor;
@@ -25,6 +27,7 @@ before(async () => {
     data: { claims: { sub: `usuario-${token}`, role: 'authenticated', email: `${token}@prueba.co` } },
     error: null
   });
+  perfilRepository.obtenerPorId = async id => ({ id, rol: 'cliente', activo: true, nombre: null });
   await new Promise(resolve => { servidor = app.listen(0, resolve); });
   base = `http://127.0.0.1:${servidor.address().port}/api/pedidos`;
 });
@@ -32,6 +35,7 @@ before(async () => {
 after(() => {
   supabase.auth.getClaims = originales.getClaims;
   pedidoRepository.listarPorUsuario = originales.listarPorUsuario;
+  perfilRepository.obtenerPorId = originales.obtenerPerfil;
   servidor.close();
 });
 

@@ -27,7 +27,7 @@ describe('Inventario', () => {
       imports: [Inventario],
       providers: [
         provideRouter([]),
-        { provide: AuthService, useValue: { usuario: () => null, esAdministrador: () => false } },
+        { provide: AuthService, useValue: { usuario: () => null, esPersonal: () => false, etiquetaRol: () => 'PORTAL DE CLIENTES' } },
         { provide: InventarioService, useValue: { listar: () => of(resumen), listarCatalogo: () => of([]) } },
       ]
     }).compileComponents();

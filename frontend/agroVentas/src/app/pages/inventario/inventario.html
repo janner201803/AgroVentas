@@ -7,7 +7,7 @@
     <div class="acciones-cuenta">
       <a routerLink="/inicio" class="volver">← Volver a inicio</a>
       <div class="cuenta">
-        <span class="encabezado-etiqueta">PANEL ADMINISTRATIVO</span>
+        <span class="encabezado-etiqueta">{{ etiquetaRol() }}</span>
         <strong>{{ usuario()?.email }}</strong>
       </div>
       <button type="button" class="cerrar-sesion" [disabled]="cerrandoSesion" (click)="cerrarSesion()">
@@ -74,7 +74,7 @@
     </div>
   </section>
 
-  <section *ngIf="esAdministrador" class="panel formulario formulario-stock">
+  <section *ngIf="puedeRegistrar" class="panel formulario formulario-stock">
     <div class="cabecera-stock">
       <h2>Agregar productos al inventario</h2>
     </div>
@@ -131,8 +131,8 @@
     </form>
   </section>
 
-  <section *ngIf="!esAdministrador" class="aviso-acceso">
+  <section *ngIf="!puedeRegistrar" class="aviso-acceso">
     <strong>Acceso de consulta</strong>
-    <p>Solo el administrador puede agregar existencias. Puedes consultar el inventario registrado.</p>
+    <p>Solo el Propietario o un Empleado pueden registrar entradas. Puedes consultar el inventario registrado.</p>
   </section>
 </main>

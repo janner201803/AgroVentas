@@ -75,7 +75,8 @@ export class Register {
     try {
       await this.authService.registrar(
         emailLimpio,
-        this.password
+        this.password,
+        { nombre: nombreLimpio, celular: celularLimpio }
       );
 
       await this.router.navigate(['/inicio']);
