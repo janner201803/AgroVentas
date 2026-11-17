@@ -7,7 +7,7 @@
     <div class="acciones-cuenta">
       <div class="cuenta">
         <span class="estado-cuenta">
-          {{ esAdministrador ? 'PANEL ADMINISTRATIVO' : 'PORTAL DE CLIENTES' }}
+          {{ etiquetaRol() }}
         </span>
         <strong>{{ usuario()?.email }}</strong>
       </div>
@@ -49,9 +49,14 @@
         Mis pedidos
       </a>
 
-      <a *ngIf="esAdministrador" routerLink="/inventario" class="nav-enlace">
+      <a *ngIf="esPersonal" routerLink="/inventario" class="nav-enlace">
         <span class="nav-icono">📦</span>
         Inventario
+      </a>
+
+      <a *ngIf="esAdministrador" routerLink="/usuarios" class="nav-enlace">
+        <span class="nav-icono">👥</span>
+        Usuarios
       </a>
 
       <div class="ayuda-panel">

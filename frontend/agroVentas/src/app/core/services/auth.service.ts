@@ -1,10 +1,27 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, computed, signal, inject } from '@angular/core';
 import { User } from '@supabase/supabase-js';
 import { Router } from '@angular/router';
 import { supabase } from './supabase.config';
 
-export const ADMIN_EMAIL = 'admin@gmail.com';
 type UsuarioAutenticado = { id: string; email?: string };
+
+// HU-01: el rol se guarda en public.perfiles (migración 20261115_roles_perfiles.sql).
+export type Rol = 'propietario' | 'empleado' | 'cliente';
+export interface Perfil {
+  id: string;
+  rol: Rol;
+  activo: boolean;
+  nombre: string | null;
+}
+
+const MENSAJE_CUENTA_DESACTIVADA = 'Tu cuenta está desactivada. Comunícate con el propietario.';
+
+export class CuentaDesactivadaError extends Error {
+  readonly code = 'cuenta_desactivada';
+  constructor() {
+    super(MENSAJE_CUENTA_DESACTIVADA);
+  }
+}
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +29,21 @@ type UsuarioAutenticado = { id: string; email?: string };
 export class AuthService {
   usuario = signal<UsuarioAutenticado | null>(null);
   authCargado = signal(false);
+  perfil = signal<Perfil | null>(null);
+  rol = computed<Rol | null>(() => this.perfil()?.rol ?? null);
+  etiquetaRol = computed(() => {
+    switch (this.rol()) {
+      case 'propietario': return 'PANEL ADMINISTRATIVO';
+      case 'empleado': return 'PANEL DE EMPLEADO';
+      default: return 'PORTAL DE CLIENTES';
+    }
+  });
+
+  // Perfil en caché por usuario, para no consultarlo en cada navegación.
+  private perfilDe: string | null = null;
+  private perfilPromesa: Promise<Perfil | null> | null = null;
+  // Motivo por el que se cerró la sesión, para mostrarlo en /login.
+  private motivoCierre = '';
 
   private router = inject(Router);
 
@@ -31,6 +63,13 @@ export class AuthService {
 
       this.usuario.set(usuario);
       this.authCargado.set(true);
+
+      if (!usuario) {
+        this.limpiarPerfil();
+      } else if (usuario.id !== this.perfilDe) {
+        // setTimeout(0): no llamar a Supabase dentro del callback de onAuthStateChange.
+        setTimeout(() => this.cargarPerfil(usuario.id), 0);
+      }
 
       if (evento === 'SIGNED_IN') {
         console.info('[AgroVentas] Sesión iniciada', {
@@ -66,6 +105,18 @@ export class AuthService {
         : null;
       this.usuario.set(usuario);
       this.authCargado.set(true);
+
+      if (!usuario) {
+        this.limpiarPerfil();
+        return null;
+      }
+
+      const perfil = await this.cargarPerfil(usuario.id);
+      if (perfil && !perfil.activo) {
+        this.motivoCierre = MENSAJE_CUENTA_DESACTIVADA;
+        await this.cerrarSesion().catch(() => undefined);
+        return null;
+      }
       return usuario;
     } catch {
       this.usuario.set(null);
@@ -74,14 +125,75 @@ export class AuthService {
     }
   }
 
-  esAdministrador(usuario: UsuarioAutenticado | null = this.usuario()): boolean {
-    return usuario?.email?.trim().toLowerCase() === ADMIN_EMAIL;
+  /**
+   * Carga el perfil (rol y estado) del usuario. Si la consulta falla o la
+   * migración no está aplicada, deja el perfil en null: el usuario se trata
+   * como cliente y no ve opciones de personal.
+   */
+  async cargarPerfil(idUsuario: string, forzar = false): Promise<Perfil | null> {
+    if (!forzar && this.perfilDe === idUsuario && this.perfilPromesa) {
+      return this.perfilPromesa;
+    }
+
+    this.perfilDe = idUsuario;
+    const promesa = (async () => {
+      const { data, error } = await supabase
+        .from('perfiles')
+        .select('id,rol,activo,nombre')
+        .eq('id', idUsuario)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('[AgroVentas] No se pudo cargar el perfil:', error.message);
+        if (this.perfilDe === idUsuario) this.perfilPromesa = null; // reintentar luego
+        return null;
+      }
+      return (data as Perfil | null) ?? null;
+    })();
+    this.perfilPromesa = promesa;
+
+    const perfil = await promesa;
+    if (this.perfilDe === idUsuario) this.perfil.set(perfil);
+    return perfil;
   }
 
-  async registrar(email: string, password: string) {
+  tieneRol(...roles: Rol[]): boolean {
+    const perfil = this.perfil();
+    return Boolean(perfil?.activo && roles.includes(perfil.rol));
+  }
+
+  /** Propietario activo. Se mantiene el nombre usado por las pantallas existentes. */
+  esAdministrador(): boolean {
+    return this.tieneRol('propietario');
+  }
+
+  /** Propietario o Empleado activo. */
+  esPersonal(): boolean {
+    return this.tieneRol('propietario', 'empleado');
+  }
+
+  /** Devuelve (una sola vez) el motivo del último cierre de sesión forzado. */
+  consumirMotivoCierre(): string {
+    const motivo = this.motivoCierre;
+    this.motivoCierre = '';
+    return motivo;
+  }
+
+  private limpiarPerfil() {
+    this.perfilDe = null;
+    this.perfilPromesa = null;
+    this.perfil.set(null);
+  }
+
+  // nombre y celular viajan como metadatos; el trigger de la base los copia a
+  // public.perfiles. El rol siempre empieza como 'cliente'.
+  async registrar(email: string, password: string, datos: { nombre: string; celular: string }) {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
-      password
+      password,
+      options: {
+        data: { nombre: datos.nombre.trim(), celular: datos.celular }
+      }
     });
 
     if (error) throw error;
@@ -95,6 +207,12 @@ export class AuthService {
     });
 
     if (error) throw error;
+
+    const perfil = await this.cargarPerfil(data.user.id, true);
+    if (perfil && !perfil.activo) {
+      await this.cerrarSesion().catch(() => undefined);
+      throw new CuentaDesactivadaError();
+    }
     return data;
   }
 

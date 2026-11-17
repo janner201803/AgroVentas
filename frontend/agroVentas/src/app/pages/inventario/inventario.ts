@@ -35,7 +35,9 @@ export class Inventario implements OnInit, OnDestroy {
   usuario = this.authService.usuario;
   productos: ProductoInventario[] = [];
   catalogo: ProductoCatalogo[] = [];
-  esAdministrador = false;
+  /** HU-17: Propietario y Empleado registran entradas de inventario. */
+  puedeRegistrar = false;
+  etiquetaRol = this.authService.etiquetaRol;
   cargando = true;
   cargandoCatalogo = true;
   guardando = false;
@@ -48,7 +50,7 @@ export class Inventario implements OnInit, OnDestroy {
   migracionPendiente = false;
 
   ngOnInit(): void {
-    this.esAdministrador = this.authService.esAdministrador();
+    this.puedeRegistrar = this.authService.esPersonal();
     this.cargarCatalogo();
     this.cargarInventario();
   }
@@ -185,8 +187,8 @@ export class Inventario implements OnInit, OnDestroy {
     const producto = this.productoSeleccionado;
     const unidad = this.unidadSeleccionada;
 
-    if (!this.esAdministrador) {
-      this.error = 'Solo el administrador puede modificar el inventario.';
+    if (!this.puedeRegistrar) {
+      this.error = 'Solo el Propietario o un Empleado pueden registrar entradas de inventario.';
       return;
     }
     if (!producto || !unidad) {

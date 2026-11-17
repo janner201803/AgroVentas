@@ -16,6 +16,7 @@ export class Inicio {
   private router = inject(Router);
 
   usuario = this.authService.usuario;
+  etiquetaRol = this.authService.etiquetaRol;
   cerrandoSesion = false;
   errorSesion = '';
 
@@ -23,6 +24,10 @@ export class Inicio {
 
   get esAdministrador(): boolean {
     return this.authService.esAdministrador();
+  }
+
+  get esPersonal(): boolean {
+    return this.authService.esPersonal();
   }
 
   async cerrarSesion(): Promise<void> {
