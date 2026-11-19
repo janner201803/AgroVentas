@@ -41,6 +41,7 @@
   --letra-28: 1.75rem;
   --letra-36: 2.25rem;
   --interlineado: 1.5;
+  --interlineado-rotulo: 1.2;
 
   /* Espacio */
   --espacio-4: 4px;
@@ -54,8 +55,15 @@
   /* Forma */
   --radio-control: 4px;
   --radio-panel: 8px;
+  --radio-marca: 999px; /* solo la marca de estado del pedido */
+  --grosor-linea: 1px;
+  --grosor-filete: 3px;
   --ancho-contenido: 1120px;
   --margen-lateral: var(--espacio-32);
+  --foto-fila: 72px;
+  --ancho-resumen: 320px;
+  --ancho-bloque: 280px;
+  --ancho-formulario: 400px;
 
   /* Foco */
   --foco-grosor: 3px;
@@ -92,6 +100,11 @@ app-root {
 :focus-visible {
   outline: var(--foco-grosor) solid var(--hoja);
   outline-offset: var(--foco-separacion);
+}
+
+/* Destino de "Saltar al contenido": recibe el foco, pero no es un control. */
+[tabindex='-1']:focus {
+  outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

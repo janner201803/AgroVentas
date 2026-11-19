@@ -8,7 +8,7 @@ import { Router, RouterLink } from '@angular/router';
   standalone: true,
   imports: [FormsModule, RouterLink],
   templateUrl: './restablecer.html',
-  styleUrls: ['../login/login.css', '../olvide-contrasena/olvide-contrasena.css'],
+  styleUrl: '../../shared/acceso/acceso.css',
 })
 export class Restablecer implements OnInit {
   private authService = inject(AuthService);

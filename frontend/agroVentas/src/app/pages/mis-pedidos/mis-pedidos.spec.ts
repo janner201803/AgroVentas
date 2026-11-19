@@ -69,7 +69,7 @@ describe('MisPedidos (HU-08)', () => {
     expect(tarjeta).toContain('Pedido #P-1');
     expect(tarjeta).toContain('3.5 kg');
     expect(tarjeta).toContain('13 de noviembre de 2026');
-    expect(tarjeta).toContain('09:00');
+    expect(tarjeta).toMatch(/9:00\sa\.\sm\./);
     // La app aún no registra la configuración regional es-CO: el separador de miles puede ser coma o punto.
     expect(tarjeta).toMatch(/17[.,]500/);
     expect(tarjeta).toContain('Confirmado');

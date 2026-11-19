@@ -1,0 +1,121 @@
+:host {
+  display: block;
+  position: relative;
+  color: var(--tinta);
+  background: var(--pliego);
+  font-family: var(--fuente-texto);
+  font-size: var(--letra-16);
+  font-weight: var(--peso-texto);
+  line-height: var(--interlineado);
+}
+
+.saltar {
+  position: absolute;
+  top: var(--espacio-8);
+  left: var(--espacio-8);
+  z-index: 1;
+  padding: var(--espacio-8) var(--espacio-16);
+  border-radius: var(--radio-control);
+  color: var(--pliego);
+  background: var(--hoja);
+  font-weight: var(--peso-texto-fuerte);
+  transform: translateY(-200%);
+}
+
+.saltar:focus {
+  transform: none;
+}
+
+.encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--espacio-24);
+  row-gap: var(--espacio-8);
+  padding: var(--espacio-8) var(--margen-lateral) 0;
+  border-bottom: var(--grosor-linea) solid var(--linea);
+}
+
+.marca {
+  display: block;
+  flex-shrink: 0;
+  margin-bottom: var(--espacio-8);
+  border-radius: var(--radio-control);
+}
+
+.logo {
+  display: block;
+  width: auto;
+  height: var(--espacio-48);
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-self: flex-end;
+  column-gap: var(--espacio-16);
+}
+
+.menu a {
+  padding: var(--espacio-12) var(--espacio-4);
+  border-bottom: var(--grosor-filete) solid transparent;
+  color: var(--tinta);
+  font-weight: var(--peso-texto-fuerte);
+  text-decoration: none;
+}
+
+.menu a:hover {
+  color: var(--hoja-oscura);
+  border-bottom-color: var(--linea);
+}
+
+.menu a.actual {
+  color: var(--hoja);
+  border-bottom-color: var(--hoja);
+}
+
+.cuenta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--espacio-16);
+  min-width: 0;
+  margin-bottom: var(--espacio-8);
+  margin-left: auto;
+}
+
+.correo {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--tinta-suave);
+  font-size: var(--letra-14);
+}
+
+.cerrar-sesion {
+  padding: var(--espacio-8) var(--espacio-16);
+  border: var(--grosor-linea) solid var(--borde);
+  border-radius: var(--radio-control);
+  color: var(--tinta);
+  background: transparent;
+  font: inherit;
+  font-weight: var(--peso-texto-fuerte);
+  cursor: pointer;
+}
+
+.cerrar-sesion:hover:not(:disabled) {
+  border-color: var(--hoja-oscura);
+  color: var(--hoja-oscura);
+}
+
+.cerrar-sesion:disabled {
+  color: var(--tinta-suave);
+  cursor: wait;
+}
+
+.error-sesion {
+  margin: 0;
+  padding: var(--espacio-12) var(--margen-lateral);
+  color: var(--estado-error-texto);
+  background: var(--estado-error-fondo);
+}

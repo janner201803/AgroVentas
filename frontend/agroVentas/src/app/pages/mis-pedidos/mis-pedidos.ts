@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Encabezado } from '../../shared/encabezado/encabezado';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TimeoutError, finalize, timeout } from 'rxjs';
 import { PedidoHistorial, PedidoService } from '../../core/services/pedido.service';
@@ -41,10 +42,9 @@ const ETIQUETAS_ESTADO: Record<string, string> = {
 @Component({
   selector: 'app-mis-pedidos',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, Encabezado],
   templateUrl: './mis-pedidos.html',
-  // Reutiliza los estilos de la pantalla de pedidos para mantener un solo diseño.
-  styleUrls: ['../pedidos/pedidos.css', './mis-pedidos.css']
+  styleUrl: './mis-pedidos.css'
 })
 export class MisPedidos implements OnInit {
   private pedidoService = inject(PedidoService);
@@ -162,15 +162,21 @@ export class MisPedidos implements OnInit {
     return ETIQUETAS_ESTADO[normalizado] ?? (normalizado || 'Sin estado');
   }
 
-  claseVisualEstado(estado: string): string {
+  /** Familia de color de la marca de estado (DESIGN.md, "Estados"). El texto siempre acompaña al color. */
+  claseVisualEstado(estado: string): 'correcto' | 'pendiente' | 'error' | 'neutro' {
     const normalizado = this.normalizarEstado(estado);
-    if (['confirmado', 'preparado', 'entregado'].includes(normalizado)) return 'exito';
+    if (['confirmado', 'preparado'].includes(normalizado)) return 'correcto';
+    if (normalizado === 'pendiente') return 'pendiente';
     if (['cancelado', 'rechazado'].includes(normalizado)) return 'error';
-    return '';
+    return 'neutro';
   }
 
+  /** "09:00:00" → "9:00 a. m." */
   formatearHora(hora: string): string {
-    return hora?.slice(0, 5) ?? '';
+    const [horas, minutos] = (hora ?? '').split(':').map(Number);
+    if (!Number.isFinite(horas)) return '';
+    return new Intl.DateTimeFormat('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true })
+      .format(new Date(2000, 0, 1, horas, minutos || 0));
   }
 
   /** La fecha de entrega llega como AAAA-MM-DD; se muestra sin depender de la zona horaria del navegador. */

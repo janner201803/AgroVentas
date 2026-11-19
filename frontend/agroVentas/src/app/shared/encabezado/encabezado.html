@@ -1,0 +1,29 @@
+<a class="saltar" href="#contenido" (click)="saltarAlContenido($event)">Saltar al contenido</a>
+
+<header class="encabezado">
+  <a class="marca" routerLink="/inicio">
+    <img src="/img/logo.png" alt="AgroVentas" class="logo" />
+  </a>
+
+  <nav class="menu" aria-label="Principal">
+    <a routerLink="/inicio" routerLinkActive="actual" ariaCurrentWhenActive="page">Lista de precios</a>
+    <a routerLink="/pedidos" routerLinkActive="actual" ariaCurrentWhenActive="page">Hacer pedido</a>
+    <a routerLink="/mis-pedidos" routerLinkActive="actual" ariaCurrentWhenActive="page">Mis pedidos</a>
+    @if (esAdministrador) {
+      <a routerLink="/inventario" routerLinkActive="actual" ariaCurrentWhenActive="page">Inventario</a>
+    }
+  </nav>
+
+  <div class="cuenta">
+    @if (usuario()?.email; as correo) {
+      <span class="correo">{{ correo }}</span>
+    }
+    <button type="button" class="cerrar-sesion" [disabled]="cerrandoSesion()" (click)="cerrarSesion()">
+      {{ cerrandoSesion() ? 'Cerrando…' : 'Cerrar sesión' }}
+    </button>
+  </div>
+</header>
+
+@if (errorSesion()) {
+  <p class="error-sesion" role="alert">{{ errorSesion() }}</p>
+}

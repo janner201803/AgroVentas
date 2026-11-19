@@ -1,7 +1,8 @@
-import { Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Encabezado } from '../../shared/encabezado/encabezado';
 import { TimeoutError, finalize, timeout } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HorarioEntrega, PedidoService, ProductoPedido } from '../../core/services/pedido.service';
@@ -17,7 +18,7 @@ interface DiaCalendario {
 @Component({
   selector: 'app-pedidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, Encabezado],
   templateUrl: './pedidos.html',
   styleUrl: './pedidos.css'
 })
@@ -26,6 +27,10 @@ export class Pedidos implements OnInit, OnDestroy {
   private inventarioService = inject(InventarioService);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
+  private route = inject(ActivatedRoute);
+  private host: ElementRef<HTMLElement> = inject(ElementRef);
+  /** Variedad elegida en la lista de precios (/pedidos?producto=ID). Se usa una sola vez. */
+  private productoSolicitado: number | null = null;
   private reintentoProductos: ReturnType<typeof setTimeout> | null = null;
 
   productos: ProductoPedido[] = [];
@@ -39,6 +44,10 @@ export class Pedidos implements OnInit, OnDestroy {
   enviando = false;
   mensaje = '';
   error = '';
+  /** Campo junto al que se repite el error de validación (además del aviso general). */
+  errorCampo: 'producto' | 'cantidad' | 'horario' | null = null;
+  /** Día que recibe el foco del teclado en el calendario. */
+  private fechaConFoco = '';
   cargandoProductos = true;
   cargandoHorarios = false;
   fechaEntrega = '';
@@ -60,6 +69,8 @@ export class Pedidos implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const solicitado = Number(this.route.snapshot.queryParamMap.get('producto'));
+    this.productoSolicitado = Number.isInteger(solicitado) && solicitado > 0 ? solicitado : null;
     this.construirCalendario();
     this.cargarProductos();
     this.fechaEntrega = this.fechaMinima;
@@ -87,6 +98,10 @@ export class Pedidos implements OnInit, OnDestroy {
           this.productoId = null;
           this.cantidad = null;
         }
+        if (this.productoId == null && this.productos.some(producto => producto.id === this.productoSolicitado)) {
+          this.productoId = this.productoSolicitado;
+        }
+        this.productoSolicitado = null;
         this.error = '';
       },
       error: err => {
@@ -167,6 +182,48 @@ export class Pedidos implements OnInit, OnDestroy {
     });
   }
 
+  /** Día del calendario que entra en el orden de tabulación: uno solo, el resto se recorre con flechas. */
+  get fechaFoco(): string {
+    const visibles = this.diasCalendario.map(celda => celda.fecha).filter((fecha): fecha is string => !!fecha);
+    for (const candidata of [this.fechaConFoco, this.fechaEntrega]) {
+      if (candidata && visibles.includes(candidata)) return candidata;
+    }
+    return visibles.find(fecha => fecha >= this.fechaMinima) ?? '';
+  }
+
+  /** "viernes, 13 de noviembre de 2026": nombre accesible de cada día del calendario. */
+  fechaTexto(fecha: string): string {
+    return new Intl.DateTimeFormat('es-CO', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'
+    }).format(new Date(`${fecha}T12:00:00Z`));
+  }
+
+  /** "09:00" → "9:00 a. m." */
+  horaTexto(hora: string): string {
+    const [horas, minutos] = hora.split(':').map(Number);
+    return new Intl.DateTimeFormat('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true })
+      .format(new Date(2000, 0, 1, horas, minutos || 0));
+  }
+
+  /** Flechas del teclado: mueven el foco entre días (y de mes si hace falta). Enter o espacio eligen. */
+  teclaCalendario(evento: KeyboardEvent, fecha: string): void {
+    const pasos: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+    const paso = pasos[evento.key];
+    if (!paso) return;
+    evento.preventDefault();
+    const destino = new Date(`${fecha}T12:00:00`);
+    destino.setDate(destino.getDate() + paso);
+    const nueva = this.fechaLocal(destino);
+    if (nueva < this.fechaMinima) return;
+    if (!this.diasCalendario.some(celda => celda.fecha === nueva)) {
+      this.mesCalendario = new Date(destino.getFullYear(), destino.getMonth(), 1);
+      this.construirCalendario();
+    }
+    this.fechaConFoco = nueva;
+    this.cdr.markForCheck();
+    setTimeout(() => this.host.nativeElement.querySelector<HTMLElement>(`[data-fecha="${nueva}"]`)?.focus());
+  }
+
   seleccionarHora(hora: string): void {
     if (this.horarios.find(item => item.hora === hora)?.disponible) this.horaEntrega = hora;
   }
@@ -183,6 +240,7 @@ export class Pedidos implements OnInit, OnDestroy {
 
   enviarPedido(): void {
     this.error = '';
+    this.errorCampo = null;
     this.mensaje = '';
     if (this.cargandoProductos || this.cargandoHorarios) {
       this.error = 'Espera a que terminen de cargar los productos y horarios.';
@@ -191,22 +249,27 @@ export class Pedidos implements OnInit, OnDestroy {
     const producto = this.productoSeleccionado;
     if (!producto || this.cantidad == null || this.cantidad <= 0) {
       this.error = 'Selecciona un producto e indica una cantidad válida.';
+      this.errorCampo = producto ? 'cantidad' : 'producto';
       return;
     }
     if (this.cantidad > producto.cantidad) {
       this.error = 'La cantidad solicitada supera el inventario disponible.';
+      this.errorCampo = 'cantidad';
       return;
     }
     if (producto.und === 'und' && !Number.isInteger(this.cantidad)) {
       this.error = 'La cantidad solicitada debe ser un número entero de unidades.';
+      this.errorCampo = 'cantidad';
       return;
     }
     if (producto.und === 'kg' && Math.abs(this.cantidad * 10 - Math.round(this.cantidad * 10)) > 1e-8) {
       this.error = 'La cantidad en kg debe usar incrementos de 0,1 kg.';
+      this.errorCampo = 'cantidad';
       return;
     }
     if (!this.fechaEntrega || !this.horaEntrega || !this.horarios.some(item => item.hora === this.horaEntrega && item.disponible)) {
       this.error = 'Selecciona una fecha y un horario disponible.';
+      this.errorCampo = 'horario';
       return;
     }
     this.enviando = true;
@@ -225,7 +288,7 @@ export class Pedidos implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: () => {
-        this.mensaje = '¡Pedido realizado correctamente! Ya quedó registrado como pendiente.';
+        this.mensaje = 'Pedido registrado. Quedó como pendiente.';
         this.productoId = null;
         this.cantidad = null;
         this.metodoPago = 'efectivo';

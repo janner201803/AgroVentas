@@ -9,7 +9,7 @@ import { AuthService } from '../../core/services/auth.service'; // ajusta la rut
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './olvide-contrasena.html',
-    styleUrls: ['../login/login.css', './olvide-contrasena.css'], // reutiliza los estilos del login
+    styleUrl: '../../shared/acceso/acceso.css',
 })
 export class OlvideContrasena {
   private authService = inject(AuthService);

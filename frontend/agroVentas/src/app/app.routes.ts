@@ -28,7 +28,7 @@ export const routes: Routes = [
   },
   {
     path: 'inicio',
-    title: 'Inicio · AgroVentas',
+    title: 'Lista de precios · AgroVentas',
     loadComponent: () => import('../app/pages/inicio/inicio').then(modulo => modulo.Inicio),
     canActivate: [authGuard]
   },

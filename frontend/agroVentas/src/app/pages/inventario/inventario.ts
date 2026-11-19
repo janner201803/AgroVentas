@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, DestroyRef, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Encabezado } from '../../shared/encabezado/encabezado';
 import { TimeoutError, finalize, timeout } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -16,14 +16,13 @@ import { AuthService } from '../../core/services/auth.service';
 @Component({
   selector: 'app-inventario',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, Encabezado],
   templateUrl: './inventario.html',
   styleUrl: './inventario.css'
 })
 export class Inventario implements OnInit, OnDestroy {
   private inventarioService = inject(InventarioService);
   private authService = inject(AuthService);
-  private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   private recargaProgramada: ReturnType<typeof setTimeout> | null = null;
@@ -32,14 +31,12 @@ export class Inventario implements OnInit, OnDestroy {
   private recargaInventarioPendiente = false;
   private destruido = false;
 
-  usuario = this.authService.usuario;
   productos: ProductoInventario[] = [];
   catalogo: ProductoCatalogo[] = [];
   esAdministrador = false;
   cargando = true;
   cargandoCatalogo = true;
   guardando = false;
-  cerrandoSesion = false;
   mensaje = '';
   error = '';
   idProductoSeleccionado: number | null = null;
@@ -69,10 +66,6 @@ export class Inventario implements OnInit, OnDestroy {
     this.busqueda = '';
   }
 
-  porIdProducto(_indice: number, producto: ProductoInventario): number {
-    return producto.id_producto;
-  }
-
   get productoSeleccionado(): ProductoCatalogo | undefined {
     return this.catalogo.find(producto => producto.id === Number(this.idProductoSeleccionado));
   }
@@ -92,21 +85,6 @@ export class Inventario implements OnInit, OnDestroy {
     this.idProductoSeleccionado = id;
     this.cantidadAgregar = 1;
     this.error = '';
-  }
-
-  async cerrarSesion(): Promise<void> {
-    if (this.cerrandoSesion) return;
-    this.cerrandoSesion = true;
-    this.error = '';
-    try {
-      await this.authService.cerrarSesion();
-      await this.router.navigate(['/login']);
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      this.error = 'No fue posible cerrar la sesión. Intenta de nuevo.';
-    } finally {
-      this.cerrandoSesion = false;
-    }
   }
 
   private cargarCatalogo(): void {

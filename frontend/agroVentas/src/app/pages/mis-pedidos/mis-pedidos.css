@@ -1,63 +1,309 @@
-/* Estilos propios de "Mis pedidos". La base (paleta, tarjetas, encabezado)
-   viene de ../pedidos/pedidos.css, que este componente también carga. */
+:host {
+  display: block;
+  min-height: 100vh;
+  color: var(--tinta);
+  background: var(--papel);
+  font-family: var(--fuente-texto);
+  font-size: var(--letra-16);
+  font-weight: var(--peso-texto);
+  line-height: var(--interlineado);
+}
 
-.barra-consulta,
-.actualizar {
+.pagina {
+  max-width: calc(var(--ancho-contenido) + 2 * var(--margen-lateral));
+  padding: var(--espacio-32) var(--margen-lateral) var(--espacio-48);
+}
+
+.cifra {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cabecera */
+
+.cabecera {
   display: flex;
-  align-items: center;
-  gap: 12px;
   flex-wrap: wrap;
-}
-
-.barra-consulta {
+  align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 16px;
+  gap: var(--espacio-16);
+  margin-bottom: var(--espacio-24);
 }
 
-.enlace-accion {
-  color: #176b43;
-  font-weight: bold;
-  text-decoration: none;
-}
-
-.enlace-accion:hover {
-  text-decoration: underline;
-}
-
-.ultima-consulta {
-  color: #82643c;
-}
-
-.boton-secundario,
-.filtro {
-  width: auto;
+h1 {
   margin: 0;
-  padding: 8px 14px;
-  border: 1px solid #176b43;
-  border-radius: 999px;
-  background: transparent;
-  color: #176b43;
-  font-size: 13px;
+  font-family: var(--fuente-rotulo);
+  font-size: var(--letra-36);
+  font-weight: var(--peso-rotulo-fuerte);
+  line-height: var(--interlineado-rotulo);
 }
+
+.contexto {
+  margin: var(--espacio-8) 0 0;
+  color: var(--tinta-suave);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-12);
+}
+
+.boton {
+  display: inline-block;
+  padding: var(--espacio-8) var(--espacio-16);
+  border: var(--grosor-linea) solid var(--borde);
+  border-radius: var(--radio-control);
+  color: var(--tinta);
+  background: transparent;
+  font: inherit;
+  font-weight: var(--peso-texto-fuerte);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.boton:hover:not(:disabled) {
+  border-color: var(--hoja-oscura);
+  color: var(--hoja-oscura);
+}
+
+.boton:disabled {
+  color: var(--tinta-suave);
+  cursor: wait;
+}
+
+.boton-principal {
+  border-color: var(--hoja);
+  color: var(--pliego);
+  background: var(--hoja);
+}
+
+.boton-principal:hover:not(:disabled) {
+  border-color: var(--hoja-oscura);
+  color: var(--pliego);
+  background: var(--hoja-oscura);
+}
+
+/* Avisos */
+
+.aviso {
+  margin: 0 0 var(--espacio-24);
+  padding: var(--espacio-16);
+  border: var(--grosor-linea) solid var(--linea);
+  border-radius: var(--radio-panel);
+  background: var(--pliego);
+}
+
+.aviso p {
+  margin: 0;
+}
+
+.aviso p + p {
+  color: var(--tinta-suave);
+}
+
+.aviso strong {
+  font-weight: var(--peso-texto-fuerte);
+}
+
+.aviso-error {
+  border-color: transparent;
+  color: var(--estado-error-texto);
+  background: var(--estado-error-fondo);
+}
+
+.aviso-error p {
+  margin-bottom: var(--espacio-12);
+}
+
+.aviso-error .boton {
+  border-color: var(--estado-error-texto);
+  color: var(--estado-error-texto);
+}
+
+.aviso-error .boton:hover {
+  color: var(--estado-error-fondo);
+  background: var(--estado-error-texto);
+}
+
+/* Filtros: pestañas de texto con contador */
 
 .filtros {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 18px;
+  column-gap: var(--espacio-24);
+  margin-bottom: var(--espacio-16);
+  border-bottom: var(--grosor-linea) solid var(--linea);
+}
+
+.filtro {
+  padding: var(--espacio-8) var(--espacio-4);
+  border: 0;
+  border-bottom: var(--grosor-filete) solid transparent;
+  color: var(--tinta);
+  background: transparent;
+  font: inherit;
+  font-weight: var(--peso-texto-fuerte);
+  cursor: pointer;
+}
+
+.filtro:hover {
+  color: var(--hoja-oscura);
+  border-bottom-color: var(--linea);
 }
 
 .filtro.activo {
-  background: #176b43;
-  color: #fff9e8;
+  color: var(--hoja);
+  border-bottom-color: var(--hoja);
 }
 
-/* El estado es el dato principal de esta pantalla: se muestra como una píldora legible. */
-.estado-pedido {
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: #ffe9c9;
-  font-size: 11px;
-  letter-spacing: 0.8px;
+.contador {
+  margin-left: var(--espacio-4);
+  color: var(--tinta-suave);
+  font-weight: var(--peso-texto);
+}
+
+/* Tabla */
+
+.lista {
+  width: 100%;
+  border: var(--grosor-linea) solid var(--linea);
+  border-radius: var(--radio-panel);
+  border-spacing: 0;
+  background: var(--pliego);
+}
+
+.lista th,
+.lista td {
+  padding: var(--espacio-12) var(--espacio-16);
+  border-bottom: var(--grosor-linea) solid var(--linea);
+  font-weight: var(--peso-texto);
+  text-align: left;
+  vertical-align: top;
+}
+
+.lista tbody tr:last-child th,
+.lista tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.lista thead th {
+  padding-block: var(--espacio-8);
+  color: var(--tinta-suave);
+  font-size: var(--letra-14);
+  font-weight: var(--peso-texto-fuerte);
+}
+
+.lista .col-numero {
+  text-align: right;
+}
+
+.linea {
+  display: block;
+}
+
+.secundario,
+.pedido-referencia {
+  color: var(--tinta-suave);
+  font-size: var(--letra-14);
+}
+
+.lista .celda-variedad {
+  font-family: var(--fuente-rotulo);
+  font-size: var(--letra-18);
+  font-weight: var(--peso-rotulo);
+}
+
+.celda-cantidad,
+.total {
   white-space: nowrap;
+}
+
+/* Marca de estado: la única píldora de la guía. Siempre lleva texto. */
+
+.estado {
+  display: inline-block;
+  padding: var(--espacio-4) var(--espacio-12);
+  border-radius: var(--radio-marca);
+  font-size: var(--letra-14);
+  font-weight: var(--peso-texto-fuerte);
+  white-space: nowrap;
+}
+
+.estado-correcto {
+  color: var(--estado-correcto-texto);
+  background: var(--estado-correcto-fondo);
+}
+
+.estado-pendiente {
+  color: var(--estado-pendiente-texto);
+  background: var(--estado-pendiente-fondo);
+}
+
+.estado-error {
+  color: var(--estado-error-texto);
+  background: var(--estado-error-fondo);
+}
+
+.estado-neutro {
+  color: var(--estado-neutro-texto);
+  background: var(--estado-neutro-fondo);
+}
+
+.solo-lectores {
+  position: absolute;
+  width: var(--grosor-linea);
+  height: var(--grosor-linea);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Pantallas angostas y zoom al 200 %: cada pedido se apila en dos columnas
+   para que no haya desplazamiento horizontal. (Una media query no admite variables.) */
+@media (max-width: 800px) {
+  .pagina {
+    padding-inline: var(--espacio-16);
+  }
+
+  .lista,
+  .lista tbody {
+    display: block;
+  }
+
+  .lista thead {
+    position: absolute;
+    width: var(--grosor-linea);
+    height: var(--grosor-linea);
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .lista tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'variedad estado'
+      'recogida total'
+      'pedido cantidad';
+    gap: var(--espacio-4) var(--espacio-16);
+    padding: var(--espacio-12) var(--espacio-16);
+    border-bottom: var(--grosor-linea) solid var(--linea);
+  }
+
+  .lista tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .lista tbody th,
+  .lista tbody td {
+    padding: 0;
+    border: 0;
+  }
+
+  .celda-variedad { grid-area: variedad; }
+  .celda-estado { grid-area: estado; text-align: right; }
+  .celda-recogida { grid-area: recogida; }
+  .celda-total { grid-area: total; }
+  .celda-pedido { grid-area: pedido; }
+  .celda-cantidad { grid-area: cantidad; }
 }

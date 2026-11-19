@@ -70,16 +70,16 @@ describe('Inventario', () => {
     expect(normalizarTexto('  Piña  ')).toBe('pina');
   });
 
-  it('renderiza el buscador y filtra las tarjetas en pantalla', async () => {
+  it('renderiza el buscador y filtra las filas en pantalla', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const html: HTMLElement = fixture.nativeElement;
     expect(html.querySelector('#buscar-producto')).not.toBeNull();
-    expect(html.querySelectorAll('article.producto').length).toBe(4);
+    expect(html.querySelectorAll('tr.producto').length).toBe(4);
 
     component.busqueda = 'piña';
     fixture.detectChanges();
-    const nombres = Array.from(html.querySelectorAll('article.producto h3')).map(h => h.textContent?.trim());
+    const nombres = Array.from(html.querySelectorAll('tr.producto th')).map(h => h.textContent?.trim());
     expect(nombres).toEqual(['Piña huevo', 'Piña segunda']);
     expect(html.querySelector('.contador')?.textContent).toContain('2 de 4');
     fixture.destroy();
@@ -92,11 +92,14 @@ describe('Inventario', () => {
     };
     fixture.detectChanges();
     await fixture.whenStable();
-    const texto = (fixture.nativeElement as HTMLElement).querySelector('article.producto')?.textContent ?? '';
-    expect(texto).toContain('Disponible');
-    expect(texto).toMatch(/Comprometido en pedidos\s*4 und/);
-    expect(texto).toMatch(/Total en bodega\s*12 und/);
-    expect(texto).toContain('09/11/2026 15:30');
+    const html: HTMLElement = fixture.nativeElement;
+    const columnas = Array.from(html.querySelectorAll('thead th')).map(th => th.textContent?.trim());
+    expect(columnas).toEqual(['Variedad', 'Unidad', 'Precio', 'Disponible', 'Comprometido', 'Total', 'Última actualización']);
+    const celda = (clase: string) => html.querySelector(`tr.producto .${clase}`)?.textContent?.trim();
+    expect(celda('celda-disponible')).toBe('8');
+    expect(celda('celda-comprometido')).toBe('4');
+    expect(celda('celda-total')).toBe('12');
+    expect(celda('celda-fecha')).toBe('09/11/2026 15:30');
     fixture.destroy();
   });
 
@@ -114,7 +117,7 @@ describe('Inventario', () => {
     await fixture.whenStable();
     const html: HTMLElement = fixture.nativeElement;
     expect(html.querySelector('.aviso-migracion')).not.toBeNull();
-    expect(html.textContent).not.toContain('Comprometido en pedidos');
+    expect(html.textContent).not.toContain('Comprometido');
     expect(html.textContent).not.toContain('Última actualización');
     fixture.destroy();
   });
