@@ -13,6 +13,14 @@ function errorSupabase(error, accion) {
   return fallo;
 }
 
+const FUNCION_NO_INSTALADA = ['PGRST202', '42883'];
+
+function migracionGestionPendiente() {
+  const error = new Error('Falta instalar la migración 20261119_estados_historial_pedidos.sql en Supabase.');
+  error.status = 503;
+  return error;
+}
+
 class PedidoRepository {
   async horariosOcupados(fecha, client = supabase) {
     const { data, error } = await client.rpc('horarios_ocupados', { p_fecha: fecha });
@@ -96,5 +104,36 @@ class PedidoRepository {
     }));
   }
 }
+
+PedidoRepository.prototype.listarGestion = async function ({ desde = null, hasta = null } = {}, client = supabase) {
+  const { data, error } = await client.rpc('pedidos_personal', { p_desde: desde, p_hasta: hasta });
+  if (error) {
+    if (FUNCION_NO_INSTALADA.includes(error.code)) throw migracionGestionPendiente();
+    throw errorSupabase(error, 'consultar los pedidos');
+  }
+  return data ?? [];
+};
+
+PedidoRepository.prototype.cambiarEstado = async function (id, estado, nota, client = supabase) {
+  const { data, error } = await client.rpc('cambiar_estado_pedido', {
+    p_id_pedido: id,
+    p_estado: estado,
+    p_nota: nota
+  });
+  if (error) {
+    if (FUNCION_NO_INSTALADA.includes(error.code)) throw migracionGestionPendiente();
+    throw errorSupabase(error, 'cambiar el estado del pedido');
+  }
+  return data;
+};
+
+PedidoRepository.prototype.historial = async function (id, client = supabase) {
+  const { data, error } = await client.rpc('historial_estados_pedido', { p_id_pedido: id });
+  if (error) {
+    if (FUNCION_NO_INSTALADA.includes(error.code)) throw migracionGestionPendiente();
+    throw errorSupabase(error, 'consultar el historial del pedido');
+  }
+  return data ?? [];
+};
 
 module.exports = new PedidoRepository();

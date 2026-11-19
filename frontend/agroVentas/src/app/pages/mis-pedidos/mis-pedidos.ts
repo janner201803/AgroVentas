@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TimeoutError, finalize, timeout } from 'rxjs';
 import { PedidoHistorial, PedidoService } from '../../core/services/pedido.service';
+import { ETIQUETA_ESTADO, EstadoPedido, normalizarEstado } from '../../core/estados-pedido';
 
 /** Grupos con los que el cliente puede filtrar su historial (HU-08). */
 export type FiltroPedidos = 'todos' | 'activos' | 'entregados' | 'cancelados';
@@ -14,22 +15,14 @@ interface OpcionFiltro {
 }
 
 /**
- * Estados que maneja hoy la base de datos, agrupados para el filtro.
- * Un estado que no esté aquí solo aparece en "Todos".
+ * Los cuatro estados de HU-08/HU-12 agrupados para el filtro. Los nombres antiguos
+ * (confirmado, preparado, rechazado) se convierten con normalizarEstado.
+ * Un estado desconocido solo aparece en "Todos".
  */
-const ESTADOS_POR_FILTRO: Record<Exclude<FiltroPedidos, 'todos'>, readonly string[]> = {
-  activos: ['pendiente', 'confirmado', 'preparado'],
+const ESTADOS_POR_FILTRO: Record<Exclude<FiltroPedidos, 'todos'>, readonly EstadoPedido[]> = {
+  activos: ['pendiente', 'en_preparacion'],
   entregados: ['entregado'],
-  cancelados: ['cancelado', 'rechazado']
-};
-
-const ETIQUETAS_ESTADO: Record<string, string> = {
-  pendiente: 'Pendiente',
-  confirmado: 'Confirmado',
-  preparado: 'Preparado',
-  entregado: 'Entregado',
-  cancelado: 'Cancelado',
-  rechazado: 'Rechazado'
+  cancelados: ['cancelado']
 };
 
 /**
@@ -150,22 +143,20 @@ export class MisPedidos implements OnInit {
 
   private perteneceAFiltro(estado: string, filtro: FiltroPedidos): boolean {
     if (filtro === 'todos') return true;
-    return ESTADOS_POR_FILTRO[filtro].includes(this.normalizarEstado(estado));
-  }
-
-  private normalizarEstado(estado: string): string {
-    return estado?.trim().toLowerCase() ?? '';
+    const normalizado = normalizarEstado(estado);
+    return normalizado !== null && ESTADOS_POR_FILTRO[filtro].includes(normalizado);
   }
 
   etiquetaEstado(estado: string): string {
-    const normalizado = this.normalizarEstado(estado);
-    return ETIQUETAS_ESTADO[normalizado] ?? (normalizado || 'Sin estado');
+    const normalizado = normalizarEstado(estado);
+    if (normalizado) return ETIQUETA_ESTADO[normalizado];
+    return estado?.trim() || 'Sin estado';
   }
 
   claseVisualEstado(estado: string): string {
-    const normalizado = this.normalizarEstado(estado);
-    if (['confirmado', 'preparado', 'entregado'].includes(normalizado)) return 'exito';
-    if (['cancelado', 'rechazado'].includes(normalizado)) return 'error';
+    const normalizado = normalizarEstado(estado);
+    if (normalizado === 'en_preparacion' || normalizado === 'entregado') return 'exito';
+    if (normalizado === 'cancelado') return 'error';
     return '';
   }
 

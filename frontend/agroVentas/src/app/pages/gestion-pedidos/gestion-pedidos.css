@@ -1,0 +1,227 @@
+/* HU-12 / HU-13: estilos propios. Encabezado, paneles y filtros vienen de inventario.css y usuarios.css. */
+.resumen-pedidos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 8px 0 4px;
+}
+
+.tarjeta-resumen {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1px solid #e8dfc7;
+  border-radius: 14px;
+  color: #174b32;
+  background: #fffdf5;
+  text-align: left;
+}
+
+.tarjeta-resumen strong {
+  font-size: 26px;
+}
+
+.tarjeta-resumen span {
+  font-weight: 600;
+}
+
+.tarjeta-resumen small {
+  color: #8e3328;
+}
+
+.tarjeta-resumen.urgente {
+  border-color: #e9b8a8;
+  background: #fff4ef;
+}
+
+.tarjeta-resumen.informativa {
+  cursor: default;
+}
+
+.acciones-listado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.reintentar {
+  margin-left: 10px;
+  padding: 6px 12px;
+}
+
+.filtros-extra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.campo-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.campo-cliente {
+  flex: 1 1 220px;
+}
+
+.campo-filtro label {
+  color: #637267;
+  font-size: 14px;
+}
+
+.campo-filtro input {
+  padding: 9px 10px;
+  border: 1px solid #d9cfb3;
+  border-radius: 9px;
+  color: #174b32;
+  background: #fff;
+  font: inherit;
+}
+
+.check-urgentes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 10px;
+  font-size: 14px;
+}
+
+.criterio-urgencia {
+  margin: 4px 0 14px;
+  color: #637267;
+  font-size: 13px;
+}
+
+.lista-pedidos {
+  display: grid;
+  gap: 12px;
+}
+
+.pedido-gestion {
+  padding: 16px 18px;
+  border: 1px solid #e8dfc7;
+  border-left-width: 5px;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.pedido-gestion.es-hoy {
+  border-left-color: #d99a1e;
+}
+
+.pedido-gestion.es-atrasado {
+  border-left-color: #c2452f;
+  background: #fffaf7;
+}
+
+.pedido-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pedido-cabecera h3 {
+  margin: 0 0 2px;
+  font-size: 17px;
+}
+
+.pedido-cliente {
+  margin: 0;
+  color: #637267;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.insignias {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.insignia {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.urgencia-atrasado { color: #fff; background: #c2452f; }
+.urgencia-hoy { color: #5c3d00; background: #f8dc94; }
+.urgencia-manana { color: #174b32; background: #e7f2dc; }
+
+.estado-pendiente { color: #5c4a14; background: #f5ecc9; }
+.estado-en_preparacion { color: #1d4f7a; background: #dcebf7; }
+.estado-entregado { color: #28603b; background: #e8f6e8; }
+.estado-cancelado { color: #8e3328; background: #ffe0d5; }
+.estado-desconocido { color: #637267; background: #eee; }
+
+.pedido-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.pedido-datos dt {
+  color: #637267;
+  font-size: 13px;
+}
+
+.pedido-datos dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+}
+
+.pedido-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.pedido-acciones button {
+  padding: 8px 13px;
+}
+
+.enlace-historial {
+  margin-left: auto;
+  color: #176b43;
+  background: transparent;
+  text-decoration: underline;
+}
+
+.historial {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #e8dfc7;
+}
+
+.historial ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.historial li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.historial li span {
+  color: #637267;
+}
+
+.historial em {
+  color: #3c5a48;
+}

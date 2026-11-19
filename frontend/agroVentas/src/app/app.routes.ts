@@ -43,6 +43,11 @@ export const routes: Routes = [
     canActivate: [rolGuard('propietario', 'empleado')]
   },
   {
+    path: 'gestion-pedidos',
+    loadComponent: () => import('../app/pages/gestion-pedidos/gestion-pedidos').then(modulo => modulo.GestionPedidos),
+    canActivate: [rolGuard('propietario', 'empleado')]
+  },
+  {
     path: 'usuarios',
     loadComponent: () => import('../app/pages/usuarios/usuarios').then(modulo => modulo.Usuarios),
     canActivate: [rolGuard('propietario')]

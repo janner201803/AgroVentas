@@ -1,0 +1,178 @@
+<main class="pagina">
+  <header class="encabezado">
+    <a routerLink="/inicio" class="marca" aria-label="Volver al inicio">
+      <img src="/img/logo.png" alt="Logo de AgroVentas" class="brand-logo" />
+    </a>
+    <h1 class="titulo-pagina">Gestión de pedidos</h1>
+    <div class="acciones-cuenta">
+      <a routerLink="/inicio" class="volver">← Volver a inicio</a>
+      <div class="cuenta">
+        <span class="encabezado-etiqueta">{{ etiquetaRol() }}</span>
+        <strong>{{ usuario()?.email }}</strong>
+      </div>
+      <button type="button" class="cerrar-sesion" [disabled]="cerrandoSesion()" (click)="cerrarSesion()">
+        {{ cerrandoSesion() ? 'Cerrando…' : 'Cerrar sesión' }}
+      </button>
+    </div>
+  </header>
+
+  <section class="resumen-pedidos" aria-label="Resumen de pedidos">
+    <button type="button" class="tarjeta-resumen urgente" (click)="verUrgentes()">
+      <strong>{{ resumen().urgentes }}</strong>
+      <span>Urgentes</span>
+      <small *ngIf="resumen().atrasados > 0">{{ resumen().atrasados }} atrasado{{ resumen().atrasados === 1 ? '' : 's' }}</small>
+    </button>
+    <button type="button" class="tarjeta-resumen" (click)="filtroEstado.set('pendiente'); soloUrgentes.set(false)">
+      <strong>{{ resumen().pendientes }}</strong>
+      <span>Pendientes</span>
+    </button>
+    <button type="button" class="tarjeta-resumen" (click)="filtroEstado.set('en_preparacion'); soloUrgentes.set(false)">
+      <strong>{{ resumen().enPreparacion }}</strong>
+      <span>En preparación</span>
+    </button>
+    <div class="tarjeta-resumen informativa">
+      <strong>{{ resumen().manana }}</strong>
+      <span>Para mañana</span>
+    </div>
+  </section>
+
+  <div *ngIf="error()" class="alerta error" role="alert">
+    {{ error() }}
+    <button *ngIf="pedidos().length === 0 && !cargando()" type="button" class="boton-secundario reintentar" (click)="cargar()">
+      Intentar de nuevo
+    </button>
+  </div>
+  <div *ngIf="mensaje()" class="alerta exito" role="status">{{ mensaje() }}</div>
+
+  <section class="panel listado">
+    <div class="listado-titulo">
+      <h2>Pedidos</h2>
+      <div class="acciones-listado">
+        <span class="contador">
+          {{ pedidosFiltrados().length }} de {{ pedidos().length }}
+          <ng-container *ngIf="ultimaConsulta()"> · actualizado {{ ultimaConsulta() | date:'h:mm a' }}</ng-container>
+        </span>
+        <button type="button" class="boton-secundario" [disabled]="cargando() || actualizando()" (click)="actualizar()">
+          {{ actualizando() ? 'Actualizando…' : 'Actualizar' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="filtros-rol" role="group" aria-label="Filtrar por estado">
+      <button
+        *ngFor="let opcion of filtrosEstado"
+        type="button"
+        class="filtro"
+        [class.activo]="filtroEstado() === opcion.valor"
+        [attr.aria-pressed]="filtroEstado() === opcion.valor"
+        (click)="filtroEstado.set(opcion.valor)"
+      >
+        {{ opcion.etiqueta }} <span>{{ contadores()[opcion.valor] }}</span>
+      </button>
+    </div>
+
+    <div class="filtros-extra">
+      <div class="campo-filtro campo-cliente">
+        <label for="buscar-cliente">Cliente</label>
+        <input
+          id="buscar-cliente"
+          type="search"
+          [ngModel]="busquedaCliente()"
+          (ngModelChange)="busquedaCliente.set($event)"
+          placeholder="Nombre, correo o celular"
+          autocomplete="off"
+        />
+      </div>
+      <div class="campo-filtro">
+        <label for="fecha-desde">Entrega desde</label>
+        <input id="fecha-desde" type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event || '')" />
+      </div>
+      <div class="campo-filtro">
+        <label for="fecha-hasta">Entrega hasta</label>
+        <input id="fecha-hasta" type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event || '')" />
+      </div>
+      <label class="check-urgentes">
+        <input type="checkbox" [ngModel]="soloUrgentes()" (ngModelChange)="soloUrgentes.set($event)" />
+        Solo urgentes
+      </label>
+      <button *ngIf="hayFiltrosExtra()" type="button" class="limpiar-busqueda" (click)="limpiarFiltros()">Limpiar filtros</button>
+    </div>
+
+    <p class="criterio-urgencia">
+      <strong>Urgente:</strong> pedidos pendientes o en preparación que se entregan hoy o cuya hora de entrega ya pasó.
+    </p>
+
+    <p *ngIf="cargando()">Cargando pedidos…</p>
+    <p *ngIf="!cargando() && !error() && pedidos().length === 0" class="vacio">Todavía no hay pedidos registrados.</p>
+    <p *ngIf="!cargando() && pedidos().length > 0 && pedidosFiltrados().length === 0" class="vacio" role="status">
+      Ningún pedido coincide con los filtros.
+    </p>
+
+    <div class="lista-pedidos" *ngIf="!cargando() && pedidosFiltrados().length > 0">
+      <article
+        *ngFor="let pedido of pedidosFiltrados(); trackBy: porId"
+        class="pedido-gestion"
+        [class.es-atrasado]="pedido.urgencia === 'atrasado'"
+        [class.es-hoy]="pedido.urgencia === 'hoy'"
+      >
+        <div class="pedido-cabecera">
+          <div>
+            <h3 [title]="pedido.id">Pedido #{{ idCorto(pedido.id) }}</h3>
+            <p class="pedido-cliente">
+              {{ pedido.cliente_nombre || pedido.cliente_correo || 'Cliente sin perfil' }}
+              <span *ngIf="pedido.cliente_celular"> · Cel. {{ pedido.cliente_celular }}</span>
+            </p>
+          </div>
+          <div class="insignias">
+            <span *ngIf="pedido.urgencia" class="insignia urgencia" [ngClass]="'urgencia-' + pedido.urgencia">
+              {{ etiquetaUrgenciaDe(pedido.urgencia) }}
+            </span>
+            <span class="insignia estado" [ngClass]="'estado-' + (pedido.estadoNormalizado || 'desconocido')">
+              {{ etiquetaDe(pedido.estado) }}
+            </span>
+          </div>
+        </div>
+
+        <dl class="pedido-datos">
+          <div><dt>Entrega</dt><dd>{{ formatearFecha(pedido.fecha_entrega) }} · {{ formatearHora(pedido.hora_entrega) }}</dd></div>
+          <div><dt>Producto</dt><dd>{{ pedido.producto_nombre || 'Producto' }} · {{ pedido.cantidad }} {{ pedido.producto_unidad }}</dd></div>
+          <div><dt>Valor</dt><dd>{{ pedido.valor | currency:'COP':'symbol-narrow':'1.0-0' }} · {{ etiquetaPago(pedido.metodo_pago) }}</dd></div>
+          <div *ngIf="pedido.ultimo_cambio_en">
+            <dt>Último cambio</dt>
+            <dd>{{ pedido.ultimo_cambio_en | date:'dd/MM/yyyy h:mm a' }}<ng-container *ngIf="pedido.ultimo_cambio_por"> · {{ pedido.ultimo_cambio_por }}</ng-container></dd>
+          </div>
+        </dl>
+
+        <div class="pedido-acciones">
+          <button
+            *ngFor="let destino of transiciones(pedido)"
+            type="button"
+            [ngClass]="destino === 'cancelado' ? 'boton-peligro' : destino === 'pendiente' ? 'boton-secundario' : ''"
+            [disabled]="estaGuardando(pedido)"
+            (click)="cambiarEstado(pedido, destino)"
+          >
+            {{ accionHacia[destino] }}
+          </button>
+          <button type="button" class="enlace-historial" (click)="alternarHistorial(pedido)" [attr.aria-expanded]="historialAbierto() === pedido.id">
+            {{ historialAbierto() === pedido.id ? 'Ocultar historial' : 'Ver historial' }}
+          </button>
+        </div>
+
+        <div *ngIf="historialAbierto() === pedido.id" class="historial">
+          <p *ngIf="cargandoHistorial()">Cargando historial…</p>
+          <p *ngIf="errorHistorial()" class="alerta error">{{ errorHistorial() }}</p>
+          <p *ngIf="!cargandoHistorial() && !errorHistorial() && historial().length === 0" class="vacio">
+            Sin cambios registrados (el pedido es anterior al historial).
+          </p>
+          <ol *ngIf="!cargandoHistorial() && historial().length > 0">
+            <li *ngFor="let cambio of historial()">
+              <strong>{{ cambio.estado_anterior ? etiquetaDe(cambio.estado_anterior) + ' → ' : '' }}{{ etiquetaDe(cambio.estado_nuevo) }}</strong>
+              <span>{{ cambio.creado_en | date:'dd/MM/yyyy h:mm a' }} · {{ cambio.responsable || 'Sistema' }}</span>
+              <em *ngIf="cambio.nota">{{ cambio.nota }}</em>
+            </li>
+          </ol>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>

@@ -61,7 +61,7 @@ describe('MisPedidos (HU-08)', () => {
   const tarjetas = (): NodeListOf<Element> => (fixture.nativeElement as HTMLElement).querySelectorAll('.pedido-card');
 
   it('muestra cada pedido con producto, cantidad, entrega, valor y estado', async () => {
-    await crear(of([pedido({ estado: 'confirmado' })]));
+    await crear(of([pedido({ estado: 'en_preparacion' })]));
 
     expect(tarjetas().length).toBe(1);
     const tarjeta = tarjetas()[0].textContent ?? '';
@@ -72,7 +72,7 @@ describe('MisPedidos (HU-08)', () => {
     expect(tarjeta).toContain('09:00');
     // La app aún no registra la configuración regional es-CO: el separador de miles puede ser coma o punto.
     expect(tarjeta).toMatch(/17[.,]500/);
-    expect(tarjeta).toContain('Confirmado');
+    expect(tarjeta).toContain('En preparación');
     expect(tarjeta).toContain('Efectivo');
   });
 
@@ -102,6 +102,18 @@ describe('MisPedidos (HU-08)', () => {
 
     expect(component.pedidosFiltrados.map(item => item.id)).toEqual(['d', 'e']);
     expect(tarjetas().length).toBe(2);
+  });
+
+  it('muestra los estados antiguos con su equivalente de HU-12', async () => {
+    await crear(of([
+      pedido({ id: 'a', estado: 'confirmado' }),
+      pedido({ id: 'b', estado: 'rechazado' })
+    ]));
+
+    expect(component.etiquetaEstado('confirmado')).toBe('En preparación');
+    expect(component.etiquetaEstado('rechazado')).toBe('Cancelado');
+    expect(component.contar('activos')).toBe(1);
+    expect(component.contar('cancelados')).toBe(1);
   });
 
   it('informa cuando ningún pedido coincide con el filtro elegido', async () => {

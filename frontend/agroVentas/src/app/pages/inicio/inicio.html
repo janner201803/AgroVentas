@@ -49,6 +49,11 @@
         Mis pedidos
       </a>
 
+      <a *ngIf="esPersonal" routerLink="/gestion-pedidos" class="nav-enlace">
+        <span class="nav-icono">🚚</span>
+        Gestión de pedidos
+      </a>
+
       <a *ngIf="esPersonal" routerLink="/inventario" class="nav-enlace">
         <span class="nav-icono">📦</span>
         Inventario
