@@ -9,6 +9,14 @@ function errorValidacion(mensaje) {
   return error;
 }
 
+// Un pedido para hoy debe registrarse con al menos esta anticipación.
+const ANTICIPACION_MINUTOS = 40;
+
+function aMinutos(hora) {
+  const [h, m] = hora.split(':').map(Number);
+  return h * 60 + m;
+}
+
 function esFechaValida(fecha) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return false;
   const fechaParsed = new Date(`${fecha}T00:00:00Z`);
@@ -21,8 +29,8 @@ class PedidoService {
     if (dto.fecha_entrega < this.fechaActualColombia()) {
       throw new Error('La fecha de entrega no puede estar en el pasado');
     }
-    if (dto.fecha_entrega === this.fechaActualColombia() && dto.hora_entrega <= this.horaActualColombia()) {
-      throw new Error('Ese horario ya pasó. Selecciona una hora posterior.');
+    if (!this.cumpleAnticipacion(dto.fecha_entrega, dto.hora_entrega)) {
+      throw new Error(`Los pedidos para hoy se registran con al menos ${ANTICIPACION_MINUTOS} minutos de anticipación. Selecciona una hora posterior.`);
     }
 
     const pedido = {
@@ -48,9 +56,15 @@ class PedidoService {
     return horarios.map(hora => ({
       hora,
       ocupado: ocupados.includes(hora),
-      disponible: fecha >= hoy && !ocupados.includes(hora) &&
-        (fecha !== hoy || hora > this.horaActualColombia())
+      disponible: fecha >= hoy && !ocupados.includes(hora) && this.cumpleAnticipacion(fecha, hora)
     }));
+  }
+
+  /** Mañana o después siempre cumple; hoy, la entrega debe ser al menos 40 minutos después de ahora. */
+  cumpleAnticipacion(fecha, hora) {
+    const hoy = this.fechaActualColombia();
+    if (fecha !== hoy) return fecha > hoy;
+    return aMinutos(hora) - aMinutos(this.horaActualColombia()) >= ANTICIPACION_MINUTOS;
   }
 
   fechaActualColombia() {
@@ -111,3 +125,4 @@ class PedidoService {
 }
 
 module.exports = new PedidoService();
+module.exports.ANTICIPACION_MINUTOS = ANTICIPACION_MINUTOS;

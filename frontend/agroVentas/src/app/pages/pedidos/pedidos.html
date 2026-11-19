@@ -151,6 +151,7 @@
           <div>
             <label>Hora de entrega</label>
             <p class="leyenda">Bloques de una hora · 8:00 a. m. a 5:00 p. m.</p>
+            <p class="leyenda">Para hoy, la entrega debe ser al menos 40 minutos después de registrar el pedido.</p>
           </div>
           <span class="fecha-mini" *ngIf="fechaEntrega">{{ fechaSeleccionadaTexto }}</span>
         </div>
@@ -164,7 +165,7 @@
             [attr.aria-pressed]="horario.hora === horaEntrega"
             (click)="seleccionarHora(horario.hora)">
             <strong>{{ horario.hora }}</strong>
-            <small>{{ horario.ocupado ? 'Ocupado' : (horario.disponible ? 'Disponible' : 'Hora pasada') }}</small>
+            <small>{{ horario.ocupado ? 'Ocupado' : (horario.disponible ? 'Disponible' : 'No disponible') }}</small>
           </button>
         </div>
         <p *ngIf="error && horarios.length" class="leyenda">No se pudo cargar la ocupación desde el servidor; al guardar se verificará que el bloque siga libre.</p>
