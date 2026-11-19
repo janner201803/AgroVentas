@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, finalize, of, shareReplay, tap, timeout } from 'rxjs';
+import { Observable, finalize, map, of, shareReplay, tap, timeout } from 'rxjs';
+import { EstadoPedido } from '../estados-pedido';
 
 export interface NuevoPedido {
   id_producto: number;
@@ -30,6 +31,26 @@ export interface PedidoHistorial {
   metodo_pago: string;
   fecha_entrega: string;
   hora_entrega: string;
+}
+
+/** HU-13: pedido visto por el personal, con cliente, producto y último cambio. */
+export interface PedidoGestion extends PedidoHistorial {
+  id_usuario: string | null;
+  cliente_nombre: string | null;
+  cliente_correo: string | null;
+  cliente_celular: string | null;
+  ultimo_cambio_en: string | null;
+  ultimo_cambio_por: string | null;
+}
+
+/** HU-12: un cambio de estado registrado. */
+export interface CambioEstadoPedido {
+  id: number;
+  estado_anterior: string | null;
+  estado_nuevo: string;
+  nota: string | null;
+  creado_en: string;
+  responsable: string | null;
 }
 
 export interface HorarioEntrega {
@@ -104,5 +125,33 @@ export class PedidoService {
 
   listarPedidos(): Observable<PedidoHistorial[]> {
     return this.http.get<PedidoHistorial[]>(this.apiUrl);
+  }
+
+  /** HU-13: todos los pedidos para el personal (opcionalmente por fecha de entrega). */
+  listarGestion(rango: { desde?: string; hasta?: string } = {}): Observable<PedidoGestion[]> {
+    const params: Record<string, string> = {};
+    if (rango.desde) params['desde'] = rango.desde;
+    if (rango.hasta) params['hasta'] = rango.hasta;
+    return this.http.get<PedidoGestion[]>(`${this.apiUrl}/gestion`, { params }).pipe(timeout({ first: 20_000 }));
+  }
+
+  /** HU-12: cambia el estado; la base registra fecha y responsable. */
+  cambiarEstado(id: string, estado: EstadoPedido, nota?: string): Observable<PedidoHistorial> {
+    return this.http
+      .patch<{ mensaje: string; pedido: PedidoHistorial }>(
+        `${this.apiUrl}/${encodeURIComponent(id)}/estado`,
+        nota ? { estado, nota } : { estado }
+      )
+      .pipe(
+        timeout({ first: 20_000 }),
+        tap(() => { this.productosCache = null; }),
+        map(respuesta => respuesta.pedido)
+      );
+  }
+
+  historialEstados(id: string): Observable<CambioEstadoPedido[]> {
+    return this.http
+      .get<CambioEstadoPedido[]>(`${this.apiUrl}/${encodeURIComponent(id)}/historial`)
+      .pipe(timeout({ first: 15_000 }));
   }
 }

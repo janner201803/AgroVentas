@@ -68,4 +68,36 @@ class PedidoController {
   }
 }
 
+PedidoController.prototype.gestion = async function (req, res) {
+  try {
+    const pedidos = await pedidoService.listarGestion(
+      { desde: req.query.desde, hasta: req.query.hasta },
+      req.supabase
+    );
+    return res.status(200).json(pedidos);
+  } catch (error) {
+    console.error('[PedidoController.gestion] Falló la consulta:', { codigo: error.code, error: error.message });
+    return res.status(error.status || 500).json({ mensaje: error.message || 'No fue posible consultar los pedidos' });
+  }
+};
+
+PedidoController.prototype.cambiarEstado = async function (req, res) {
+  try {
+    const pedido = await pedidoService.cambiarEstado(req.params.id, req.body, req.supabase);
+    return res.status(200).json({ mensaje: 'Estado actualizado', pedido });
+  } catch (error) {
+    console.error('[PedidoController.cambiarEstado] Falló el cambio:', { codigo: error.code, error: error.message });
+    return res.status(error.status || 500).json({ mensaje: error.message || 'No fue posible cambiar el estado' });
+  }
+};
+
+PedidoController.prototype.historial = async function (req, res) {
+  try {
+    return res.status(200).json(await pedidoService.historial(req.params.id, req.supabase));
+  } catch (error) {
+    console.error('[PedidoController.historial] Falló la consulta:', { codigo: error.code, error: error.message });
+    return res.status(error.status || 500).json({ mensaje: error.message || 'No fue posible consultar el historial' });
+  }
+};
+
 module.exports = new PedidoController();
