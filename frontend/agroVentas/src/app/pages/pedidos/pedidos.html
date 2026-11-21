@@ -85,13 +85,13 @@
         type="number"
         [(ngModel)]="cantidad"
         [min]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
-        [max]="productoSeleccionado?.cantidad ?? null"
+        [max]="productoSeleccionado ? disponibleParaAgregar(productoSeleccionado) : null"
         [step]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
         placeholder="Ingresa la cantidad"
       />
 
       <small *ngIf="productoSeleccionado">
-        Inventario disponible: {{ productoSeleccionado.cantidad }} {{ productoSeleccionado.und }}
+        Disponible para agregar: {{ disponibleParaAgregar(productoSeleccionado) }} {{ productoSeleccionado.und }}
       </small>
 
       <button type="button" (click)="agregarProducto()" [disabled]="enviando || !productoSeleccionado">Agregar al carrito</button>
@@ -164,7 +164,7 @@
             <small>{{ horario.ocupado ? 'Ocupado' : (horario.disponible ? 'Disponible' : 'No disponible') }}</small>
           </button>
         </div>
-        <p *ngIf="error && horarios.length" class="leyenda">No se pudo cargar la ocupación desde el servidor; al guardar se verificará que el bloque siga libre.</p>
+        <p *ngIf="avisoHorarios" class="leyenda">{{ avisoHorarios }}</p>
       </section>
 
       <!-- Botón -->

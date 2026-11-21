@@ -40,6 +40,7 @@ export class Pedidos implements OnInit, OnDestroy {
   mensaje = '';
   error = '';
   cargandoProductos = true;
+  avisoHorarios = '';
   cargandoHorarios = false;
   fechaEntrega = '';
   horaEntrega = '';
@@ -139,6 +140,7 @@ export class Pedidos implements OnInit, OnDestroy {
 
   private cargarHorarios(): void {
     if (!this.fechaEntrega) return;
+    this.avisoHorarios = '';
     this.cargandoHorarios = true;
     this.horaEntrega = '';
     this.horarios = this.horasEntrega.map(horario => ({ ...horario }));
@@ -176,6 +178,11 @@ export class Pedidos implements OnInit, OnDestroy {
   }
 
   carrito: { producto: ProductoPedido; cantidad: number }[] = [];
+
+  disponibleParaAgregar(producto: ProductoPedido): number {
+    const agregado = this.carrito.find(linea => linea.producto.id === producto.id)?.cantidad ?? 0;
+    return Math.max(0, Math.round((producto.cantidad - agregado) * 10) / 10);
+  }
 
   get totalCarrito(): number {
     return this.carrito.reduce((total, linea) => total + Math.round(linea.producto.precio * linea.cantidad), 0);
