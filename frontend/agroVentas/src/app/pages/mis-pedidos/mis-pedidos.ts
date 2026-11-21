@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Paginador } from '../../core/paginador';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -34,7 +35,7 @@ const ESTADOS_POR_FILTRO: Record<Exclude<FiltroPedidos, 'todos'>, readonly Estad
 @Component({
   selector: 'app-mis-pedidos',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [Paginador, CommonModule, RouterLink],
   templateUrl: './mis-pedidos.html',
   // Reutiliza los estilos de la pantalla de pedidos para mantener un solo diseño.
   styleUrls: ['../pedidos/pedidos.css', './mis-pedidos.css']

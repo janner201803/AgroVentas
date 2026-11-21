@@ -1,0 +1,24 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  color: #174b32;
+  background:
+    radial-gradient(ellipse at 90% 18%, rgb(247 250 167), transparent 50%),
+    radial-gradient(ellipse at 10% 80%, rgb(250 252 137), transparent 50%),
+    #fff1c9;
+  font-family: Arial, sans-serif;
+}
+
+app-encabezado-seccion { display:block; max-width:1200px; box-sizing:border-box; margin:auto; padding:10px 28px 0; }
+main { width:min(calc(100% - 2rem),36rem); box-sizing:border-box; margin:1rem auto; padding:clamp(1.2rem,4vw,2.4rem); border:1px solid #dfdbc8; border-radius:18px; background:#fffdf5; box-shadow:0 8px 26px #20352212; }
+h1 { margin:1.3rem 0; }
+a { color:#176b43; font-weight:600; }
+form,label { display:grid; gap:.45rem; }
+form { gap:1rem; }
+label { font-weight:600; }
+input,textarea,button { font:inherit; padding:.75rem; border:1px solid #baba9e; border-radius:.6rem; }
+textarea { min-height:4rem; }
+button { color:white; background:#176b43; cursor:pointer; font-weight:700; }
+button:disabled { opacity:.55; cursor:default; }
+:focus-visible { outline:3px solid #8bbc78; outline-offset:2px; }
+

@@ -225,3 +225,19 @@
 .historial em {
   color: #3c5a48;
 }
+
+.confirmar-pago { display:flex; flex-wrap:wrap; gap:.75rem; align-items:end; margin:1rem 0; padding:1rem; border:1px solid #d8dfc6; border-radius:.8rem; background:#f5f7eb; }
+.confirmar-pago label { display:grid; gap:.35rem; font-weight:600; color:#174b32; }
+.confirmar-pago select { font:inherit; padding:.55rem .8rem; background:white; color:#174b32; border:1px solid #aabea1; border-radius:.5rem; }
+.confirmar-pago button:last-child { background:white; color:#176b43; border:1px solid #aabea1; }
+.acciones-filtro { display:flex; flex-wrap:wrap; align-items:center; gap:.75rem 1.25rem; min-height:2.5rem; }
+.acciones-filtro .check-urgentes { padding:0; margin:0; }
+.acciones-filtro .limpiar-busqueda { width:auto; margin:0; padding:.45rem .8rem; font-size:.85rem; line-height:1.2; white-space:nowrap; }
+.encabezado { display:flex; flex-wrap:wrap; justify-content:space-between; gap:1rem 2rem; }
+.marca { width:clamp(9rem,17vw,15rem); }
+.acciones-cuenta { flex-wrap:wrap; }
+.volver { padding:.55rem .8rem; border:1px solid #bfd49e; border-radius:.6rem; background:#eff5df; color:#176b43; font:600 .8rem Arial,sans-serif; text-decoration:none; white-space:nowrap; }
+@media(max-width:700px) {
+  .encabezado { justify-content:center; padding:.75rem 0; }
+  .acciones-cuenta { width:100%; justify-content:center; }
+}

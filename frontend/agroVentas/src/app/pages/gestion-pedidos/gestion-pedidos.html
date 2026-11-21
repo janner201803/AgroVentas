@@ -91,11 +91,11 @@
         <label for="fecha-hasta">Entrega hasta</label>
         <input id="fecha-hasta" type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event || '')" />
       </div>
-      <label class="check-urgentes">
+      <div class="acciones-filtro"><label class="check-urgentes">
         <input type="checkbox" [ngModel]="soloUrgentes()" (ngModelChange)="soloUrgentes.set($event)" />
         Solo urgentes
       </label>
-      <button *ngIf="hayFiltrosExtra()" type="button" class="limpiar-busqueda" (click)="limpiarFiltros()">Limpiar filtros</button>
+      <button *ngIf="hayFiltrosExtra()" type="button" class="limpiar-busqueda" (click)="limpiarFiltros()">Limpiar filtros</button></div>
     </div>
 
     <p class="criterio-urgencia">
@@ -110,7 +110,7 @@
 
     <div class="lista-pedidos" *ngIf="!cargando() && pedidosFiltrados().length > 0">
       <article
-        *ngFor="let pedido of pedidosFiltrados(); trackBy: porId"
+        *ngFor="let pedido of pedidosFiltrados() | slice:pag.inicio():pag.inicio()+pag.tamano; trackBy: porId"
         class="pedido-gestion"
         [class.es-atrasado]="pedido.urgencia === 'atrasado'"
         [class.es-hoy]="pedido.urgencia === 'hoy'"
@@ -143,7 +143,18 @@
           </div>
         </dl>
 
-        <div class="pedido-acciones">
+        <section class="confirmar-pago" *ngIf="entregaPendiente() === pedido.id">
+          <label>Método de pago
+            <select [(ngModel)]="pago">
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option *ngIf="pedido.credito_habilitado" value="credito">Crédito</option>
+            </select>
+          </label>
+          <button [disabled]="estaGuardando(pedido)" (click)="cambiarEstado(pedido, 'entregado', true)">Confirmar entrega y registrar venta</button>
+          <button (click)="entregaPendiente.set(null)">Volver</button>
+        </section>
+        <div class="pedido-acciones" *ngIf="entregaPendiente() !== pedido.id">
           <button
             *ngFor="let destino of transiciones(pedido)"
             type="button"
@@ -174,5 +185,7 @@
         </div>
       </article>
     </div>
+    <app-paginador #pag [total]="pedidosFiltrados().length" [filtros]="[filtroEstado(),busquedaCliente(),desde(),hasta(),soloUrgentes()].join('|')" />
   </section>
 </main>
+

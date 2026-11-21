@@ -1,0 +1,17 @@
+<header class="encabezado">
+    <a routerLink="/inicio" class="marca" aria-label="Volver al inicio">
+      <img src="/img/logo.png" alt="Logo de AgroVentas" class="brand-logo" />
+    </a>
+    <h1 class="titulo-pagina">{{ titulo() }}</h1>
+    <div class="acciones-cuenta">
+      <a routerLink="/inicio" class="volver">← Volver a inicio</a>
+      <div class="cuenta">
+        <span class="encabezado-etiqueta">{{ auth.etiquetaRol() }}</span>
+        <strong>{{ auth.usuario()?.email }}</strong>
+      </div>
+      <button type="button" class="cerrar-sesion" [disabled]="cerrandoSesion()" (click)="cerrarSesion()">
+        {{ cerrandoSesion() ? 'Cerrando…' : 'Cerrar sesión' }}
+      </button>
+    </div>
+  </header>
+@if (error()) { <p role="alert">{{ error() }}</p> }
