@@ -1,7 +1,11 @@
 class CrearPedidoDTO {
   constructor(datos) {
-    this.id_producto = Number(datos.id_producto);
-    this.cantidad = Number(datos.cantidad);
+    const lineas = datos.lineas === undefined ? [datos] : datos.lineas;
+    if (!Array.isArray(lineas) || !lineas.length) throw new Error('Agrega productos al carrito');
+    this.lineas = lineas.map(linea => ({
+      id_producto: Number(linea?.id_producto),
+      cantidad: Number(linea?.cantidad)
+    }));
     this.metodo_pago = datos.metodo_pago;
     this.comprobante_url = datos.comprobante_url || null;
     this.fecha_entrega = datos.fecha_entrega;
@@ -9,12 +13,12 @@ class CrearPedidoDTO {
   }
 
   validar() {
-    if (!Number.isInteger(this.id_producto) || this.id_producto <= 0) {
-      throw new Error('Selecciona un producto válido');
-    }
-
-    if (!Number.isFinite(this.cantidad) || this.cantidad <= 0) {
-      throw new Error('La cantidad debe ser mayor que cero');
+    const ids = new Set();
+    for (const { id_producto, cantidad } of this.lineas) {
+      if (!Number.isSafeInteger(id_producto) || id_producto <= 0) throw new Error('Selecciona un producto válido');
+      if (!Number.isFinite(cantidad) || cantidad <= 0) throw new Error('La cantidad debe ser mayor que cero');
+      if (ids.has(id_producto)) throw new Error('Producto repetido en el carrito');
+      ids.add(id_producto);
     }
 
     if (!['efectivo', 'consignacion'].includes(this.metodo_pago)) {

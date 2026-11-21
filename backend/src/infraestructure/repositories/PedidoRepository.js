@@ -36,10 +36,9 @@ class PedidoRepository {
   }
 
   async crearConReserva(pedido, client = supabase) {
-    const { data, error } = await client.rpc('crear_pedido_con_reserva', {
+    const { data, error } = await client.rpc('crear_pedido_carrito', {
       p_id_pedido: pedido.id,
-      p_id_producto: pedido.id_producto,
-      p_cantidad: pedido.cantidad,
+      p_lineas: pedido.lineas,
       p_fecha_entrega: pedido.fecha_entrega,
       p_hora_entrega: pedido.hora_entrega,
       p_metodo_pago: pedido.metodo_pago
@@ -47,7 +46,7 @@ class PedidoRepository {
 
     if (error) {
       if (error.code === 'PGRST202' || error.code === '42883') {
-        const setupError = new Error('Falta instalar la migración 20261102_reserva_stock_pedidos.sql en Supabase.');
+        const setupError = new Error('Falta instalar la migración 20261121_carrito.sql en Supabase.');
         setupError.status = 503;
         throw setupError;
       }

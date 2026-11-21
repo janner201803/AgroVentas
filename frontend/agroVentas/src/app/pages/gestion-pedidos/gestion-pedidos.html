@@ -135,7 +135,7 @@
 
         <dl class="pedido-datos">
           <div><dt>Entrega</dt><dd>{{ formatearFecha(pedido.fecha_entrega) }} · {{ formatearHora(pedido.hora_entrega) }}</dd></div>
-          <div><dt>Producto</dt><dd>{{ pedido.producto_nombre || 'Producto' }} · {{ pedido.cantidad }} {{ pedido.producto_unidad }}</dd></div>
+          <div><dt>Productos</dt><dd *ngFor="let linea of pedido.lineas">{{ linea.nombre }} · {{ linea.cantidad }} {{ linea.unidad }}</dd><dd *ngIf="!pedido.lineas?.length">{{ pedido.producto_nombre || 'Producto' }} · {{ pedido.cantidad }} {{ pedido.producto_unidad }}</dd></div>
           <div><dt>Valor</dt><dd>{{ pedido.valor | currency:'COP':'symbol-narrow':'1.0-0' }} · {{ etiquetaPago(pedido.metodo_pago) }}</dd></div>
           <div *ngIf="pedido.ultimo_cambio_en">
             <dt>Último cambio</dt>
