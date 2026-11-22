@@ -40,6 +40,7 @@ export class Pedidos implements OnInit, OnDestroy {
   mensaje = '';
   error = '';
   cargandoProductos = true;
+  avisoHorarios = '';
   cargandoHorarios = false;
   fechaEntrega = '';
   horaEntrega = '';
@@ -139,6 +140,7 @@ export class Pedidos implements OnInit, OnDestroy {
 
   private cargarHorarios(): void {
     if (!this.fechaEntrega) return;
+    this.avisoHorarios = '';
     this.cargandoHorarios = true;
     this.horaEntrega = '';
     this.horarios = this.horasEntrega.map(horario => ({ ...horario }));
@@ -175,25 +177,32 @@ export class Pedidos implements OnInit, OnDestroy {
     return this.productos.find(producto => producto.id === Number(this.productoId));
   }
 
-  get valorEstimado(): number {
-    const producto = this.productoSeleccionado;
-    if (!producto || this.cantidad == null || this.cantidad <= 0) return 0;
-    return producto.precio * this.cantidad;
+  carrito: { producto: ProductoPedido; cantidad: number }[] = [];
+
+  disponibleParaAgregar(producto: ProductoPedido): number {
+    const agregado = this.carrito.find(linea => linea.producto.id === producto.id)?.cantidad ?? 0;
+    return Math.max(0, Math.round((producto.cantidad - agregado) * 10) / 10);
   }
 
-  enviarPedido(): void {
+  get totalCarrito(): number {
+    return this.carrito.reduce((total, linea) => total + Math.round(linea.producto.precio * linea.cantidad), 0);
+  }
+
+  quitarProducto(id: number): void {
+    this.carrito = this.carrito.filter(linea => linea.producto.id !== id);
+  }
+
+  agregarProducto(): void {
     this.error = '';
     this.mensaje = '';
-    if (this.cargandoProductos || this.cargandoHorarios) {
-      this.error = 'Espera a que terminen de cargar los productos y horarios.';
-      return;
-    }
     const producto = this.productoSeleccionado;
     if (!producto || this.cantidad == null || this.cantidad <= 0) {
       this.error = 'Selecciona un producto e indica una cantidad válida.';
       return;
     }
-    if (this.cantidad > producto.cantidad) {
+    const anterior = this.carrito.find(linea => linea.producto.id === producto.id);
+    const cantidad = Math.round(((anterior?.cantidad ?? 0) + this.cantidad) * 10) / 10;
+    if (cantidad > producto.cantidad) {
       this.error = 'La cantidad solicitada supera el inventario disponible.';
       return;
     }
@@ -205,14 +214,27 @@ export class Pedidos implements OnInit, OnDestroy {
       this.error = 'La cantidad en kg debe usar incrementos de 0,1 kg.';
       return;
     }
+    if (anterior) anterior.cantidad = cantidad;
+    else this.carrito.push({ producto, cantidad });
+    this.productoId = null;
+    this.cantidad = null;
+  }
+
+  enviarPedido(): void {
+    if (this.enviando) return;
+    this.error = '';
+    this.mensaje = '';
+    if (!this.carrito.length || this.productoId !== null) {
+      this.error = 'Agrega el producto al carrito antes de registrar el pedido.';
+      return;
+    }
     if (!this.fechaEntrega || !this.horaEntrega || !this.horarios.some(item => item.hora === this.horaEntrega && item.disponible)) {
       this.error = 'Selecciona una fecha y un horario disponible.';
       return;
     }
     this.enviando = true;
     this.pedidoService.crearPedido({
-      id_producto: producto.id,
-      cantidad: this.cantidad,
+      lineas: this.carrito.map(({ producto, cantidad }) => ({ id_producto: producto.id, cantidad })),
       metodo_pago: this.metodoPago,
       fecha_entrega: this.fechaEntrega,
       hora_entrega: this.horaEntrega
@@ -225,6 +247,7 @@ export class Pedidos implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: () => {
+        this.carrito = [];
         this.mensaje = '¡Pedido realizado correctamente! Ya quedó registrado como pendiente.';
         this.productoId = null;
         this.cantidad = null;

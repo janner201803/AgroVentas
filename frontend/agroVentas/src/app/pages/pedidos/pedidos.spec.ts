@@ -63,6 +63,28 @@ describe('Pedidos', () => {
     expect(consultas).toBe(0);
   });
 
+  it('envía dos variedades en un solo pedido y acumula un producto repetido', async () => {
+    await crear();
+    component.productos = [
+      { id: 1, nombre: 'Primera', und: 'kg', precio: 2000, cantidad: 5 },
+      { id: 2, nombre: 'Segunda', und: 'und', precio: 3000, cantidad: 6 }
+    ];
+    for (const [id, cantidad] of [[1, 1], [2, 2], [1, 0.5]]) {
+      component.productoId = id;
+      component.cantidad = cantidad;
+      component.agregarProducto();
+    }
+    expect(component.totalCarrito).toBe(9000);
+    component.horaEntrega = '09:00';
+    const guardar = vi.spyOn(TestBed.inject(PedidoService), 'crearPedido');
+    component.enviarPedido();
+    expect(guardar).toHaveBeenCalledTimes(1);
+    expect(guardar).toHaveBeenCalledWith(expect.objectContaining({
+      lineas: [{ id_producto: 1, cantidad: 1.5 }, { id_producto: 2, cantidad: 2 }]
+    }));
+    expect(component.carrito).toHaveLength(0);
+  });
+
   it('enlaza a la pantalla "Mis pedidos"', async () => {
     const html = await crear();
     const enlace = html.querySelector<HTMLAnchorElement>('section.historial a.enlace-mis-pedidos');

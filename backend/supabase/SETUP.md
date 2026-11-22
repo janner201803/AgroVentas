@@ -26,3 +26,9 @@ La pantalla de inventario usa `GET /api/inventario/resumen` (solo administrador)
 La vista de pedidos obtiene existencias disponibles desde `GET /api/inventario?disponibles=true`. Usa `inventario.id` como `id` para el formulario y lo envía como `pedidos.id_producto`; el backend lee `inventario.id_producto` para obtener el producto del catálogo, el precio y la unidad.
 
 La creación del pedido usa la función `crear_pedido_con_reserva` para descontar existencias y registrar el pedido en una misma transacción. La función comprueba el stock y el horario reservado incluso si dos solicitudes llegan a la vez. La tabla interna `reservas_stock_pedidos` conserva la cantidad que se debe devolver si el estado cambia a `cancelado` o `rechazado`; si un pedido cancelado vuelve a un estado activo, la cantidad se reserva otra vez y la transición falla si ya no hay stock suficiente.
+
+## Carrito de varios productos
+
+Después de la migración de estados del 19 de noviembre, aplicar una vez `migrations/20261121_carrito.sql` en el entorno de prueba y actualizar la API y el frontend. El cliente envía una lista de productos y cantidades para un único horario. La base calcula los precios, guarda las líneas y reserva todas las cantidades dentro de la misma transacción. Los pedidos históricos siguen mostrando su producto original.
+
+Para comprobar el flujo, agregar dos variedades con stock, confirmar el pedido y abrir el mismo identificador en Mis pedidos y Gestión de pedidos. Cancelarlo debe devolver ambas reservas. En otra compra, reducir el stock del segundo producto antes de confirmar y comprobar que el rechazo conserva el saldo del primero.

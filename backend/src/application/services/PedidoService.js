@@ -35,8 +35,7 @@ class PedidoService {
 
     const pedido = {
       id: randomUUID(),
-      id_producto: dto.id_producto,
-      cantidad: dto.cantidad,
+      lineas: dto.lineas,
       fecha_entrega: dto.fecha_entrega,
       hora_entrega: dto.hora_entrega,
       metodo_pago: dto.metodo_pago

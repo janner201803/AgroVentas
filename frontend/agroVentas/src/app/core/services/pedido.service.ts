@@ -4,8 +4,7 @@ import { Observable, finalize, map, of, shareReplay, tap, timeout } from 'rxjs';
 import { EstadoPedido } from '../estados-pedido';
 
 export interface NuevoPedido {
-  id_producto: number;
-  cantidad: number;
+  lineas: { id_producto: number; cantidad: number }[];
   metodo_pago: 'efectivo' | 'consignacion';
   comprobante_url?: string;
   fecha_entrega: string;
@@ -21,6 +20,7 @@ export interface ProductoPedido {
 }
 
 export interface PedidoHistorial {
+  lineas?: { id_producto: number; nombre: string; unidad: string; cantidad: number; precio: number; subtotal: number }[];
   id: string;
   id_producto: number;
   producto_nombre: string | null;

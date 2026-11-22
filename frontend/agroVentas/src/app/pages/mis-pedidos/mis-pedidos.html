@@ -71,7 +71,7 @@
           <div class="producto-info pedido-producto">
             <span class="icono-pedido" aria-hidden="true"><img src="/img/piñaPepa.jpg" alt="" /></span>
             <div>
-              <h3>{{ pedido.producto_nombre || 'Producto de inventario' }}</h3>
+              <h3>{{ (pedido.lineas?.length || 0) > 1 ? 'Pedido con varios productos' : (pedido.producto_nombre || 'Producto de inventario') }}</h3>
               <span class="pedido-referencia" [title]="pedido.id">Pedido #{{ idCorto(pedido.id) }}</span>
             </div>
           </div>
@@ -83,7 +83,8 @@
         <div class="resumen pedido-detalles">
           <div>
             <span class="detalle-etiqueta">Cantidad</span>
-            <strong>{{ pedido.cantidad }} {{ pedido.producto_unidad || 'unidades' }}</strong>
+            <strong *ngFor="let linea of pedido.lineas">{{ linea.nombre }} · {{ linea.cantidad }} {{ linea.unidad }}</strong>
+            <strong *ngIf="!pedido.lineas?.length">{{ pedido.cantidad }} {{ pedido.producto_unidad || 'unidades' }}</strong>
           </div>
           <div>
             <span class="detalle-etiqueta">Entrega</span>

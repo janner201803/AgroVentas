@@ -8,11 +8,9 @@
     <div class="acciones-encabezado">
       <a routerLink="/inicio" class="volver">← Volver a inicio</a>
 
-      <span class="carrito-contenedor" title="Próximamente">
-        <button type="button" class="carrito" disabled aria-disabled="true" aria-label="Carrito (próximamente)">
-          <img src="/img/iconos/carrito.svg" alt="" aria-hidden="true" />
-        </button>
-      </span>
+      <button type="button" class="carrito" aria-label="Ver carrito" (click)="resumen.scrollIntoView()">
+        <img src="/img/iconos/carrito.svg" alt="" /> {{ carrito.length }}
+      </button>
     </div>
   </header>
 
@@ -50,7 +48,6 @@
         id="producto"
         name="producto"
         [(ngModel)]="productoId"
-        required
         [disabled]="cargandoProductos || productos.length === 0"
       >
         <option [ngValue]="null">
@@ -88,29 +85,28 @@
         type="number"
         [(ngModel)]="cantidad"
         [min]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
-        [max]="productoSeleccionado?.cantidad ?? null"
+        [max]="productoSeleccionado ? disponibleParaAgregar(productoSeleccionado) : null"
         [step]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
-        required
         placeholder="Ingresa la cantidad"
       />
 
       <small *ngIf="productoSeleccionado">
-        Inventario disponible: {{ productoSeleccionado.cantidad }} {{ productoSeleccionado.und }}
+        Disponible para agregar: {{ disponibleParaAgregar(productoSeleccionado) }} {{ productoSeleccionado.und }}
       </small>
 
-      <!-- Resumen del pedido -->
-      <div
-        class="resumen"
-        *ngIf="productoSeleccionado && cantidad && cantidad > 0"
-      >
-        <div>
-          <span>Valor estimado</span>
-
-          <strong>
-            {{ valorEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}
-          </strong>
-        </div>
-      </div>
+      <button type="button" (click)="agregarProducto()" [disabled]="enviando || !productoSeleccionado">Agregar al carrito</button>
+      <section #resumen aria-labelledby="titulo-carrito">
+        <h2 id="titulo-carrito">Tu carrito</h2>
+        <p *ngIf="!carrito.length">Agrega un producto para comenzar.</p>
+        <ul class="lista-carrito">
+          <li *ngFor="let linea of carrito">
+            <strong>{{ linea.producto.nombre }}</strong> · {{ linea.cantidad }} {{ linea.producto.und }}
+            · {{ linea.cantidad * linea.producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }}
+            <button type="button" [attr.aria-label]="'Quitar ' + linea.producto.nombre" (click)="quitarProducto(linea.producto.id)" [disabled]="enviando">Quitar</button>
+          </li>
+        </ul>
+        <strong>Total estimado {{ totalCarrito | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      </section>
 
       <!-- Método de pago -->
       <label for="pago">Método de pago</label>
@@ -168,13 +164,13 @@
             <small>{{ horario.ocupado ? 'Ocupado' : (horario.disponible ? 'Disponible' : 'No disponible') }}</small>
           </button>
         </div>
-        <p *ngIf="error && horarios.length" class="leyenda">No se pudo cargar la ocupación desde el servidor; al guardar se verificará que el bloque siga libre.</p>
+        <p *ngIf="avisoHorarios" class="leyenda">{{ avisoHorarios }}</p>
       </section>
 
       <!-- Botón -->
       <button
         type="submit"
-        [disabled]="enviando || cargandoProductos || cargandoHorarios || productos.length === 0 || !horaEntrega"
+        [disabled]="enviando || cargandoProductos || cargandoHorarios || !carrito.length || !horaEntrega"
       >
         {{ enviando ? 'Registrando...' : 'Registrar pedido' }}
       </button>
