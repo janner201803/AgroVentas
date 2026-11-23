@@ -49,6 +49,8 @@
         Mis pedidos
       </a>
 
+      <a *ngIf="esPersonal" routerLink="/clientes" class="nav-enlace"><span class="nav-icono" aria-hidden="true">👤</span> Registrar cliente</a>
+      <a *ngIf="esPersonal" routerLink="/ventas" class="nav-enlace"><span class="nav-icono" aria-hidden="true">🧾</span> Ventas</a>
       <a *ngIf="esPersonal" routerLink="/gestion-pedidos" class="nav-enlace">
         <span class="nav-icono">🚚</span>
         Gestión de pedidos

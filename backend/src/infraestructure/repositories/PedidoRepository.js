@@ -135,4 +135,12 @@ PedidoRepository.prototype.historial = async function (id, client = supabase) {
   return data ?? [];
 };
 
+PedidoRepository.prototype.entregar = async function (id, pago, nota, client = supabase) {
+  const { data, error } = await client.rpc('entregar_pedido', {
+    p_id_pedido: id, p_pago: pago, p_nota: nota
+  });
+  if (error) throw errorSupabase(error, 'registrar la entrega y la venta');
+  return data;
+};
+
 module.exports = new PedidoRepository();

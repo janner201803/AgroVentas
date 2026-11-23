@@ -1,3 +1,4 @@
+import { Paginador } from '../../core/paginador';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -37,7 +38,7 @@ const RECARGA_AUTOMATICA_MS = 60_000;
 @Component({
   selector: 'app-gestion-pedidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [Paginador, CommonModule, FormsModule, RouterLink],
   templateUrl: './gestion-pedidos.html',
   styleUrls: ['../inventario/inventario.css', '../usuarios/usuarios.css', './gestion-pedidos.css']
 })
@@ -186,17 +187,25 @@ export class GestionPedidos implements OnInit {
     this.consultar(() => this.actualizando.set(false));
   }
 
-  cambiarEstado(pedido: PedidoVista, estado: EstadoPedido): void {
+  entregaPendiente = signal<string | null>(null);
+  pago = 'efectivo';
+
+  cambiarEstado(pedido: PedidoVista, estado: EstadoPedido, confirmado = false): void {
     if (this.estaGuardando(pedido)) return;
     const referencia = `el pedido #${this.idCorto(pedido.id)}`;
     if (estado === 'cancelado' && !confirm(`¿Cancelar ${referencia}? El stock reservado vuelve al inventario y no se puede deshacer.`)) return;
-    if (estado === 'entregado' && !confirm(`¿Marcar ${referencia} como entregado? No se puede deshacer.`)) return;
+    if (estado === 'entregado' && !confirmado) {
+      this.pago = pedido.metodo_pago === 'consignacion' ? 'transferencia' : 'efectivo';
+      this.entregaPendiente.set(pedido.id);
+      return;
+    }
 
     this.error.set('');
     this.mensaje.set('');
     this.marcarGuardando(pedido.id, true);
-    this.pedidoService.cambiarEstado(pedido.id, estado).subscribe({
+    this.pedidoService.cambiarEstado(pedido.id, estado, undefined, estado === 'entregado' ? this.pago : undefined).subscribe({
       next: actualizado => {
+        this.entregaPendiente.set(null);
         this.pedidos.update(lista => lista.map(p => (p.id === pedido.id
           ? { ...p, ...actualizado, ultimo_cambio_en: new Date().toISOString(), ultimo_cambio_por: this.usuario()?.email ?? p.ultimo_cambio_por }
           : p)));

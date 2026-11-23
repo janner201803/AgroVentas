@@ -112,6 +112,12 @@ class PedidoService {
       nota = nota.trim() || null;
       if (nota && nota.length > 500) throw errorValidacion('La nota no puede superar 500 caracteres');
     }
+    if (estado === 'entregado') {
+      if (!['efectivo', 'transferencia', 'credito'].includes(datos.pago)) {
+        throw errorValidacion('Confirma el método de pago antes de entregar');
+      }
+      return pedidoRepository.entregar(id, datos.pago, nota, client);
+    }
     return pedidoRepository.cambiarEstado(id, estado, nota, client);
   }
 

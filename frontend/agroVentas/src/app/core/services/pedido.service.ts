@@ -35,6 +35,7 @@ export interface PedidoHistorial {
 
 /** HU-13: pedido visto por el personal, con cliente, producto y último cambio. */
 export interface PedidoGestion extends PedidoHistorial {
+  credito_habilitado?: boolean;
   id_usuario: string | null;
   cliente_nombre: string | null;
   cliente_correo: string | null;
@@ -136,11 +137,11 @@ export class PedidoService {
   }
 
   /** HU-12: cambia el estado; la base registra fecha y responsable. */
-  cambiarEstado(id: string, estado: EstadoPedido, nota?: string): Observable<PedidoHistorial> {
+  cambiarEstado(id: string, estado: EstadoPedido, nota?: string, pago?: string): Observable<PedidoHistorial> {
     return this.http
       .patch<{ mensaje: string; pedido: PedidoHistorial }>(
         `${this.apiUrl}/${encodeURIComponent(id)}/estado`,
-        nota ? { estado, nota } : { estado }
+        { estado, nota, pago }
       )
       .pipe(
         timeout({ first: 20_000 }),
