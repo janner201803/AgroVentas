@@ -1,193 +1,370 @@
-<main class="pagina">
-  <header class="encabezado">
-    <a routerLink="/inicio" class="marca" aria-label="Volver al inicio">
-      <img src="/img/logo.png" alt="Logo de AgroVentas" class="brand-logo" />
-    </a>
-    <h1 class="titulo-pagina">Gestión de pedidos</h1>
-    <div class="acciones-cuenta">
-      <a routerLink="/inicio" class="volver">← Volver a inicio</a>
-      <div class="cuenta">
-        <span class="encabezado-etiqueta">{{ etiquetaRol() }}</span>
-        <strong>{{ usuario()?.email }}</strong>
-      </div>
-      <button type="button" class="cerrar-sesion" [disabled]="cerrandoSesion()" (click)="cerrarSesion()">
-        {{ cerrandoSesion() ? 'Cerrando…' : 'Cerrar sesión' }}
-      </button>
-    </div>
-  </header>
+<div class="pagina">
 
-  <section class="resumen-pedidos" aria-label="Resumen de pedidos">
-    <button type="button" class="tarjeta-resumen urgente" (click)="verUrgentes()">
-      <strong>{{ resumen().urgentes }}</strong>
-      <span>Urgentes</span>
-      <small *ngIf="resumen().atrasados > 0">{{ resumen().atrasados }} atrasado{{ resumen().atrasados === 1 ? '' : 's' }}</small>
-    </button>
-    <button type="button" class="tarjeta-resumen" (click)="filtroEstado.set('pendiente'); soloUrgentes.set(false)">
-      <strong>{{ resumen().pendientes }}</strong>
-      <span>Pendientes</span>
-    </button>
-    <button type="button" class="tarjeta-resumen" (click)="filtroEstado.set('en_preparacion'); soloUrgentes.set(false)">
-      <strong>{{ resumen().enPreparacion }}</strong>
-      <span>En preparación</span>
-    </button>
-    <div class="tarjeta-resumen informativa">
-      <strong>{{ resumen().manana }}</strong>
-      <span>Para mañana</span>
-    </div>
-  </section>
+  <div class="layout">
 
-  <div *ngIf="error()" class="alerta error" role="alert">
-    {{ error() }}
-    <button *ngIf="pedidos().length === 0 && !cargando()" type="button" class="boton-secundario reintentar" (click)="cargar()">
-      Intentar de nuevo
-    </button>
-  </div>
-  <div *ngIf="mensaje()" class="alerta exito" role="status">{{ mensaje() }}</div>
+    <section class="tarjeta lista-card" aria-label="Pedidos">
+      <div class="barra-filtros">
+        <div class="selector">
+          <select
+            aria-label="Filtrar por estado"
+            [value]="filtroEstado()"
+            (change)="filtroEstado.set($any($event.target).value)"
+          >
+            <option
+              *ngFor="let opcion of filtrosEstado"
+              [value]="opcion.valor"
+              [selected]="opcion.valor === filtroEstado()"
+            >
+              {{ opcion.etiqueta }} ({{ contadores()[opcion.valor] }})
+            </option>
+          </select>
+        </div>
 
-  <section class="panel listado">
-    <div class="listado-titulo">
-      <h2>Pedidos</h2>
-      <div class="acciones-listado">
-        <span class="contador">
-          {{ pedidosFiltrados().length }} de {{ pedidos().length }}
-          <ng-container *ngIf="ultimaConsulta()"> · actualizado {{ ultimaConsulta() | date:'h:mm a' }}</ng-container>
-        </span>
-        <button type="button" class="boton-secundario" [disabled]="cargando() || actualizando()" (click)="actualizar()">
-          {{ actualizando() ? 'Actualizando…' : 'Actualizar' }}
+        <div class="selector selector-icono-izq">
+          <svg class="selector-icono" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M12 7.5V12l3 2" />
+          </svg>
+          <select
+            aria-label="Filtrar por urgencia"
+            title="Urgente: pedidos pendientes o en preparación que se entregan hoy o cuya hora de entrega ya pasó."
+            [value]="soloUrgentes() ? 'urgentes' : 'todas'"
+            (change)="soloUrgentes.set($any($event.target).value === 'urgentes')"
+          >
+            <option value="todas" [selected]="!soloUrgentes()">Todas las entregas</option>
+            <option value="urgentes" [selected]="soloUrgentes()">Solo urgentes</option>
+          </select>
+        </div>
+
+        <button
+          type="button"
+          class="btn-actualizar"
+          aria-label="Actualizar pedidos"
+          title="Actualizar"
+          [disabled]="cargando() || actualizando()"
+          (click)="actualizar()"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" [class.girando]="actualizando()">
+            <path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4" />
+            <path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4" />
+          </svg>
         </button>
       </div>
-    </div>
 
-    <div class="filtros-rol" role="group" aria-label="Filtrar por estado">
-      <button
-        *ngFor="let opcion of filtrosEstado"
-        type="button"
-        class="filtro"
-        [class.activo]="filtroEstado() === opcion.valor"
-        [attr.aria-pressed]="filtroEstado() === opcion.valor"
-        (click)="filtroEstado.set(opcion.valor)"
-      >
-        {{ opcion.etiqueta }} <span>{{ contadores()[opcion.valor] }}</span>
-      </button>
-    </div>
-
-    <div class="filtros-extra">
-      <div class="campo-filtro campo-cliente">
-        <label for="buscar-cliente">Cliente</label>
-        <input
-          id="buscar-cliente"
-          type="search"
-          [ngModel]="busquedaCliente()"
-          (ngModelChange)="busquedaCliente.set($event)"
-          placeholder="Nombre, correo o celular"
-          autocomplete="off"
-        />
-      </div>
-      <div class="campo-filtro">
-        <label for="fecha-desde">Entrega desde</label>
-        <input id="fecha-desde" type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event || '')" />
-      </div>
-      <div class="campo-filtro">
-        <label for="fecha-hasta">Entrega hasta</label>
-        <input id="fecha-hasta" type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event || '')" />
-      </div>
-      <div class="acciones-filtro"><label class="check-urgentes">
-        <input type="checkbox" [ngModel]="soloUrgentes()" (ngModelChange)="soloUrgentes.set($event)" />
-        Solo urgentes
-      </label>
-      <button *ngIf="hayFiltrosExtra()" type="button" class="limpiar-busqueda" (click)="limpiarFiltros()">Limpiar filtros</button></div>
-    </div>
-
-    <p class="criterio-urgencia">
-      <strong>Urgente:</strong> pedidos pendientes o en preparación que se entregan hoy o cuya hora de entrega ya pasó.
-    </p>
-
-    <p *ngIf="cargando()">Cargando pedidos…</p>
-    <p *ngIf="!cargando() && !error() && pedidos().length === 0" class="vacio">Todavía no hay pedidos registrados.</p>
-    <p *ngIf="!cargando() && pedidos().length > 0 && pedidosFiltrados().length === 0" class="vacio" role="status">
-      Ningún pedido coincide con los filtros.
-    </p>
-
-    <div class="lista-pedidos" *ngIf="!cargando() && pedidosFiltrados().length > 0">
-      <article
-        *ngFor="let pedido of pedidosFiltrados() | slice:pag.inicio():pag.inicio()+pag.tamano; trackBy: porId"
-        class="pedido-gestion"
-        [class.es-atrasado]="pedido.urgencia === 'atrasado'"
-        [class.es-hoy]="pedido.urgencia === 'hoy'"
-      >
-        <div class="pedido-cabecera">
-          <div>
-            <h3 [title]="pedido.id">Pedido #{{ idCorto(pedido.id) }}</h3>
-            <p class="pedido-cliente">
-              {{ pedido.cliente_nombre || pedido.cliente_correo || 'Cliente sin perfil' }}
-              <span *ngIf="pedido.cliente_celular"> · Cel. {{ pedido.cliente_celular }}</span>
-            </p>
-          </div>
-          <div class="insignias">
-            <span *ngIf="pedido.urgencia" class="insignia urgencia" [ngClass]="'urgencia-' + pedido.urgencia">
-              {{ etiquetaUrgenciaDe(pedido.urgencia) }}
-            </span>
-            <span class="insignia estado" [ngClass]="'estado-' + (pedido.estadoNormalizado || 'desconocido')">
-              {{ etiquetaDe(pedido.estado) }}
-            </span>
-          </div>
-        </div>
-
-        <dl class="pedido-datos">
-          <div><dt>Entrega</dt><dd>{{ formatearFecha(pedido.fecha_entrega) }} · {{ formatearHora(pedido.hora_entrega) }}</dd></div>
-          <div><dt>Productos</dt><dd *ngFor="let linea of pedido.lineas">{{ linea.nombre }} · {{ linea.cantidad }} {{ linea.unidad }}</dd><dd *ngIf="!pedido.lineas?.length">{{ pedido.producto_nombre || 'Producto' }} · {{ pedido.cantidad }} {{ pedido.producto_unidad }}</dd></div>
-          <div><dt>Valor</dt><dd>{{ pedido.valor | currency:'COP':'symbol-narrow':'1.0-0' }} · {{ etiquetaPago(pedido.metodo_pago) }}</dd></div>
-          <div><dt>Canal</dt><dd>{{ etiquetaCanal(pedido.canal_origen) }}</dd></div>
-          <div *ngIf="pedido.registrado_por_nombre"><dt>Registrado por</dt><dd>{{ pedido.registrado_por_nombre }}</dd></div>
-          <div *ngIf="pedido.ultimo_cambio_en">
-            <dt>Último cambio</dt>
-            <dd>{{ pedido.ultimo_cambio_en | date:'dd/MM/yyyy h:mm a' }}<ng-container *ngIf="pedido.ultimo_cambio_por"> · {{ pedido.ultimo_cambio_por }}</ng-container></dd>
-          </div>
-        </dl>
-
-        <section class="confirmar-pago" *ngIf="entregaPendiente() === pedido.id">
-          <label>Método de pago
-            <select [(ngModel)]="pago">
-              <option value="efectivo">Efectivo</option>
-              <option value="transferencia">Transferencia</option>
-              <option *ngIf="pedido.credito_habilitado" value="credito">Crédito</option>
-            </select>
+      <div class="filtros-extra">
+        <div class="filtros-extra-campos">
+          <label class="campo-filtro campo-cliente">
+            <span>Cliente</span>
+            <input
+              type="search"
+              aria-label="Buscar cliente"
+              [ngModel]="busquedaCliente()"
+              (ngModelChange)="busquedaCliente.set($event)"
+              placeholder="Nombre, correo o celular"
+              autocomplete="off"
+            />
           </label>
-          <button [disabled]="estaGuardando(pedido)" (click)="cambiarEstado(pedido, 'entregado', true)">Confirmar entrega y registrar venta</button>
-          <button (click)="entregaPendiente.set(null)">Volver</button>
-        </section>
-        <div class="pedido-acciones" *ngIf="entregaPendiente() !== pedido.id">
-          <button
-            *ngFor="let destino of transiciones(pedido)"
-            type="button"
-            [ngClass]="destino === 'cancelado' ? 'boton-peligro' : destino === 'pendiente' ? 'boton-secundario' : ''"
-            [disabled]="estaGuardando(pedido)"
-            (click)="cambiarEstado(pedido, destino)"
-          >
-            {{ accionHacia[destino] }}
-          </button>
-          <button type="button" class="enlace-historial" (click)="alternarHistorial(pedido)" [attr.aria-expanded]="historialAbierto() === pedido.id">
-            {{ historialAbierto() === pedido.id ? 'Ocultar historial' : 'Ver historial' }}
-          </button>
+          <label class="campo-filtro">
+            <span>Entrega desde</span>
+            <input type="date" aria-label="Entrega desde" [ngModel]="desde()" (ngModelChange)="desde.set($event || '')" />
+          </label>
+          <label class="campo-filtro">
+            <span>Entrega hasta</span>
+            <input type="date" aria-label="Entrega hasta" [ngModel]="hasta()" (ngModelChange)="hasta.set($event || '')" />
+          </label>
+        </div>
+        <button *ngIf="hayFiltrosExtra()" type="button" class="limpiar-busqueda" (click)="limpiarFiltros()">Limpiar filtros</button>
+      </div>
+      <span class="contador">{{ pedidosFiltrados().length }} de {{ pedidos().length }} pedidos</span>
+
+      <div *ngIf="error()" class="alerta error" role="alert">
+        {{ error() }}
+        <button *ngIf="pedidos().length === 0 && !cargando()" type="button" class="boton-secundario reintentar" (click)="cargar()">
+          Intentar de nuevo
+        </button>
+      </div>
+      <div *ngIf="mensaje()" class="alerta exito" role="status">{{ mensaje() }}</div>
+
+      <p *ngIf="cargando()">Cargando pedidos…</p>
+      <p *ngIf="!cargando() && !error() && pedidos().length === 0" class="vacio">Todavía no hay pedidos registrados.</p>
+      <p *ngIf="!cargando() && pedidos().length > 0 && pedidosFiltrados().length === 0" class="vacio" role="status">
+        Ningún pedido coincide con los filtros.
+      </p>
+
+      <div class="lista-pedidos" *ngIf="!cargando() && pedidosFiltrados().length > 0">
+        <article
+          *ngFor="let pedido of pedidosFiltrados() | slice:pag.inicio():pag.inicio()+pag.tamano; trackBy: porId"
+          class="pedido-gestion"
+        >
+          <div class="pedido-foto" aria-hidden="true">
+            <img src="/img/piñaPepa.jpg" alt="" />
+          </div>
+
+          <div class="pedido-cuerpo">
+            <div class="pedido-fila-superior">
+              <div class="pedido-titulo">
+                <h3 [title]="pedido.id">Pedido #{{ idCorto(pedido.id) }}</h3>
+                <span class="pedido-referencia">
+                  Cliente: {{ pedido.cliente_nombre || pedido.cliente_correo || 'Cliente sin perfil' }}
+                  <ng-container *ngIf="pedido.cliente_celular"> · Cel. {{ pedido.cliente_celular }}</ng-container>
+                </span>
+              </div>
+              <div class="insignias">
+                <span *ngIf="pedido.urgencia" class="insignia urgencia" [ngClass]="'urgencia-' + pedido.urgencia">
+                  {{ etiquetaUrgenciaDe(pedido.urgencia) }}
+                </span>
+                <span class="insignia estado" [ngClass]="'estado-' + (pedido.estadoNormalizado || 'desconocido')">
+                  {{ etiquetaDe(pedido.estado) }}
+                </span>
+              </div>
+            </div>
+
+            <ul class="pedido-meta">
+              <li>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+                  <path d="M3.5 10h17M8 3v4M16 3v4" />
+                </svg>
+                {{ formatearFecha(pedido.fecha_entrega) }} · {{ formatearHora(pedido.hora_entrega) }}
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />
+                  <path d="M4 7.5l8 4.5 8-4.5M12 12v9" />
+                </svg>
+                <ng-container *ngIf="(pedido.lineas?.length ?? 0) > 1; else unaLinea">{{ pedido.lineas?.length }} productos</ng-container>
+                <ng-template #unaLinea>{{ pedido.lineas?.[0]?.cantidad ?? pedido.cantidad }} {{ pedido.lineas?.[0]?.unidad ?? pedido.producto_unidad }}</ng-template>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="6" width="18" height="13" rx="2.5" />
+                  <path d="M3 10.5h18M7 15h4" />
+                </svg>
+                {{ etiquetaPago(pedido.metodo_pago) }}
+              </li>
+            </ul>
+
+          </div>
+
+          <div class="pedido-acciones">
+            <button type="button" class="btn-detalles" (click)="alternarHistorial(pedido)" [attr.aria-expanded]="historialAbierto() === pedido.id">
+              {{ historialAbierto() === pedido.id ? 'Ocultar detalles' : 'Ver detalles' }}
+              <svg class="chevron" [class.abierto]="historialAbierto() === pedido.id" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+
+            <div class="acciones-estado" *ngIf="entregaPendiente() !== pedido.id">
+              <button
+                *ngFor="let destino of transiciones(pedido)"
+                type="button"
+                [ngClass]="destino === 'cancelado' ? 'boton-peligro' : destino === 'pendiente' ? 'boton-secundario' : ''"
+                [disabled]="estaGuardando(pedido)"
+                (click)="cambiarEstado(pedido, destino)"
+              >
+                {{ accionHacia[destino] }}
+              </button>
+            </div>
+          </div>
+
+          <section class="confirmar-pago" *ngIf="entregaPendiente() === pedido.id">
+            <label>Método de pago
+              <select [(ngModel)]="pago">
+                <option value="efectivo">Efectivo</option>
+                <option value="transferencia">Transferencia</option>
+                <option *ngIf="pedido.credito_habilitado" value="credito">Crédito</option>
+              </select>
+            </label>
+            <button [disabled]="estaGuardando(pedido)" (click)="cambiarEstado(pedido, 'entregado', true)">Confirmar entrega y registrar venta</button>
+            <button (click)="entregaPendiente.set(null)">Volver</button>
+          </section>
+
+          <div class="pedido-detalles" *ngIf="historialAbierto() === pedido.id">
+
+            <!-- Tarjeta izquierda: información -->
+            <div class="detalles-info">
+              <h4 class="detalles-titulo">
+                <svg class="titulo-icono" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 11v5M12 7.6v.01" />
+                </svg>
+                Información del pedido
+              </h4>
+
+              <div class="detalles-grid">
+                <div class="detalle-productos">
+                  <div class="detalle-texto">
+                    <span class="detalle-etiqueta">Productos</span>
+                    <strong *ngFor="let linea of pedido.lineas">{{ linea.nombre }} · {{ linea.cantidad }} {{ linea.unidad }}</strong>
+                    <strong *ngIf="!pedido.lineas?.length">{{ pedido.producto_nombre || 'Producto' }} · {{ pedido.cantidad }} {{ pedido.producto_unidad }}</strong>
+                  </div>
+                </div>
+
+                <div>
+                  <span class="detalle-etiqueta">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+                      <path d="M3.5 10h17M8 3v4M16 3v4" />
+                    </svg>
+                    Entrega
+                  </span>
+                  <strong>{{ formatearFecha(pedido.fecha_entrega) }}</strong>
+                  <small class="detalle-hora">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="8.5" />
+                      <path d="M12 7.5V12l3 2" />
+                    </svg>
+                    {{ formatearHora(pedido.hora_entrega) }}
+                  </small>
+                </div>
+
+                <div>
+                  <span class="detalle-etiqueta">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" />
+                    </svg>
+                    Canal
+                  </span>
+                  <strong>{{ etiquetaCanal(pedido.canal_origen) }}</strong>
+                </div>
+
+                <div class="detalle-total">
+                  <span class="detalle-etiqueta">
+                    <span class="icono-dolar" aria-hidden="true">$</span>
+                    Total
+                  </span>
+                  <strong>{{ pedido.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+                </div>
+
+                <div>
+                  <span class="detalle-etiqueta">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="3" y="6" width="18" height="13" rx="2.5" />
+                      <path d="M3 10.5h18M7 15h4" />
+                    </svg>
+                    Pago
+                  </span>
+                  <strong>{{ etiquetaPago(pedido.metodo_pago) }}</strong>
+                </div>
+
+                <div *ngIf="pedido.registrado_por_nombre">
+                  <span class="detalle-etiqueta">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+                      <path d="M3.5 7.5l8.5 6 8.5-6" />
+                    </svg>
+                    Registrado por
+                  </span>
+                  <strong>{{ pedido.registrado_por_nombre }}</strong>
+                </div>
+
+                <div *ngIf="pedido.ultimo_cambio_en">
+                  <span class="detalle-etiqueta">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4" />
+                      <path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4" />
+                    </svg>
+                    Último cambio
+                  </span>
+                  <strong>{{ pedido.ultimo_cambio_en | date:'dd/MM/yyyy h:mm a' }}</strong>
+                  <small *ngIf="pedido.ultimo_cambio_por">{{ pedido.ultimo_cambio_por }}</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tarjeta derecha: historial -->
+            <div class="historial">
+              <h4 class="historial-titulo">
+                <svg class="titulo-icono" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3 2" />
+                </svg>
+                Historial de estados
+              </h4>
+              <p *ngIf="cargandoHistorial()">Cargando historial…</p>
+              <p *ngIf="errorHistorial()" class="alerta error">{{ errorHistorial() }}</p>
+              <p *ngIf="!cargandoHistorial() && !errorHistorial() && historial().length === 0" class="vacio">
+                Sin cambios registrados (el pedido es anterior al historial).
+              </p>
+              <ol *ngIf="!cargandoHistorial() && historial().length > 0">
+                <li *ngFor="let cambio of historial()">
+                  <span class="cambio-estado">{{ cambio.estado_anterior ? etiquetaDe(cambio.estado_anterior) + ' → ' : '' }}{{ etiquetaDe(cambio.estado_nuevo) }}</span>
+                  <span class="cambio-meta">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+                      <path d="M3.5 10h17M8 3v4M16 3v4" />
+                    </svg>
+                    {{ cambio.creado_en | date:'dd/MM/yyyy h:mm a' }}
+                  </span>
+                  <span class="cambio-meta">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="8" r="3.5" />
+                      <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
+                    </svg>
+                    {{ cambio.responsable || 'Sistema' }}
+                  </span>
+                  <em *ngIf="cambio.nota">{{ cambio.nota }}</em>
+                </li>
+              </ol>
+            </div>
+
+          </div>
+
+        </article>
+      </div>
+      <app-paginador #pag [total]="pedidosFiltrados().length" [filtros]="[filtroEstado(),busquedaCliente(),desde(),hasta(),soloUrgentes()].join('|')" />
+    </section>
+
+    <aside class="derecha" aria-label="Resumen de pedidos">
+      <div class="resumen-tarjeta">
+        <div class="resumen-cabecera">
+          <h2 class="tarjeta-titulo">Resumen</h2>
         </div>
 
-        <div *ngIf="historialAbierto() === pedido.id" class="historial">
-          <p *ngIf="cargandoHistorial()">Cargando historial…</p>
-          <p *ngIf="errorHistorial()" class="alerta error">{{ errorHistorial() }}</p>
-          <p *ngIf="!cargandoHistorial() && !errorHistorial() && historial().length === 0" class="vacio">
-            Sin cambios registrados (el pedido es anterior al historial).
-          </p>
-          <ol *ngIf="!cargandoHistorial() && historial().length > 0">
-            <li *ngFor="let cambio of historial()">
-              <strong>{{ cambio.estado_anterior ? etiquetaDe(cambio.estado_anterior) + ' → ' : '' }}{{ etiquetaDe(cambio.estado_nuevo) }}</strong>
-              <span>{{ cambio.creado_en | date:'dd/MM/yyyy h:mm a' }} · {{ cambio.responsable || 'Sistema' }}</span>
-              <em *ngIf="cambio.nota">{{ cambio.nota }}</em>
+        <div class="resumen-cuerpo">
+          <span class="resumen-etiqueta">Pedidos por atender</span>
+          <div class="resumen-numero">
+            <strong>{{ contadores()['por_atender'] }}</strong>
+            <span>{{ contadores()['por_atender'] === 1 ? 'pedido' : 'pedidos' }}</span>
+          </div>
+
+          <ul class="resumen-lista">
+            <li>
+              <button type="button" class="resumen-fila" (click)="verUrgentes()">
+                <span class="resumen-nombre">
+                  Urgentes
+                  <small *ngIf="resumen().atrasados > 0">{{ resumen().atrasados }} atrasado{{ resumen().atrasados === 1 ? '' : 's' }}</small>
+                </span>
+                <strong>{{ resumen().urgentes }}</strong>
+              </button>
             </li>
-          </ol>
-        </div>
-      </article>
-    </div>
-    <app-paginador #pag [total]="pedidosFiltrados().length" [filtros]="[filtroEstado(),busquedaCliente(),desde(),hasta(),soloUrgentes()].join('|')" />
-  </section>
-</main>
+            <li>
+              <button type="button" class="resumen-fila" (click)="filtroEstado.set('pendiente'); soloUrgentes.set(false)">
+                <span class="resumen-nombre">Pendientes</span>
+                <strong>{{ resumen().pendientes }}</strong>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="resumen-fila" (click)="filtroEstado.set('en_preparacion'); soloUrgentes.set(false)">
+                <span class="resumen-nombre">En preparación</span>
+                <strong>{{ resumen().enPreparacion }}</strong>
+              </button>
+            </li>
+            <li>
+              <div class="resumen-fila">
+                <span class="resumen-nombre">Para mañana</span>
+                <strong>{{ resumen().manana }}</strong>
+              </div>
+            </li>
+          </ul>
 
+          <small *ngIf="ultimaConsulta()" class="ultima-consulta">Última consulta: {{ ultimaConsulta() | date:'h:mm a' }}</small>
+
+          <a routerLink="/pedido-interno" class="btn-resumen-pedido">+ Registrar pedido</a>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>

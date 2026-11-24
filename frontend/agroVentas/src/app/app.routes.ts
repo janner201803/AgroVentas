@@ -60,12 +60,20 @@ export const routes: Routes = [
       {
         path: 'inventario',
         loadComponent: () => import('../app/pages/inventario/inventario').then(modulo => modulo.Inventario),
-        canActivate: [rolGuard('propietario', 'empleado')]
+        canActivate: [rolGuard('propietario', 'empleado')],
+        data: {
+          titulo: 'Productos disponibles',
+          subtitulo: 'Consulta el inventario de nuestras variedades de piña.'
+        }
       },
       {
         path: 'gestion-pedidos',
         loadComponent: () => import('../app/pages/gestion-pedidos/gestion-pedidos').then(modulo => modulo.GestionPedidos),
-        canActivate: [rolGuard('propietario', 'empleado')]
+        canActivate: [rolGuard('propietario', 'empleado')],
+        data: {
+          titulo: 'Gestión de pedidos',
+          subtitulo: 'Consulta y administra los pedidos de tus clientes.'
+        }
       },
       {
         path: 'pedido-interno',
