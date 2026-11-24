@@ -2,6 +2,7 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router} from '@angular/router';
+import { Paginador } from '../../core/paginador';
 import { AuthService } from '../../core/services/auth.service';
 import { AbonoCartera, CarteraService, CuentaCartera } from '../../core/services/cartera.service';
 
@@ -10,7 +11,7 @@ type EstadoFiltro = '' | 'pendiente' | 'parcial' | 'pagada';
 @Component({
   selector: 'app-cartera',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe, Paginador],
   templateUrl: './cartera.html',
   styleUrl: './cartera.css'
 })

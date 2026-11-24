@@ -75,8 +75,9 @@
       <p *ngIf="cargando() && cuentas().length === 0" class="vacio" role="status">Cargando cartera…</p>
       <p *ngIf="!cargando() && !error() && cuentas().length === 0" class="vacio">No hay cuentas por cobrar para este filtro.</p>
 
+      <app-paginador #pagCartera [total]="cuentas().length" [filtros]="estadoFiltro" [tamano]="6" />
       <div class="lista-cuentas" *ngIf="cuentas().length > 0">
-        <article class="cuenta-cartera" *ngFor="let cuenta of cuentas()">
+        <article class="cuenta-cartera" *ngFor="let cuenta of cuentas() | slice: pagCartera.inicio(): pagCartera.inicio() + pagCartera.tamano()">
           <header class="cabecera-cuenta">
             <div class="cuenta-titulo">
               <h3>{{ cuenta.cliente_nombre }}</h3>
