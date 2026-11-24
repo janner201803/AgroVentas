@@ -1,63 +1,538 @@
-/* Estilos propios de "Mis pedidos". La base (paleta, tarjetas, encabezado)
-   viene de ../pedidos/pedidos.css, que este componente también carga. */
+/*
+  La base (tarjetas, iconos de título, resumen con cabecera verde, :host, etc.)
+  viene de ../pedidos/pedidos.css, que mis-pedidos.ts carga primero en styleUrls.
+  Aquí solo está lo propio de esta pantalla.
+*/
 
-.barra-consulta,
-.actualizar {
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.btn-resumen-pedido {
+  display: inline-flex;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #176b43;
+  background: #fff9e8;
+  font-size: 12px;
+  font-weight: bold;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 18%);
+}
+
+.btn-resumen-pedido:hover {
+  background: #e0f0b6;
+}
+
+/* ───── Estructura ───── */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(280px, 22vw, 340px);
+  gap: 22px;
+  align-items: start;
+}
+
+.derecha {
+  position: sticky;
+  top: 16px;
+}
+
+/* ───── Botones ───── */
+.btn-principal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 16px;
+  border-radius: 999px;
+  color: #fff9e8;
+  background: #176b43;
+  font-size: 13px;
+  font-weight: bold;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-principal:hover {
+  filter: brightness(0.95);
+}
+
+.boton-secundario {
+  margin: 0;
+  padding: 9px 16px;
+  border: 1px solid #176b43;
+  border-radius: 999px;
+  color: #176b43;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.boton-secundario:hover {
+  background: #f0f5dc;
+}
+
+/* ───── Tarjeta de la lista ───── */
+.lista-card {
+  gap: 16px;
+}
+
+.lista-cabecera {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 16px;
+}
+
+.lista-cabecera .tarjeta-titulo {
+  display: block;
+  margin: 0;
+  text-align: center;
+}
+
+.selectores {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.selector {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.selector select {
+  width: auto;
+  min-width: 170px;
+  padding: 10px 38px 10px 16px;
+  border: 1px solid #c5df8b;
+  border-radius: 999px;
+  color: #174b32;
+  background-color: #fffdf5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23176b43' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none;
+}
+
+.selector select:hover {
+  background-color: #f0f5dc;
+}
+
+.selector-fecha select {
+  padding-left: 40px;
+  min-width: 250px;
+}
+
+.selector-icono {
+  position: absolute;
+  left: 14px;
+  color: #176b43;
+  pointer-events: none;
+}
+
+.btn-actualizar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #c5df8b;
+  border-radius: 50%;
+  color: #176b43;
+  background: #fffdf5;
+  cursor: pointer;
+}
+
+.btn-actualizar:hover:not(:disabled) {
+  background: #f0f5dc;
+}
+
+.btn-actualizar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-actualizar svg.girando {
+  animation: girar 0.9s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-actualizar svg.girando {
+    animation: none;
+  }
+}
+
+/* ───── Carga, error y vacío ───── */
+.mensaje-carga {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  padding: 16px 20px;
+  border: 1px solid #f3e3b6;
+  border-radius: 16px;
+  color: #174b32;
+  background: #fff6dc;
+  font-size: 14px;
+  font-weight: 700;
 }
 
-.barra-consulta {
+.indicador-carga {
+  display: block;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.alerta {
+  padding: 14px 16px;
+  border-radius: 14px;
+}
+
+.alerta p {
+  margin: 0 0 10px;
+}
+
+.vacio-historial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 36px 24px;
+  border: 1px solid #f3e3b6;
+  border-radius: 18px;
+  background: #fffaea;
+  text-align: center;
+}
+
+.vacio-historial p {
+  margin: 0;
+  max-width: 380px;
+  color: #82643c;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.vacio-historial .boton-secundario,
+.vacio-historial .btn-principal {
+  margin-top: 10px;
+}
+
+.icono-vacio {
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+}
+
+/* ───── Lista de pedidos ───── */
+.lista-pedidos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pedido-item {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 8px 16px;
+  padding: 12px;
+  border: 1px solid #f3e3b6;
+  border-radius: 18px;
+  background: #fffdf5;
+}
+
+.pedido-foto {
+  width: 120px;
+  height: 100px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #fcf0c9;
+}
+
+.pedido-foto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pedido-cuerpo {
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  margin-bottom: 16px;
+  gap: 10px;
+  min-width: 0;
 }
 
-.enlace-accion {
+.pedido-fila-superior {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pedido-titulo {
+  min-width: 0;
+}
+
+.pedido-titulo h3 {
+  margin: 0 0 3px;
+  color: #174b32;
+  font-size: 17px;
+}
+
+.pedido-referencia {
+  color: #82643c;
+  font-size: 13px;
+}
+
+.estado-pedido {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  color: #c4510f;
+  background: #ffe9c9;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.estado-pedido.exito {
+  color: #285d2f;
+  background: #e0f0b6;
+}
+
+.estado-pedido.error {
+  color: #8e3328;
+  background: #ffe0d5;
+}
+
+.pedido-fila-inferior {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+}
+
+.pedido-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #174b32;
+  font-size: 13px;
+}
+
+.pedido-meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-left: 1px solid #f0c98a;
+}
+
+.pedido-meta li:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.pedido-meta svg {
+  flex-shrink: 0;
   color: #176b43;
-  font-weight: bold;
-  text-decoration: none;
 }
 
-.enlace-accion:hover {
-  text-decoration: underline;
+.btn-detalles {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1px solid #176b43;
+  border-radius: 999px;
+  color: #176b43;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-detalles:hover {
+  background: #f0f5dc;
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+}
+
+.chevron.abierto {
+  transform: rotate(180deg);
+}
+
+.pedido-detalles {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.5fr) minmax(0, 0.7fr) minmax(0, 0.9fr);
+  gap: 12px;
+  padding: 14px 18px;
+  border: 1px solid #e8dfc7;
+  border-radius: 14px;
+  background: #fffdf5;
+}
+
+.pedido-detalles > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding-left: 12px;
+  border-left: 1px solid #f3e3b6;
+}
+
+.pedido-detalles > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.detalle-etiqueta {
+  color: #82643c;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.pedido-detalles strong {
+  color: #176b43;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+/* ───── Resumen ───── */
+.resumen-cuerpo {
+  gap: 6px;
+}
+
+.resumen-etiqueta {
+  color: #174b32;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.resumen-numero {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 0 2px;
+  color: #e96c20;
+}
+
+.resumen-numero strong {
+  color: #176b43;
+  font-size: 56px;
+  line-height: 1;
+}
+
+.resumen-numero span {
+  font-size: 22px;
+  font-weight: 900;
 }
 
 .ultima-consulta {
   color: #82643c;
+  text-align: center;
 }
 
-.boton-secundario,
-.filtro {
-  width: auto;
-  margin: 0;
-  padding: 8px 14px;
-  border: 1px solid #176b43;
-  border-radius: 999px;
-  background: transparent;
-  color: #176b43;
-  font-size: 13px;
+.resumen-lista {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.filtros {
+.resumen-lista li {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 18px;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid #f3e3b6;
 }
 
-.filtro.activo {
-  background: #176b43;
-  color: #fff9e8;
+.resumen-nombre {
+  flex: 1;
+  color: #174b32;
+  font-size: 15px;
 }
 
-/* El estado es el dato principal de esta pantalla: se muestra como una píldora legible. */
-.estado-pedido {
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: #ffe9c9;
-  font-size: 11px;
-  letter-spacing: 0.8px;
-  white-space: nowrap;
+.resumen-lista strong {
+  color: #174b32;
+  font-size: 16px;
+}
+
+@media (max-width: 1200px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .derecha {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .pedido-item {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+
+  .pedido-foto {
+    width: 84px;
+    height: 84px;
+  }
+
+  .selector select,
+  .selector-fecha select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .selector {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .pedido-fila-superior {
+    flex-wrap: wrap;
+  }
 }

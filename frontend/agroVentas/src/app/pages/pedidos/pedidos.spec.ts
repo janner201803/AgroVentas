@@ -63,6 +63,19 @@ describe('Pedidos', () => {
     expect(consultas).toBe(0);
   });
 
+  it('calcula el valor estimado del producto seleccionado', async () => {
+    await crear();
+    component.productos = [
+      { id: 1, nombre: 'Primera', und: 'kg', precio: 2000, cantidad: 5 }
+    ];
+    component.productoId = 1;
+    component.cantidad = 1.5;
+
+    expect(component.valorEstimado).toBe(3000);
+    component.cantidad = null;
+    expect(component.valorEstimado).toBe(0);
+  });
+
   it('envía dos variedades en un solo pedido y acumula un producto repetido', async () => {
     await crear();
     component.productos = [

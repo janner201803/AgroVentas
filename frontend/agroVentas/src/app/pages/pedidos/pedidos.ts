@@ -8,7 +8,6 @@ import { HorarioEntrega, PedidoService, ProductoPedido } from '../../core/servic
 import { InventarioService } from '../../core/services/inventario.service';
 import { ChangeDetectorRef } from '@angular/core';
 
-
 interface DiaCalendario {
   fecha: string | null;
   dia: number | null;
@@ -186,6 +185,11 @@ export class Pedidos implements OnInit, OnDestroy {
 
   get totalCarrito(): number {
     return this.carrito.reduce((total, linea) => total + Math.round(linea.producto.precio * linea.cantidad), 0);
+  }
+
+  get valorEstimado(): number {
+    if (!this.productoSeleccionado || this.cantidad == null || this.cantidad <= 0) return 0;
+    return Math.round(this.productoSeleccionado.precio * this.cantidad);
   }
 
   quitarProducto(id: number): void {

@@ -1,106 +1,208 @@
-<main class="pagina">
-  <header class="encabezado">
-    <a routerLink="/inicio" class="marca" aria-label="Volver al inicio">
-      <img src="/img/logo.png" alt="Logo de AgroVentas" class="brand-logo" />
-    </a>
+<div class="pagina">
+  <div class="layout">
 
-    <div class="acciones-encabezado">
-      <a routerLink="/inicio" class="volver">← Volver a inicio</a>
-    </div>
-  </header>
+    <section class="tarjeta lista-card" aria-label="Historial de pedidos">
 
-  <section class="formulario" aria-labelledby="titulo-mis-pedidos">
-    <div class="agenda-titulo">
-      <div>
-        <span class="etiqueta">TU ACTIVIDAD</span>
-        <h1 id="titulo-mis-pedidos">Mis pedidos</h1>
-        <p class="descripcion">Consulta el estado de tus pedidos y los datos de recogida.</p>
+      <div class="lista-cabecera">
+        <h2 class="tarjeta-titulo">
+          Mis pedidos
+        </h2>
+
+        <div class="selectores" *ngIf="pedidos.length > 0">
+          <div class="selector">
+            <select
+              aria-label="Filtrar por estado"
+              [value]="filtro"
+              (change)="seleccionarFiltro($any($event.target).value)"
+            >
+              <option
+                *ngFor="let opcion of filtros"
+                [value]="opcion.valor"
+                [selected]="opcion.valor === filtro"
+              >
+                {{ opcion.etiqueta }} ({{ contar(opcion.valor) }})
+              </option>
+            </select>
+          </div>
+
+          <div class="selector selector-fecha">
+            <svg class="selector-icono" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+              <path d="M3.5 10h17M8 3v4M16 3v4" />
+            </svg>
+            <select
+              aria-label="Filtrar por semana de entrega"
+              [value]="valorSemana"
+              (change)="seleccionarSemana($any($event.target).value)"
+            >
+              <option
+                *ngFor="let opcion of opcionesSemana"
+                [value]="opcion.valor"
+                [selected]="opcion.valor === valorSemana"
+              >
+                {{ opcion.etiqueta }}
+              </option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            class="btn-actualizar"
+            aria-label="Actualizar pedidos"
+            title="Actualizar"
+            [disabled]="cargando || actualizando"
+            (click)="actualizar()"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" [class.girando]="actualizando">
+              <path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4" />
+              <path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4" />
+            </svg>
+          </button>
+        </div>
       </div>
-      <span class="total-pedidos">{{ pedidos.length }} {{ pedidos.length === 1 ? 'pedido' : 'pedidos' }}</span>
-    </div>
 
-    <div class="barra-consulta">
-      <a routerLink="/pedidos" class="enlace-accion">+ Hacer un pedido</a>
-      <div class="actualizar">
-        <small *ngIf="ultimaConsulta" class="ultima-consulta">
-          Última consulta: {{ ultimaConsultaTexto }}
-        </small>
-        <button type="button" class="boton-secundario" [disabled]="cargando || actualizando" (click)="actualizar()">
-          {{ actualizando ? 'Actualizando…' : 'Actualizar' }}
-        </button>
+      <div *ngIf="cargando" class="mensaje-carga" role="status">
+        <img src="/img/iconos/cargando.svg" class="indicador-carga" alt="" aria-hidden="true" />
+        <span>Cargando tus pedidos…</span>
       </div>
-    </div>
 
-    <div class="filtros" role="group" aria-label="Filtrar pedidos por estado" *ngIf="pedidos.length > 0">
-      <button
-        *ngFor="let opcion of filtros"
-        type="button"
-        class="filtro"
-        [class.activo]="opcion.valor === filtro"
-        [attr.aria-pressed]="opcion.valor === filtro"
-        (click)="seleccionarFiltro(opcion.valor)"
-      >
-        {{ opcion.etiqueta }} ({{ contar(opcion.valor) }})
-      </button>
-    </div>
+      <div *ngIf="!cargando && error" class="alerta error" role="alert">
+        <p>{{ error }}</p>
+        <button type="button" class="boton-secundario" (click)="cargarPedidos()">Intentar de nuevo</button>
+      </div>
 
-    <div *ngIf="cargando" class="producto-info" role="status">
-      <img src="/img/iconos/cargando.svg" class="indicador-carga" alt="" aria-hidden="true" />
-      <span>Cargando tus pedidos…</span>
-    </div>
+      <div *ngIf="!cargando && !error && pedidos.length === 0" class="vacio-historial">
+        <img src="/img/iconos/canasta.svg" class="icono-vacio" alt="" aria-hidden="true" />
+        <strong>Aún no tienes pedidos</strong>
+        <p>Cuando registres uno, aparecerá aquí con su estado y los detalles de entrega.</p>
+        <a routerLink="/pedidos" class="btn-principal">Hacer mi primer pedido</a>
+      </div>
 
-    <div *ngIf="!cargando && error" class="alerta error" role="alert">
-      <p>{{ error }}</p>
-      <button type="button" (click)="cargarPedidos()">Intentar de nuevo</button>
-    </div>
+      <div *ngIf="!cargando && !error && pedidos.length > 0 && pedidosFiltrados.length === 0" class="vacio-historial">
+        <strong>No hay pedidos con estos filtros</strong>
+        <p>Prueba con otro estado o con otra semana.</p>
+        <button type="button" class="boton-secundario" (click)="limpiarFiltros()">Quitar filtros</button>
+      </div>
 
-    <div *ngIf="!cargando && !error && pedidos.length === 0" class="recogida vacio-historial">
-      <img src="/img/iconos/canasta.svg" class="icono-vacio" alt="" aria-hidden="true" />
-      <strong>Aún no tienes pedidos</strong>
-      <p>Cuando registres uno, aparecerá aquí con su estado y los detalles de entrega.</p>
-    </div>
+      <div *ngIf="!cargando && pedidosFiltrados.length > 0" class="lista-pedidos">
+        <article class="pedido-item" *ngFor="let pedido of pedidosFiltrados">
 
-    <div *ngIf="!cargando && !error && pedidos.length > 0 && pedidosFiltrados.length === 0" class="recogida vacio-historial">
-      <strong>No tienes pedidos en este estado</strong>
-      <p>Elige otro filtro para ver el resto de tus pedidos.</p>
-    </div>
+          <div class="pedido-foto" aria-hidden="true">
+            <img src="/img/piñaPepa.jpg" alt="" />
+          </div>
 
-    <div *ngIf="!cargando && pedidosFiltrados.length > 0" class="lista-pedidos">
-      <article class="agenda pedido-card" *ngFor="let pedido of pedidosFiltrados">
-        <div class="agenda-titulo">
-          <div class="producto-info pedido-producto">
-            <span class="icono-pedido" aria-hidden="true"><img src="/img/piñaPepa.jpg" alt="" /></span>
-            <div>
-              <h3>{{ (pedido.lineas?.length || 0) > 1 ? 'Pedido con varios productos' : (pedido.producto_nombre || 'Producto de inventario') }}</h3>
-              <span class="pedido-referencia" [title]="pedido.id">Pedido #{{ idCorto(pedido.id) }}</span>
+          <div class="pedido-cuerpo">
+            <div class="pedido-fila-superior">
+              <div class="pedido-titulo">
+                <h3>{{ (pedido.lineas?.length || 0) > 1 ? 'Pedido con varios productos' : (pedido.producto_nombre || 'Producto de inventario') }}</h3>
+                <span class="pedido-referencia" [title]="pedido.id">Pedido #{{ idCorto(pedido.id) }}</span>
+              </div>
+
+              <span class="estado-pedido" [ngClass]="claseVisualEstado(pedido.estado)">
+                {{ etiquetaEstado(pedido.estado) }}
+              </span>
+            </div>
+
+            <div class="pedido-fila-inferior">
+              <ul class="pedido-meta">
+                <li>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+                    <path d="M3.5 10h17M8 3v4M16 3v4" />
+                  </svg>
+                  {{ formatearFecha(pedido.fecha_entrega) }} · {{ formatearHora(pedido.hora_entrega) }}
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />
+                    <path d="M4 7.5l8 4.5 8-4.5M12 12v9" />
+                  </svg>
+                  {{ resumenCantidad(pedido) }}
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="6" width="18" height="13" rx="2.5" />
+                    <path d="M3 10.5h18M7 15h4" />
+                  </svg>
+                  {{ etiquetaPago(pedido.metodo_pago) }}
+                </li>
+              </ul>
+
+              <button
+                type="button"
+                class="btn-detalles"
+                [attr.aria-expanded]="estaExpandido(pedido.id)"
+                (click)="alternarDetalle(pedido.id)"
+              >
+                {{ estaExpandido(pedido.id) ? 'Ocultar detalles' : 'Ver detalles' }}
+                <svg class="chevron" [class.abierto]="estaExpandido(pedido.id)" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
             </div>
           </div>
-          <span class="etiqueta estado-pedido" [ngClass]="claseVisualEstado(pedido.estado)">
-            {{ etiquetaEstado(pedido.estado) }}
-          </span>
+
+          <div class="pedido-detalles" *ngIf="estaExpandido(pedido.id)">
+            <div>
+              <span class="detalle-etiqueta">Cantidad</span>
+              <strong *ngFor="let linea of pedido.lineas">{{ linea.nombre }} · {{ linea.cantidad }} {{ linea.unidad }}</strong>
+              <strong *ngIf="!pedido.lineas?.length">{{ pedido.cantidad }} {{ pedido.producto_unidad || 'unidades' }}</strong>
+            </div>
+            <div>
+              <span class="detalle-etiqueta">Entrega</span>
+              <strong>{{ formatearFecha(pedido.fecha_entrega) }}</strong>
+              <small>{{ formatearHora(pedido.hora_entrega) }}</small>
+            </div>
+            <div>
+              <span class="detalle-etiqueta">Total</span>
+              <strong>{{ pedido.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+            <div>
+              <span class="detalle-etiqueta">Pago</span>
+              <strong>{{ etiquetaPago(pedido.metodo_pago) }}</strong>
+            </div>
+          </div>
+
+        </article>
+      </div>
+
+    </section>
+
+    <aside class="derecha" aria-label="Resumen de tus pedidos">
+      <div class="resumen-tarjeta">
+        <div class="resumen-cabecera">
+          <h2 class="tarjeta-titulo">Resumen</h2>
         </div>
 
-        <div class="resumen pedido-detalles">
-          <div>
-            <span class="detalle-etiqueta">Cantidad</span>
-            <strong *ngFor="let linea of pedido.lineas">{{ linea.nombre }} · {{ linea.cantidad }} {{ linea.unidad }}</strong>
-            <strong *ngIf="!pedido.lineas?.length">{{ pedido.cantidad }} {{ pedido.producto_unidad || 'unidades' }}</strong>
+        <div class="resumen-cuerpo">
+          <span class="resumen-etiqueta">Total de pedidos</span>
+          <div class="resumen-numero">
+            <strong>{{ totalEnSemana }}</strong>
+            <span>{{ totalEnSemana === 1 ? 'pedido' : 'pedidos' }}</span>
           </div>
-          <div>
-            <span class="detalle-etiqueta">Entrega</span>
-            <strong>{{ formatearFecha(pedido.fecha_entrega) }}</strong>
-            <small>{{ formatearHora(pedido.hora_entrega) }}</small>
-          </div>
-          <div>
-            <span class="detalle-etiqueta">Total</span>
-            <strong>{{ pedido.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-          </div>
-          <div>
-            <span class="detalle-etiqueta">Pago</span>
-            <strong>{{ etiquetaPago(pedido.metodo_pago) }}</strong>
-          </div>
+          <small class="ultima-consulta">{{ etiquetaSemana }}</small>
+
+          <ul class="resumen-lista">
+            <li>
+              <span class="resumen-nombre">En curso</span>
+              <strong>{{ contar('activos') }}</strong>
+            </li>
+            <li>
+              <span class="resumen-nombre">Entregados</span>
+              <strong>{{ contar('entregados') }}</strong>
+            </li>
+            <li>
+              <span class="resumen-nombre">Cancelados</span>
+              <strong>{{ contar('cancelados') }}</strong>
+            </li>
+          </ul>
+
+          <small *ngIf="ultimaConsulta" class="ultima-consulta">Última consulta: {{ ultimaConsultaTexto }}</small>
         </div>
-      </article>
-    </div>
-  </section>
-</main>
+      </div>
+
+      <a routerLink="/pedidos" class="btn-resumen-pedido">+ Hacer un pedido</a>
+    </aside>
+
+  </div>
+</div>

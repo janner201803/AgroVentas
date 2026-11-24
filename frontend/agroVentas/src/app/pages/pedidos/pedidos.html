@@ -1,187 +1,224 @@
+<div class="pagina">
 
-<main class="pagina">
-  <header class="encabezado">
-    <a routerLink="/inicio" class="marca" aria-label="Volver al inicio">
-      <img src="/img/logo.png" alt="Logo de AgroVentas" class="brand-logo" />
-    </a>
+  <div *ngIf="error" class="alerta error">
+    {{ error }}
+  </div>
 
-    <div class="acciones-encabezado">
-      <a routerLink="/inicio" class="volver">← Volver a inicio</a>
+  <div *ngIf="mensaje" class="alerta exito" role="status">
+    {{ mensaje }}
+    <a routerLink="/mis-pedidos" class="enlace-mis-pedidos">Ver mis pedidos</a>
+  </div>
 
-      <button type="button" class="carrito" aria-label="Ver carrito" (click)="resumen.scrollIntoView()">
-        <img src="/img/iconos/carrito.svg" alt="" /> {{ carrito.length }}
-      </button>
-    </div>
-  </header>
+  <form class="checkout" (ngSubmit)="enviarPedido()">
 
-  <section class="formulario">
-    <span class="etiqueta">NUEVO PEDIDO</span>
+    <div class="izquierda">
 
-    <h1>Haz tu pedido de piña</h1>
+      <section class="tarjeta">
+        <h2 class="tarjeta-titulo">
+          Variedad y cantidad
+        </h2>
 
-    <p class="descripcion">
-      Selecciona la variedad y la cantidad que necesitas.
-      Los pedidos se organizan para que puedas recogerlos.
-    </p>
+        <label for="producto">Tipo de piña</label>
 
-    <!-- Mensajes -->
-    <div *ngIf="error" class="alerta error">
-      {{ error }}
-    </div>
+        <p class="leyenda" *ngIf="cargandoProductos">Cargando productos disponibles…</p>
+        <p class="leyenda" *ngIf="!cargandoProductos && productos.length === 0">
+          No hay productos disponibles para pedir. Revisa el catálogo y sus precios en inventario.
+        </p>
 
-    <div *ngIf="mensaje" class="alerta exito" role="status">
-      {{ mensaje }}
-      <a routerLink="/mis-pedidos" class="enlace-mis-pedidos">Ver mis pedidos →</a>
-    </div>
-
-    <form (ngSubmit)="enviarPedido()">
-
-      <!-- Tipo de piña -->
-      <label for="producto">Tipo de piña</label>
-
-      <p *ngIf="cargandoProductos">Cargando productos disponibles…</p>
-      <p *ngIf="!cargandoProductos && productos.length === 0">
-        No hay productos disponibles para pedir. Revisa el catálogo y sus precios en inventario.
-      </p>
-
-      <select
-        id="producto"
-        name="producto"
-        [(ngModel)]="productoId"
-        [disabled]="cargandoProductos || productos.length === 0"
-      >
-        <option [ngValue]="null">
-          Selecciona una variedad
-        </option>
-
-        <option
-          *ngFor="let producto of productos"
-          [ngValue]="producto.id"
+        <select
+          id="producto"
+          name="producto"
+          [(ngModel)]="productoId"
+          required
+          [disabled]="cargandoProductos || productos.length === 0"
         >
-          {{ producto.nombre }} —
-          {{ producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ producto.und }}
-        </option>
-      </select>
+          <option [ngValue]="null">
+            Selecciona una variedad
+          </option>
 
-      <!-- Información del producto seleccionado -->
-      <div *ngIf="productoSeleccionado" class="producto-info">
-        <span>
-          Precio por {{ productoSeleccionado.und }}
-        </span>
+          <option
+            *ngFor="let producto of productos"
+            [ngValue]="producto.id"
+          >
+            {{ producto.nombre }} —
+            {{ producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ producto.und }}
+          </option>
+        </select>
 
-        <strong>
-          {{ productoSeleccionado.precio | currency:'COP':'symbol-narrow':'1.0-0' }}
-        </strong>
+        <div class="producto-info">
+          <span>
+            Precio por {{ productoSeleccionado?.und || 'unidad' }}
+          </span>
+
+          <strong>
+            {{ productoSeleccionado ? (productoSeleccionado.precio | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}
+          </strong>
+        </div>
+
+        <label for="cantidad">
+          Cantidad ({{ productoSeleccionado?.und || 'unidades' }})
+        </label>
+
+        <input
+          id="cantidad"
+          name="cantidad"
+          type="number"
+          [(ngModel)]="cantidad"
+          [min]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
+          [max]="productoSeleccionado?.cantidad ?? null"
+          [step]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
+          required
+          placeholder="Ingresa la cantidad"
+        />
+
+        <small *ngIf="productoSeleccionado">
+          Inventario disponible: {{ productoSeleccionado.cantidad }} {{ productoSeleccionado.und }}
+        </small>
+      </section>
+
+      <section class="tarjeta">
+        <h2 class="tarjeta-titulo">
+          Fecha y hora de entrega
+        </h2>
+
+        <div class="agenda-horarios">
+
+          <div class="agenda">
+            <div class="agenda-cabecera">
+              <div>
+                <label>Fecha de entrega</label>
+                <p class="fecha-elegida" *ngIf="fechaEntrega">{{ fechaSeleccionadaTexto }}</p>
+              </div>
+            </div>
+
+            <div class="mes-controles">
+              <button type="button" aria-label="Mes anterior" (click)="cambiarMes(-1)">‹</button>
+              <strong>{{ nombreMes }}</strong>
+              <button type="button" aria-label="Mes siguiente" (click)="cambiarMes(1)">›</button>
+            </div>
+
+            <div class="calendario">
+              <span class="dia-semana" *ngFor="let dia of diasSemana">{{ dia }}</span>
+              <ng-container *ngFor="let celda of diasCalendario">
+                <span *ngIf="!celda.fecha" class="dia-vacio"></span>
+                <button *ngIf="celda.fecha" type="button" class="dia"
+                  [class.seleccionado]="celda.fecha === fechaEntrega"
+                  [disabled]="celda.fecha < fechaMinima"
+                  [attr.aria-pressed]="celda.fecha === fechaEntrega"
+                  (click)="seleccionarFecha(celda.fecha || '')">{{ celda.dia }}</button>
+              </ng-container>
+            </div>
+            <p class="leyenda">Elige una fecha para consultar los bloques disponibles.</p>
+          </div>
+
+          <div class="horarios">
+            <div class="agenda-cabecera">
+              <div>
+                <label>Hora de entrega</label>
+                <p class="leyenda">Bloques de una hora · 8:00 a. m. a 5:00 p. m.</p>
+              </div>
+            </div>
+
+            <p class="leyenda">Para hoy, la entrega debe ser al menos 40 minutos después de registrar el pedido.</p>
+            <p *ngIf="cargandoHorarios" class="leyenda">Actualizando disponibilidad…</p>
+
+            <div class="horas-grid" *ngIf="horarios.length">
+              <button *ngFor="let horario of horarios" type="button" class="hora"
+                [class.seleccionada]="horario.hora === horaEntrega"
+                [class.ocupada]="horario.ocupado"
+                [class.no-disponible]="!horario.ocupado && !horario.disponible"
+                [disabled]="!horario.disponible"
+                [attr.aria-pressed]="horario.hora === horaEntrega"
+                (click)="seleccionarHora(horario.hora)">
+                <strong>{{ horario.hora }}</strong>
+                <small>{{ horario.ocupado ? 'Ocupado' : (horario.disponible ? 'Disponible' : 'No disponible') }}</small>
+              </button>
+            </div>
+            <p *ngIf="error && horarios.length" class="leyenda">No se pudo cargar la ocupación desde el servidor; al guardar se verificará que el bloque siga libre.</p>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="tarjeta">
+        <h2 class="tarjeta-titulo">
+          Método de pago
+        </h2>
+
+        <label for="pago">Método de pago</label>
+
+        <select id="pago" name="pago" [(ngModel)]="metodoPago" required>
+          <option value="efectivo">Efectivo al recoger</option>
+        </select>
+        <small>El pago por consignación estará disponible cuando se habilite la carga segura del comprobante.</small>
+      </section>
+
+    </div>
+
+    <aside class="derecha" aria-label="Resumen del pedido">
+      <div class="resumen-tarjeta">
+        <div class="resumen-cabecera">
+          <h2 class="tarjeta-titulo">Resumen del pedido</h2>
+        </div>
+
+        <div class="resumen-cuerpo">
+          <dl class="resumen-filas">
+            <div>
+              <dt>Variedad</dt>
+              <dd>{{ productoSeleccionado?.nombre || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Precio por {{ productoSeleccionado?.und || 'unidad' }}</dt>
+              <dd>
+                {{ productoSeleccionado ? (productoSeleccionado.precio | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Cantidad</dt>
+              <dd>
+                <ng-container *ngIf="cantidad && cantidad > 0; else sinCantidad">
+                  {{ cantidad }} {{ productoSeleccionado?.und }}
+                </ng-container>
+                <ng-template #sinCantidad>—</ng-template>
+              </dd>
+            </div>
+            <div>
+              <dt>Fecha de entrega</dt>
+              <dd class="fecha-resumen">{{ fechaSeleccionadaTexto || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Hora de entrega</dt>
+              <dd>{{ horaEntrega || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Pago</dt>
+              <dd>Efectivo al recoger</dd>
+            </div>
+          </dl>
+
+          <div class="resumen-total">
+            <span>Valor estimado</span>
+            <strong>
+              {{ (productoSeleccionado && cantidad && cantidad > 0) ? (valorEstimado | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}
+            </strong>
+          </div>
+
+          <button
+            type="submit"
+            class="btn-registrar"
+            [disabled]="enviando || cargandoProductos || cargandoHorarios || productos.length === 0 || !horaEntrega"
+          >
+            {{ enviando ? 'Registrando...' : 'Registrar pedido' }}
+          </button>
+
+          <p class="nota-resumen">Pagas en efectivo al momento de recoger tu pedido.</p>
+        </div>
       </div>
 
-      <!-- Cantidad -->
-      <label for="cantidad">
-        Cantidad ({{ productoSeleccionado?.und || 'unidades' }})
-      </label>
+      <a routerLink="/mis-pedidos" class="mis-pedidos-tarjeta">
+        + Mis pedidos
+      </a>
+    </aside>
 
-      <input
-        id="cantidad"
-        name="cantidad"
-        type="number"
-        [(ngModel)]="cantidad"
-        [min]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
-        [max]="productoSeleccionado ? disponibleParaAgregar(productoSeleccionado) : null"
-        [step]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
-        placeholder="Ingresa la cantidad"
-      />
-
-      <small *ngIf="productoSeleccionado">
-        Disponible para agregar: {{ disponibleParaAgregar(productoSeleccionado) }} {{ productoSeleccionado.und }}
-      </small>
-
-      <button type="button" (click)="agregarProducto()" [disabled]="enviando || !productoSeleccionado">Agregar al carrito</button>
-      <section #resumen aria-labelledby="titulo-carrito">
-        <h2 id="titulo-carrito">Tu carrito</h2>
-        <p *ngIf="!carrito.length">Agrega un producto para comenzar.</p>
-        <ul class="lista-carrito">
-          <li *ngFor="let linea of carrito">
-            <strong>{{ linea.producto.nombre }}</strong> · {{ linea.cantidad }} {{ linea.producto.und }}
-            · {{ linea.cantidad * linea.producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }}
-            <button type="button" [attr.aria-label]="'Quitar ' + linea.producto.nombre" (click)="quitarProducto(linea.producto.id)" [disabled]="enviando">Quitar</button>
-          </li>
-        </ul>
-        <strong>Total estimado {{ totalCarrito | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-      </section>
-
-      <!-- Método de pago -->
-      <label for="pago">Método de pago</label>
-
-      <select id="pago" name="pago" [(ngModel)]="metodoPago" required>
-        <option value="efectivo">Efectivo al recoger</option>
-      </select>
-      <small>El pago por consignación estará disponible cuando se habilite la carga segura del comprobante.</small>
-
-      <section class="agenda">
-        <div class="agenda-titulo">
-          <div>
-            <label>Fecha de entrega</label>
-            <p class="fecha-elegida" *ngIf="fechaEntrega">{{ fechaSeleccionadaTexto }}</p>
-          </div>
-          <div class="mes-controles">
-            <button type="button" aria-label="Mes anterior" (click)="cambiarMes(-1)">‹</button>
-            <strong>{{ nombreMes }}</strong>
-            <button type="button" aria-label="Mes siguiente" (click)="cambiarMes(1)">›</button>
-          </div>
-        </div>
-        <div class="calendario">
-          <span class="dia-semana" *ngFor="let dia of diasSemana">{{ dia }}</span>
-          <ng-container *ngFor="let celda of diasCalendario">
-            <span *ngIf="!celda.fecha" class="dia-vacio"></span>
-            <button *ngIf="celda.fecha" type="button" class="dia"
-              [class.seleccionado]="celda.fecha === fechaEntrega"
-              [disabled]="celda.fecha < fechaMinima"
-              [attr.aria-pressed]="celda.fecha === fechaEntrega"
-              (click)="seleccionarFecha(celda.fecha || '')">{{ celda.dia }}</button>
-          </ng-container>
-        </div>
-        <p class="leyenda">Elige una fecha para consultar los bloques disponibles.</p>
-      </section>
-
-      <section class="horarios">
-        <div class="horarios-titulo">
-          <div>
-            <label>Hora de entrega</label>
-            <p class="leyenda">Bloques de una hora · 8:00 a. m. a 5:00 p. m.</p>
-            <p class="leyenda">Para hoy, la entrega debe ser al menos 40 minutos después de registrar el pedido.</p>
-          </div>
-          <span class="fecha-mini" *ngIf="fechaEntrega">{{ fechaSeleccionadaTexto }}</span>
-        </div>
-        <p *ngIf="cargandoHorarios" class="leyenda">Actualizando disponibilidad…</p>
-        <div class="horas-grid" *ngIf="horarios.length">
-          <button *ngFor="let horario of horarios" type="button" class="hora"
-            [class.seleccionada]="horario.hora === horaEntrega"
-            [class.ocupada]="horario.ocupado"
-            [class.no-disponible]="!horario.ocupado && !horario.disponible"
-            [disabled]="!horario.disponible"
-            [attr.aria-pressed]="horario.hora === horaEntrega"
-            (click)="seleccionarHora(horario.hora)">
-            <strong>{{ horario.hora }}</strong>
-            <small>{{ horario.ocupado ? 'Ocupado' : (horario.disponible ? 'Disponible' : 'No disponible') }}</small>
-          </button>
-        </div>
-        <p *ngIf="avisoHorarios" class="leyenda">{{ avisoHorarios }}</p>
-      </section>
-
-      <!-- Botón -->
-      <button
-        type="submit"
-        [disabled]="enviando || cargandoProductos || cargandoHorarios || !carrito.length || !horaEntrega"
-      >
-        {{ enviando ? 'Registrando...' : 'Registrar pedido' }}
-      </button>
-
-    </form>
-  </section>
-
-  <section class="formulario historial" aria-labelledby="titulo-historial">
-    <span class="etiqueta">TU ACTIVIDAD</span>
-    <h2 id="titulo-historial">Mis pedidos</h2>
-    <p class="descripcion">Consulta el estado de tus pedidos y los datos de recogida en una pantalla aparte.</p>
-    <a routerLink="/mis-pedidos" class="enlace-mis-pedidos">Ver mis pedidos →</a>
-  </section>
-</main>
+  </form>
+</div>
