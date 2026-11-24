@@ -1,6 +1,7 @@
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Paginador } from '../../core/paginador';
 
 import {
   ClienteComercial,
@@ -12,7 +13,7 @@ import {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe, Paginador],
   templateUrl: './clientes.html',
   styleUrl: './clientes.css'
 })

@@ -68,8 +68,9 @@
       <p *ngIf="cargando()" class="vacio" role="status">Cargando clientes…</p>
       <p *ngIf="!cargando() && clientes().length === 0" class="vacio">No se encontraron fichas con esa búsqueda.</p>
 
+      <app-paginador #pagClientes [total]="clientes().length" [filtros]="[buscar, incluirInactivos].join('|')" />
       <div class="lista-clientes">
-        <article class="cliente" *ngFor="let cliente of clientes()">
+        <article class="cliente" *ngFor="let cliente of clientes() | slice: pagClientes.inicio(): pagClientes.inicio() + pagClientes.tamano()">
           <header class="cabecera-cliente">
             <div>
               <span class="estado" [class.inactivo]="!cliente.activo">{{ cliente.activo ? 'Activo' : 'Inactivo' }}</span>

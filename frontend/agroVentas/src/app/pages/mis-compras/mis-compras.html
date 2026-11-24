@@ -1,68 +1,109 @@
+<main class="pagina-mi-cuenta" aria-label="Historial de compras y pagos">
+  <section class="panel-mi-cuenta">
+    <div class="introduccion-cuenta">
+      <p class="introduccion">Aquí puedes consultar tus compras, los pagos registrados y cualquier saldo pendiente.</p>
+      <button type="button" class="boton-actualizar" [disabled]="cargando()" (click)="consultar()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4" /></svg>
+        {{ cargando() ? 'Actualizando…' : 'Actualizar' }}
+      </button>
+    </div>
 
-<main aria-label="Historial de compras y pagos">
-  <div class="acciones">
-    <a routerLink="/inicio">← Volver a inicio</a>
-    <button type="button" class="boton-secundario" [disabled]="cargando()" (click)="consultar()">
-      {{ cargando() ? 'Actualizando…' : 'Actualizar' }}
-    </button>
-  </div>
-  <p class="introduccion">Aquí puedes consultar tus compras, los pagos registrados y cualquier saldo pendiente.</p>
+    <section class="resumen-compras" aria-label="Resumen de compras y pagos">
+      <article class="resumen-item">
+        <span>Total de compras</span>
+        <strong>{{ totalCompras | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      </article>
+      <article class="resumen-item">
+        <span>Total pagado</span>
+        <strong>{{ totalPagado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      </article>
+      <article class="resumen-item">
+        <span>Saldo pendiente</span>
+        <strong [class.saldo-destacado]="saldoPendiente > 0">{{ saldoPendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      </article>
+    </section>
 
-  <section class="resumen" aria-label="Resumen de compras y pagos">
-    <article><span>Total de compras</span><strong>{{ totalCompras | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></article>
-    <article><span>Total pagado</span><strong>{{ totalPagado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></article>
-    <article><span>Saldo pendiente</span><strong>{{ saldoPendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></article>
-  </section>
+    <div class="filtros-compras" *ngIf="compras().length > 0" aria-label="Filtros de compras">
+      <label class="filtro-compra">
+        <span>Semana</span>
+        <select aria-label="Filtrar por semana" [value]="valorSemana" (change)="seleccionarSemana($any($event.target).value)">
+          <option *ngFor="let opcion of opcionesSemana" [value]="opcion.valor">{{ opcion.etiqueta }}</option>
+        </select>
+      </label>
+      <label class="filtro-compra">
+        <span>Producto</span>
+        <select aria-label="Filtrar por producto" [value]="productoFiltro" (change)="seleccionarProducto($any($event.target).value)">
+          <option *ngFor="let opcion of opcionesProducto" [value]="opcion.valor">{{ opcion.etiqueta }}</option>
+        </select>
+      </label>
+      <span class="conteo-filtrado">{{ comprasFiltradas.length }} {{ comprasFiltradas.length === 1 ? 'compra' : 'compras' }}</span>
+    </div>
 
-  <p *ngIf="error()" class="aviso error" role="alert">{{ error() }}</p>
-  <p *ngIf="cargando() && compras().length === 0" role="status">Cargando tus compras…</p>
-  <p *ngIf="!cargando() && !error() && compras().length === 0" class="vacio">Todavía no tienes compras registradas. Las ventas aparecen aquí cuando el pedido se entrega.</p>
+    <p *ngIf="error()" class="aviso error" role="alert">{{ error() }}</p>
+    <p *ngIf="cargando() && compras().length === 0" class="estado-vacio" role="status">Cargando tus compras…</p>
+    <p *ngIf="!cargando() && !error() && compras().length === 0" class="estado-vacio">
+      Todavía no tienes compras registradas. Las ventas aparecen aquí cuando el pedido se entrega.
+    </p>
+    <p *ngIf="!cargando() && compras().length > 0 && comprasFiltradas.length === 0" class="estado-vacio" role="status">
+      No hay compras que coincidan con estos filtros.
+    </p>
 
-  <section class="lista-compras" *ngIf="compras().length > 0">
-    <article class="compra" *ngFor="let compra of compras()">
-      <header class="cabecera-compra">
-        <div>
-          <span class="referencia">Pedido #{{ compra.pedido_id }}</span>
-          <h2>{{ compra.creado_en | date:'d MMMM y':'-0500' }}</h2>
-          <span class="subtitulo">{{ compra.creado_en | date:'h:mm a':'-0500' }} · {{ metodoPago(compra.metodo_pago) }}</span>
-        </div>
-        <strong class="total-compra">{{ compra.total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-      </header>
-
-      <dl class="datos-compra">
-        <div><dt>Entrega</dt><dd>{{ compra.fecha_entrega ? (compra.fecha_entrega | date:'dd/MM/yyyy':'UTC') : '—' }}<ng-container *ngIf="compra.hora_entrega"> · {{ compra.hora_entrega.slice(0, 5) }}</ng-container></dd></div>
-        <div><dt>Estado del pedido</dt><dd>{{ etiquetaPedido(compra.estado_pedido) }}</dd></div>
-      </dl>
-
-      <details>
-        <summary>Ver productos y pagos ({{ compra.abonos.length }})</summary>
-        <div class="detalle-lista">
-          <strong>Productos</strong>
-          <p *ngFor="let linea of compra.lineas">
-            {{ linea.nombre || ('Producto #' + linea.id_producto) }} · {{ linea.cantidad }} {{ linea.unidad }}
-            <span>{{ linea.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
-          </p>
-        </div>
-
-        <section class="estado-cuenta" *ngIf="compra.cuenta as cuenta">
-          <header><strong>Saldo de la compra a crédito</strong><span class="estado" [ngClass]="'estado-' + cuenta.estado">{{ estadoCuenta(cuenta.estado) }}</span></header>
-          <dl class="datos-compra">
-            <div><dt>Valor original</dt><dd>{{ cuenta.valor_original | currency:'COP':'symbol-narrow':'1.0-0' }}</dd></div>
-            <div><dt>Saldo pendiente</dt><dd class="saldo">{{ cuenta.saldo_pendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</dd></div>
-            <div><dt>Vencimiento</dt><dd>{{ cuenta.fecha_vencimiento ? (cuenta.fecha_vencimiento | date:'dd/MM/yyyy':'UTC') : 'Sin definir' }}</dd></div>
-            <div *ngIf="cuenta.dias_mora !== null && cuenta.dias_mora > 0"><dt>Días de mora</dt><dd class="mora">{{ cuenta.dias_mora }}</dd></div>
-          </dl>
-          <strong>Pagos / abonos</strong>
-          <p *ngIf="compra.abonos.length === 0" class="sin-pagos">Todavía no tienes abonos registrados en esta cuenta.</p>
-          <div class="abono" *ngFor="let abono of compra.abonos">
-            <span>{{ abono.registrado_en | date:'dd/MM/yyyy h:mm a':'-0500' }} · {{ metodoPago(abono.metodo_pago) }}</span>
-            <strong>{{ abono.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-            <small *ngIf="abono.nota">{{ abono.nota }}</small>
+    <app-paginador #pagCompras [total]="comprasFiltradas.length" [filtros]="[valorSemana, productoFiltro].join('|')" [tamano]="10" />
+    <section class="lista-compras" *ngIf="comprasFiltradas.length > 0" aria-label="Compras registradas">
+      <article class="compra" *ngFor="let compra of comprasFiltradas | slice: pagCompras.inicio(): pagCompras.inicio() + pagCompras.tamano()">
+        <header class="cabecera-compra">
+          <div class="datos-pedido">
+            <span class="referencia">Pedido #{{ compra.pedido_id }}</span>
+            <h2>{{ compra.creado_en | date:'d MMMM y':'-0500' }}</h2>
+            <span class="hora-pago">{{ compra.creado_en | date:'h:mm a':'-0500' }} · {{ metodoPago(compra.metodo_pago) }}</span>
           </div>
-        </section>
+          <strong class="total-compra">{{ compra.total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        </header>
 
-        <p *ngIf="!compra.cuenta" class="pago-completo">Esta compra no tiene saldo pendiente.</p>
-      </details>
-    </article>
+        <div class="datos-entrega-estado">
+          <div class="dato-compra">
+            <span class="etiqueta-dato">Entrega</span>
+            <strong>{{ compra.fecha_entrega ? (compra.fecha_entrega | date:'dd/MM/yyyy':'UTC') : 'Sin fecha' }}<ng-container *ngIf="compra.hora_entrega"> · {{ compra.hora_entrega.slice(0, 5) }}</ng-container></strong>
+          </div>
+          <div class="dato-compra dato-estado-pedido">
+            <span class="etiqueta-dato">Estado del pedido</span>
+            <strong [ngClass]="'estado-' + compra.estado_pedido">{{ etiquetaPedido(compra.estado_pedido) }}</strong>
+          </div>
+        </div>
+
+        <details class="detalle-compra">
+          <summary>Ver productos y pagos ({{ compra.abonos.length }})</summary>
+          <div class="detalle-lista">
+            <h3>Productos</h3>
+            <p *ngFor="let linea of compra.lineas">
+              <span>{{ linea.nombre || ('Producto #' + linea.id_producto) }} · {{ linea.cantidad }} {{ linea.unidad }}</span>
+              <strong>{{ linea.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+            </p>
+          </div>
+
+          <section class="estado-cuenta" *ngIf="compra.cuenta as cuenta">
+            <header class="cabecera-credito">
+              <strong>Saldo de la compra a crédito</strong>
+              <span class="estado" [ngClass]="'estado-' + cuenta.estado">{{ estadoCuenta(cuenta.estado) }}</span>
+            </header>
+            <dl class="datos-credito">
+              <div><dt>Valor original</dt><dd>{{ cuenta.valor_original | currency:'COP':'symbol-narrow':'1.0-0' }}</dd></div>
+              <div><dt>Saldo pendiente</dt><dd class="saldo">{{ cuenta.saldo_pendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</dd></div>
+              <div><dt>Vencimiento</dt><dd>{{ cuenta.fecha_vencimiento ? (cuenta.fecha_vencimiento | date:'dd/MM/yyyy':'UTC') : 'Sin definir' }}</dd></div>
+              <div *ngIf="cuenta.dias_mora !== null && cuenta.dias_mora > 0"><dt>Días de mora</dt><dd class="mora">{{ cuenta.dias_mora }}</dd></div>
+            </dl>
+            <h3 class="titulo-abonos">Pagos / abonos</h3>
+            <p *ngIf="compra.abonos.length === 0" class="sin-pagos">Todavía no tienes abonos registrados en esta cuenta.</p>
+            <div class="abono" *ngFor="let abono of compra.abonos">
+              <span>{{ abono.registrado_en | date:'dd/MM/yyyy h:mm a':'-0500' }} · {{ metodoPago(abono.metodo_pago) }}</span>
+              <strong>{{ abono.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+              <small *ngIf="abono.nota">{{ abono.nota }}</small>
+            </div>
+          </section>
+
+          <p *ngIf="!compra.cuenta" class="pago-completo">Esta compra no tiene saldo pendiente.</p>
+        </details>
+      </article>
+    </section>
   </section>
 </main>

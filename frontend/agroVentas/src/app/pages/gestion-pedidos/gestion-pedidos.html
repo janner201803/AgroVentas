@@ -93,7 +93,7 @@
 
       <div class="lista-pedidos" *ngIf="!cargando() && pedidosFiltrados().length > 0">
         <article
-          *ngFor="let pedido of pedidosFiltrados() | slice:pag.inicio():pag.inicio()+pag.tamano; trackBy: porId"
+          *ngFor="let pedido of pedidosFiltrados() | slice:pag.inicio():pag.inicio()+pag.tamano(); trackBy: porId"
           class="pedido-gestion"
         >
           <div class="pedido-foto" aria-hidden="true">

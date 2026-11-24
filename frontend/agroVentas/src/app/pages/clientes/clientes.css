@@ -79,6 +79,10 @@
   padding: 22px;
 }
 
+.tarjeta-cuerpo > app-paginador {
+  order: 1;
+}
+
 /* ───── Formulario de registro ───── */
 .form-registro {
   grid-template-columns: repeat(2, minmax(0, 1fr));

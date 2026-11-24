@@ -118,6 +118,10 @@
   padding: 22px;
 }
 
+.tarjeta-cuerpo > app-paginador {
+  order: 1;
+}
+
 /* ───── Filtros ───── */
 .filtros {
   display: flex;
