@@ -1,0 +1,41 @@
+:host { display:block; min-height:100vh; color:#174b32; background:radial-gradient(ellipse at 90% 18%,rgb(247 250 167),transparent 50%),radial-gradient(ellipse at 10% 80%,rgb(250 252 137),transparent 50%),#fff1c9; font-family:Arial,sans-serif; }
+main { width:min(calc(100% - 2rem),68rem); margin:1rem auto 2rem; padding:clamp(1rem,3vw,2rem); border:1px solid #dfdbc8; border-radius:18px; background:#fffdf5; box-shadow:0 8px 26px #20352212; }
+.acciones-cartera { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:.75rem; }
+.acciones-cartera a { margin-right:auto; color:#176b43; font-weight:700; text-decoration:none; }
+.acciones-cartera span { color:#617064; font-size:.8rem; }
+.introduccion { color:#617064; line-height:1.5; }
+.resumen-cartera { display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); gap:.8rem; margin:1rem 0; }
+.resumen-cartera article { display:grid; gap:.4rem; padding:1rem; border:1px solid #e8dfc7; border-radius:12px; background:#fff; }
+.resumen-cartera span,dt,.referencia,.contacto { color:#617064; font-size:.88rem; }
+.resumen-cartera strong { color:#176b43; font-size:1.25rem; }
+.filtros { display:flex; flex-wrap:wrap; align-items:center; gap:.6rem; margin:1.1rem 0; }
+.filtros label,.form-abono label { display:grid; gap:.35rem; font-weight:700; }
+select,input,button { min-height:42px; padding:.65rem .8rem; border:1px solid #baba9e; border-radius:.6rem; color:inherit; background:#fff; font:inherit; }
+button { border:0; color:#fff9e8; background:#176b43; font-weight:700; cursor:pointer; }
+button:disabled { opacity:.6; cursor:wait; }
+.boton-secundario { border:1px solid #287747; color:#176b43; background:#f0f5dc; }
+.lista-cuentas { display:grid; gap:1rem; }
+.cuenta-cartera { padding:clamp(1rem,3vw,1.5rem); border:1px solid #e8dfc7; border-radius:14px; background:white; overflow-wrap:anywhere; }
+.cabecera-cuenta { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:start; gap:.8rem; }
+h2 { margin:.25rem 0; font-size:1.25rem; }
+.estado { display:inline-flex; align-items:center; padding:.4rem .7rem; border-radius:999px; font-size:.8rem; font-weight:700; }
+.estado-pendiente { color:#805316; background:#fff0c7; }
+.estado-parcial { color:#24528a; background:#e7f0ff; }
+.estado-pagada { color:#216239; background:#e5f5e7; }
+.datos-cuenta { display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:.8rem; margin:1rem 0; }
+.datos-cuenta dd { margin:.25rem 0 0; font-weight:700; }
+.saldo { color:#a7442f; }
+.mora { color:#a7442f; }
+.detalle-cuenta { border-top:1px solid #e3e6d7; padding-top:.8rem; }
+summary { color:#176b43; font-weight:700; cursor:pointer; }
+.lineas-venta,.historial-abonos { display:grid; gap:.35rem; margin:1rem 0; }
+.lineas-venta p,.abono { display:grid; grid-template-columns:1fr auto; gap:.25rem .8rem; margin:0; padding:.55rem 0; border-bottom:1px solid #edf0ec; }
+.abono small { grid-column:1/-1; color:#617064; }
+.sin-abonos { color:#617064; }
+.form-abono { display:grid; grid-template-columns:repeat(auto-fit,minmax(12rem,1fr)); align-items:end; gap:.75rem; margin-top:1rem; padding:1rem; border-radius:12px; background:#f4f8ef; }
+.form-abono input,.form-abono select { width:100%; }
+.alerta,.vacio { padding:.8rem 1rem; border-radius:9px; }
+.error { color:#8e3328; background:#ffe0d5; }
+.exito { color:#28603b; background:#e8f6e8; }
+.vacio { color:#617064; background:#f6f8f4; }
+@media(max-width:560px) { main { width:calc(100% - 1rem); padding:1rem; } .acciones-cartera { justify-content:flex-start; } .acciones-cartera span { order:3; width:100%; } .filtros { align-items:stretch; } .filtros select { flex:1; } }

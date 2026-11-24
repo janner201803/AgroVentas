@@ -32,3 +32,17 @@ La creación del pedido usa la función `crear_pedido_con_reserva` para desconta
 Después de la migración de estados del 19 de noviembre, aplicar una vez `migrations/20261121_carrito.sql` en el entorno de prueba y actualizar la API y el frontend. El cliente envía una lista de productos y cantidades para un único horario. La base calcula los precios, guarda las líneas y reserva todas las cantidades dentro de la misma transacción. Los pedidos históricos siguen mostrando su producto original.
 
 Para comprobar el flujo, agregar dos variedades con stock, confirmar el pedido y abrir el mismo identificador en Mis pedidos y Gestión de pedidos. Cancelarlo debe devolver ambas reservas. En otra compra, reducir el stock del segundo producto antes de confirmar y comprobar que el rechazo conserva el saldo del primero.
+
+## HU-15 · Generar cuentas por cobrar
+
+Después de aplicar `migrations/20261122_clientes_ventas.sql`, ejecuta `migrations/20261123_hu15_cuentas_por_cobrar.sql` en Supabase. Cada nueva venta con `metodo_pago = 'credito'` genera, dentro de la misma transacción, una sola fila en `public.cuentas_por_cobrar` vinculada a la venta y su ficha de cliente. La cuenta inicia con `valor_original` y `saldo_pendiente` iguales al total de la venta, `fecha_emision` igual a la fecha de registro de la venta y estado `pendiente`. También se incorporan idempotentemente las ventas a crédito ya existentes.
+
+`fecha_vencimiento` queda vacía hasta que el negocio defina el plazo de pago. La tabla no otorga acceso directo por RLS; las consultas de cartera y del cliente se implementarán con sus permisos en las siguientes partes. Esta primera parte no registra abonos ni cambia la interfaz.
+
+**Relación con usuarios:** `perfiles` es el perfil de la cuenta de autenticación (`id` UUID, rol y correo). `clientes` es la ficha comercial (`id` bigint, nombre, teléfono y dirección) y `clientes.cuenta_id` la vincula opcionalmente a la cuenta del cliente. Ventas y cuentas por cobrar usan `cliente_id` hacia `clientes.id`, porque una ficha comercial puede existir aunque el cliente aún no tenga usuario. Para mostrar la deuda a un cliente con cuenta, las consultas deben unir `cuentas_por_cobrar.cliente_id → clientes.id → clientes.cuenta_id → perfiles.id` y filtrar por `auth.uid()`.
+
+## HU-16 · Consultar cartera y registrar abonos
+
+Después de la migración de cuentas por cobrar, ejecuta `migrations/20261125_hu16_cartera_abonos.sql`. Crea `public.abonos_cuenta` y las funciones `cartera_personal` y `registrar_abono_cuenta`. El backend expone `GET /api/cartera` (filtro opcional `?estado=pendiente|parcial|pagada`) y `POST /api/cartera/:id/abonos`; ambas rutas requieren una sesión activa de Propietario o Empleado. El abono y el recálculo del saldo/estado ocurren en una única transacción y se rechazan pagos mayores al saldo.
+
+La pantalla está en `/cartera` y se enlaza desde Inicio. Muestra ventas a crédito, saldo, estado, vencimiento si fue definido e historial de pagos. Los pagos registrados son abonos reales; no se generan cuotas programadas porque todavía no se ha definido una frecuencia/plazo comercial.
