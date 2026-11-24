@@ -71,6 +71,11 @@
         <span>Cartera</span>
       </a>
 
+      <a *ngIf="esAdministrador" routerLink="/reportes" routerLinkActive="activo" class="nav-enlace">
+        <span class="nav-icono" aria-hidden="true">📊</span>
+        <span>Tablero y reportes</span>
+      </a>
+
       <a *ngIf="esCliente" routerLink="/mis-compras" routerLinkActive="activo" class="nav-enlace">
         <span class="nav-icono" aria-hidden="true">🧾</span>
         <span>Mis compras y pagos</span>

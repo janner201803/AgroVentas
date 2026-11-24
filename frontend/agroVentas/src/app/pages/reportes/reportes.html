@@ -1,0 +1,60 @@
+<main class="pagina-reportes">
+  <section class="filtros panel-reportes">
+    <div><h2>Tablero del Propietario</h2><p>Ventas del período y situación actual de cartera, pedidos e inventario.</p></div>
+    <form (ngSubmit)="consultar()">
+      <label>Desde<input type="date" name="desde" [(ngModel)]="desde" [max]="hoy" required /></label>
+      <label>Hasta<input type="date" name="hasta" [(ngModel)]="hasta" [max]="hoy" required /></label>
+      <button type="submit" [disabled]="cargando()">{{ cargando() ? 'Consultando…' : 'Aplicar período' }}</button>
+    </form>
+  </section>
+
+  <p *ngIf="error()" class="aviso error" role="alert">{{ error() }}</p>
+  <p *ngIf="cargando() && !reporte()" role="status">Cargando tablero…</p>
+
+  <ng-container *ngIf="reporte() as datos">
+    <div class="barra-acciones">
+      <span>Período: {{ datos.desde }} al {{ datos.hasta }}</span>
+      <div><button type="button" class="secundario" (click)="exportarCsv()">Exportar CSV</button><button type="button" class="secundario" (click)="imprimir()">Imprimir</button></div>
+    </div>
+
+    <section class="indicadores" aria-label="Indicadores de ventas">
+      <article class="indicador"><span>Ventas del período</span><strong>{{ datos.ventas.total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong><small>{{ datos.ventas.cantidad }} ventas registradas</small></article>
+      <article class="indicador"><span>Promedio por venta</span><strong>{{ datos.ventas.promedio | currency:'COP':'symbol-narrow':'1.0-0' }}</strong><small>Promedio del período</small></article>
+      <article class="indicador"><span>Saldo de cartera</span><strong>{{ datos.cartera.saldo_pendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</strong><small>{{ datos.cartera.cuentas_abiertas }} cuentas abiertas</small></article>
+      <article class="indicador" [class.alerta-indicador]="datos.cartera.cuentas_en_mora > 0"><span>Saldo en mora</span><strong>{{ datos.cartera.saldo_en_mora | currency:'COP':'symbol-narrow':'1.0-0' }}</strong><small>{{ datos.cartera.cuentas_en_mora }} cuentas vencidas</small></article>
+    </section>
+
+    <section class="indicadores secundarios-indicadores" aria-label="Pedidos e inventario">
+      <article class="indicador"><span>Pedidos pendientes</span><strong>{{ datos.pedidos.pendientes }}</strong><small>Por iniciar preparación</small></article>
+      <article class="indicador"><span>En preparación</span><strong>{{ datos.pedidos.en_preparacion }}</strong><small>Pedidos activos</small></article>
+      <article class="indicador"><span>Entregas para hoy</span><strong>{{ datos.pedidos.entregas_hoy }}</strong><small>Pendientes o en preparación</small></article>
+      <article class="indicador" [class.alerta-indicador]="datos.inventario.productos_sin_existencias > 0"><span>Sin existencias</span><strong>{{ datos.inventario.productos_sin_existencias }}</strong><small>Productos con cero disponible</small></article>
+    </section>
+
+    <section class="tablas-reportes">
+      <article class="panel-reportes">
+        <h2>Ventas por método de pago</h2>
+        <p *ngIf="datos.por_metodo_pago.length === 0" class="vacio">No hay ventas en este período.</p>
+        <div class="tabla-contenedor" *ngIf="datos.por_metodo_pago.length > 0"><table><thead><tr><th>Método</th><th>Ventas</th><th>Total</th></tr></thead><tbody><tr *ngFor="let fila of datos.por_metodo_pago"><td>{{ metodo(fila.metodo_pago) }}</td><td>{{ fila.cantidad }}</td><td>{{ fila.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tbody></table></div>
+      </article>
+
+      <article class="panel-reportes">
+        <h2>Productos más vendidos</h2>
+        <p *ngIf="datos.productos_mas_vendidos.length === 0" class="vacio">No hay ventas de productos en este período.</p>
+        <div class="tabla-contenedor" *ngIf="datos.productos_mas_vendidos.length > 0"><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Total</th></tr></thead><tbody><tr *ngFor="let fila of datos.productos_mas_vendidos"><td>{{ fila.nombre }}</td><td>{{ fila.cantidad }} {{ fila.unidad }}</td><td>{{ fila.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tbody></table></div>
+      </article>
+
+      <article class="panel-reportes">
+        <h2>Ventas por cliente</h2>
+        <p *ngIf="datos.ventas_por_cliente.length === 0" class="vacio">No hay ventas asociadas a clientes en este período.</p>
+        <div class="tabla-contenedor" *ngIf="datos.ventas_por_cliente.length > 0"><table><thead><tr><th>Cliente</th><th>Ventas</th><th>Total</th></tr></thead><tbody><tr *ngFor="let fila of datos.ventas_por_cliente"><td>{{ fila.nombre }}</td><td>{{ fila.ventas }}</td><td>{{ fila.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tbody></table></div>
+      </article>
+
+      <article class="panel-reportes alerta-stock">
+        <h2>Alertas de inventario</h2>
+        <p *ngIf="datos.inventario.productos.length === 0" class="vacio">Todos los productos tienen existencias disponibles.</p>
+        <ul *ngIf="datos.inventario.productos.length > 0"><li *ngFor="let producto of datos.inventario.productos">{{ producto.nombre }} · {{ producto.disponible }} {{ producto.unidad }}</li></ul>
+      </article>
+    </section>
+  </ng-container>
+</main>
