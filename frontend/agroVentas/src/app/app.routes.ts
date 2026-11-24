@@ -128,15 +128,19 @@ export const routes: Routes = [
           titulo: 'Usuarios',
           subtitulo: 'Consulta las cuentas y administra sus roles y accesos.'
         }
+      },
+      {
+        path: 'mis-compras',
+        loadComponent: () => import('./pages/mis-compras/mis-compras').then(m => m.MisCompras),
+        canActivate: [rolGuard('cliente')],
+        data: {
+          titulo: 'Mis compras',
+          subtitulo: 'Consulta tus compras, pagos registrados y saldos pendientes.'
+        }
       }
     ]
   },
 
-  {
-    path: 'mis-compras',
-    loadComponent: () => import('./pages/mis-compras/mis-compras').then(m => m.MisCompras),
-    canActivate: [rolGuard('cliente')]
-  },
   {
     path: '',
     redirectTo: 'login',

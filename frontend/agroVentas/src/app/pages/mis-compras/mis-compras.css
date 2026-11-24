@@ -1,37 +1,483 @@
-:host { display:block; min-height:100vh; color:#174b32; background:radial-gradient(ellipse at 90% 18%,rgb(247 250 167),transparent 50%),radial-gradient(ellipse at 10% 80%,rgb(250 252 137),transparent 50%),#fff1c9; font-family:Arial,sans-serif; }
-main { width:min(calc(100% - 2rem),68rem); margin:1rem auto 2rem; padding:clamp(1rem,3vw,2rem); border:1px solid #dfdbc8; border-radius:18px; background:#fffdf5; box-shadow:0 8px 26px #20352212; }
-.acciones { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:.7rem; }
-.acciones a { color:#176b43; font-weight:700; text-decoration:none; }
-button { min-height:42px; padding:.65rem .8rem; border:0; border-radius:.6rem; color:#fff9e8; background:#176b43; font:inherit; font-weight:700; cursor:pointer; }
-button:disabled { opacity:.6; cursor:wait; }
-.boton-secundario { border:1px solid #287747; color:#176b43; background:#f0f5dc; }
-.introduccion { color:#617064; line-height:1.5; }
-.resumen { display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); gap:.8rem; margin:1rem 0; }
-.resumen article { display:grid; gap:.4rem; padding:1rem; border:1px solid #e8dfc7; border-radius:12px; background:#fff; }
-.resumen span,dt,.referencia,.subtitulo { color:#617064; font-size:.88rem; }
-.resumen strong { color:#176b43; font-size:1.2rem; }
-.lista-compras { display:grid; gap:1rem; }
-.compra { padding:clamp(1rem,3vw,1.5rem); border:1px solid #e8dfc7; border-radius:14px; background:#fff; overflow-wrap:anywhere; }
-.cabecera-compra { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.8rem; }
-h2 { margin:.25rem 0; font-size:1.2rem; }
-.subtitulo { display:block; }
-.total-compra { color:#176b43; font-size:1.25rem; }
-.datos-compra { display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:.8rem; margin:1rem 0; }
-.datos-compra dd { margin:.25rem 0 0; font-weight:700; }
-details { border-top:1px solid #e3e6d7; padding-top:.8rem; }
-summary { color:#176b43; font-weight:700; cursor:pointer; }
-.detalle-lista { display:grid; gap:.35rem; margin:1rem 0; }
-.detalle-lista p,.abono { display:grid; grid-template-columns:1fr auto; gap:.25rem .8rem; margin:0; padding:.55rem 0; border-bottom:1px solid #edf0ec; }
-.estado-cuenta { display:grid; gap:.4rem; margin-top:1rem; padding:1rem; border:1px solid #e8dfc7; border-radius:12px; background:#fffdf5; }
-.estado-cuenta header { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.5rem; }
-.estado { padding:.35rem .65rem; border-radius:999px; font-size:.8rem; font-weight:700; }
-.estado-pendiente { color:#805316; background:#fff0c7; }
-.estado-parcial { color:#24528a; background:#e7f0ff; }
-.estado-pagada { color:#216239; background:#e5f5e7; }
-.saldo,.mora { color:#a7442f; }
-.abono small { grid-column:1/-1; color:#617064; }
-.sin-pagos,.pago-completo { color:#617064; }
-.aviso,.vacio { padding:.8rem 1rem; border-radius:9px; }
-.error { color:#8e3328; background:#ffe0d5; }
-.vacio { color:#617064; background:#f6f8f4; }
-@media(max-width:560px) { main { width:calc(100% - 1rem); padding:1rem; } }
+:host {
+  display: block;
+  color: #174b32;
+  font-family: Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.pagina-mi-cuenta {
+  width: 100%;
+  margin: 0 auto 2rem;
+}
+
+.panel-mi-cuenta {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 24px 30px;
+  border: 1px solid #e8dfc7;
+  border-radius: 24px;
+  background: #fffdf5;
+  box-shadow: 0 5px 20px rgb(71 91 36 / 8%);
+}
+
+.panel-mi-cuenta > app-paginador {
+  order: 1;
+}
+
+.introduccion-cuenta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.boton-actualizar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 9px 17px;
+  border: 1px solid #b9d878;
+  border-radius: 999px;
+  color: #176b43;
+  background: #f4f8de;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.boton-actualizar:hover:not(:disabled) {
+  background: #e9f2c7;
+}
+
+.boton-actualizar:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.introduccion {
+  flex: 1 1 360px;
+  margin: 0;
+  color: #46534b;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.resumen-compras {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.resumen-item {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 88px;
+  padding: 15px 18px;
+  border: 1px solid #e8dfaa;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fffefb, #fffdf4);
+}
+
+.resumen-item span {
+  color: #4f5a53;
+  font-size: 14px;
+}
+
+.resumen-item strong {
+  color: #176b43;
+  font-size: clamp(21px, 2vw, 27px);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.resumen-item .saldo-destacado {
+  color: #a7442f;
+}
+
+.filtros-compras {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #e8dfc7;
+  border-radius: 16px;
+  background: #fffef8;
+}
+
+.filtro-compra {
+  display: grid;
+  flex: 1 1 230px;
+  gap: 6px;
+  min-width: 0;
+  color: #55725c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.filtro-compra select {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 8px 36px 8px 13px;
+  border: 1px solid #d6dfc1;
+  border-radius: 999px;
+  color: #174b32;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.conteo-filtrado {
+  padding: 0 2px 12px;
+  color: #82643c;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.aviso,
+.estado-vacio {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  line-height: 1.5;
+}
+
+.aviso.error {
+  color: #8e3328;
+  background: #ffe0d5;
+}
+
+.estado-vacio {
+  border: 1px solid #f3e3b6;
+  color: #82643c;
+  background: #fffaea;
+}
+
+.lista-compras {
+  display: grid;
+  gap: 14px;
+}
+
+.compra {
+  display: grid;
+  gap: 15px;
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid #e8dfaa;
+  border-radius: 20px;
+  background: #fffef9;
+  overflow-wrap: anywhere;
+}
+
+.cabecera-compra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+
+.datos-pedido {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.referencia {
+  color: #176b43;
+  font-size: 15px;
+}
+
+.datos-pedido h2 {
+  margin: 2px 0 0;
+  color: #174b32;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.hora-pago {
+  color: #637267;
+  font-size: 14px;
+}
+
+.total-compra {
+  color: #176b43;
+  font-size: 26px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.datos-entrega-estado {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dato-compra {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 66px;
+  padding: 12px 15px;
+  border-left: 2px solid #e8dfaa;
+}
+
+.etiqueta-dato {
+  color: #637267;
+  font-size: 13px;
+}
+
+.dato-compra strong {
+  color: #174b32;
+  font-size: 16px;
+}
+
+.dato-compra .estado-entregado,
+.dato-compra .estado-en_preparacion {
+  color: #176b43;
+}
+
+.dato-compra .estado-pendiente {
+  color: #b66b14;
+}
+
+.dato-compra .estado-cancelado {
+  color: #a33a2d;
+}
+
+.detalle-compra {
+  padding-top: 12px;
+  border-top: 1px solid #e8dfaa;
+}
+
+.detalle-compra summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  color: #176b43;
+  font-size: 15px;
+  font-weight: 800;
+  list-style: none;
+  cursor: pointer;
+}
+
+.detalle-compra summary::-webkit-details-marker {
+  display: none;
+}
+
+.detalle-compra summary::before {
+  content: '▸';
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.detalle-compra[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.detalle-compra summary:hover {
+  color: #0f5836;
+}
+
+.detalle-lista {
+  display: grid;
+  gap: 0;
+  margin: 8px 0 14px;
+}
+
+.detalle-lista h3,
+.titulo-abonos {
+  margin: 0;
+  color: #174b32;
+  font-size: 16px;
+}
+
+.detalle-lista p,
+.abono {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0;
+  padding: 9px 0;
+  border-bottom: 1px solid #eee8d7;
+  color: #46534b;
+  font-size: 14px;
+}
+
+.detalle-lista p:last-child {
+  border-bottom: 0;
+}
+
+.detalle-lista strong,
+.abono strong {
+  flex-shrink: 0;
+  color: #174b32;
+}
+
+.estado-cuenta {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  border: 1px solid #dce8b8;
+  border-radius: 16px;
+  background: #fffef8;
+  overflow: hidden;
+}
+
+.cabecera-credito {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
+  color: #176b43;
+  background: #f0f6d9;
+}
+
+.estado {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.estado-pendiente { color: #805316; background: #fff0c7; }
+.estado-parcial { color: #24528a; background: #e7f0ff; }
+.estado-pagada { color: #216239; background: #e5f5e7; }
+
+.datos-credito {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0 16px;
+}
+
+.datos-credito > div {
+  min-width: 0;
+  padding-right: 12px;
+  border-right: 1px solid #e8dfaa;
+}
+
+.datos-credito > div:last-child {
+  border-right: 0;
+}
+
+.datos-credito dt {
+  color: #637267;
+  font-size: 13px;
+}
+
+.datos-credito dd {
+  margin: 5px 0 0;
+  color: #176b43;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.datos-credito dd.saldo,
+.datos-credito dd.mora {
+  color: #b53c35;
+}
+
+.titulo-abonos,
+.sin-pagos,
+.abono {
+  margin-right: 16px;
+  margin-left: 16px;
+}
+
+.sin-pagos {
+  margin-top: -6px;
+  margin-bottom: 14px;
+  color: #637267;
+}
+
+.abono {
+  flex-wrap: wrap;
+  margin-top: -12px;
+}
+
+.abono small {
+  flex: 1 0 100%;
+  color: #637267;
+}
+
+.pago-completo {
+  margin: 12px 0 0;
+  color: #637267;
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 3px solid rgb(23 107 67 / 30%);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .panel-mi-cuenta {
+    padding: 20px;
+  }
+
+  .datos-credito {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .datos-credito > div:nth-child(2) {
+    border-right: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .panel-mi-cuenta {
+    gap: 14px;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .resumen-compras,
+  .datos-entrega-estado,
+  .datos-credito {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .introduccion-cuenta {
+    align-items: flex-start;
+  }
+
+  .resumen-item {
+    min-height: 76px;
+  }
+
+  .datos-credito > div {
+    padding: 0 0 10px;
+    border-right: 0;
+    border-bottom: 1px solid #e8dfaa;
+  }
+
+  .datos-credito > div:last-child {
+    border-bottom: 0;
+  }
+
+  .total-compra {
+    font-size: 23px;
+  }
+}

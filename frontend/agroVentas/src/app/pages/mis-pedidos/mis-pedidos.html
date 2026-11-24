@@ -83,7 +83,7 @@
       </div>
 
       <div *ngIf="!cargando && pedidosFiltrados.length > 0" class="lista-pedidos">
-        <article class="pedido-item" *ngFor="let pedido of pedidosFiltrados | slice:pag.inicio():pag.inicio()+pag.tamano">
+        <article class="pedido-item" *ngFor="let pedido of pedidosFiltrados | slice:pag.inicio():pag.inicio()+pag.tamano()">
 
           <div class="pedido-foto" aria-hidden="true">
             <img src="/img/piñaPepa.jpg" alt="" />
