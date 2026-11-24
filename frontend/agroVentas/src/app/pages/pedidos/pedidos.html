@@ -29,7 +29,6 @@
           id="producto"
           name="producto"
           [(ngModel)]="productoId"
-          required
           [disabled]="cargandoProductos || productos.length === 0"
         >
           <option [ngValue]="null">
@@ -65,15 +64,23 @@
           type="number"
           [(ngModel)]="cantidad"
           [min]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
-          [max]="productoSeleccionado?.cantidad ?? null"
+          [max]="productoSeleccionado ? disponibleParaAgregar(productoSeleccionado) : null"
           [step]="productoSeleccionado?.und === 'und' ? 1 : 0.1"
-          required
           placeholder="Ingresa la cantidad"
         />
 
         <small *ngIf="productoSeleccionado">
-          Inventario disponible: {{ productoSeleccionado.cantidad }} {{ productoSeleccionado.und }}
+          Disponible para agregar: {{ disponibleParaAgregar(productoSeleccionado) }} {{ productoSeleccionado.und }}
         </small>
+
+        <button
+          type="button"
+          class="btn-agregar"
+          [disabled]="enviando || !productoSeleccionado || !cantidad || cantidad <= 0"
+          (click)="agregarProducto()"
+        >
+          Agregar al carrito
+        </button>
       </section>
 
       <section class="tarjeta">
@@ -162,26 +169,29 @@
         </div>
 
         <div class="resumen-cuerpo">
+          <section aria-labelledby="titulo-carrito">
+            <h3 id="titulo-carrito" class="carrito-titulo">Tu carrito ({{ carrito.length }})</h3>
+            <p *ngIf="!carrito.length" class="leyenda">Agrega un producto para comenzar.</p>
+            <ul *ngIf="carrito.length" class="carrito-lista">
+              <li *ngFor="let linea of carrito" class="carrito-linea">
+                <div>
+                  <strong>{{ linea.producto.nombre }}</strong>
+                  <small>{{ linea.cantidad }} {{ linea.producto.und }} · {{ linea.cantidad * linea.producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</small>
+                </div>
+                <button
+                  type="button"
+                  class="btn-quitar"
+                  [attr.aria-label]="'Quitar ' + linea.producto.nombre"
+                  [disabled]="enviando"
+                  (click)="quitarProducto(linea.producto.id)"
+                >
+                  Quitar
+                </button>
+              </li>
+            </ul>
+          </section>
+
           <dl class="resumen-filas">
-            <div>
-              <dt>Variedad</dt>
-              <dd>{{ productoSeleccionado?.nombre || '—' }}</dd>
-            </div>
-            <div>
-              <dt>Precio por {{ productoSeleccionado?.und || 'unidad' }}</dt>
-              <dd>
-                {{ productoSeleccionado ? (productoSeleccionado.precio | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}
-              </dd>
-            </div>
-            <div>
-              <dt>Cantidad</dt>
-              <dd>
-                <ng-container *ngIf="cantidad && cantidad > 0; else sinCantidad">
-                  {{ cantidad }} {{ productoSeleccionado?.und }}
-                </ng-container>
-                <ng-template #sinCantidad>—</ng-template>
-              </dd>
-            </div>
             <div>
               <dt>Fecha de entrega</dt>
               <dd class="fecha-resumen">{{ fechaSeleccionadaTexto || '—' }}</dd>
@@ -199,14 +209,14 @@
           <div class="resumen-total">
             <span>Valor estimado</span>
             <strong>
-              {{ (productoSeleccionado && cantidad && cantidad > 0) ? (valorEstimado | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}
+              {{ totalCarrito | currency:'COP':'symbol-narrow':'1.0-0' }}
             </strong>
           </div>
 
           <button
             type="submit"
             class="btn-registrar"
-            [disabled]="enviando || cargandoProductos || cargandoHorarios || productos.length === 0 || !horaEntrega"
+            [disabled]="enviando || cargandoProductos || cargandoHorarios || !carrito.length || !horaEntrega"
           >
             {{ enviando ? 'Registrando...' : 'Registrar pedido' }}
           </button>
