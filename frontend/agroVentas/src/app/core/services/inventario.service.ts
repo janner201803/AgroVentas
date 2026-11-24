@@ -1,3 +1,4 @@
+import { API_URL } from '../api.config';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, finalize, of, shareReplay, tap, timeout } from 'rxjs';
@@ -40,8 +41,8 @@ export interface AgregarExistencias {
 export class InventarioService {
   private http = inject(HttpClient);
   private pedidoService = inject(PedidoService);
-  private readonly inventarioUrl = 'http://localhost:3001/api/inventario';
-  private readonly productosUrl = 'http://localhost:3001/api/productos';
+  private readonly inventarioUrl = `${API_URL}/inventario`;
+  private readonly productosUrl = `${API_URL}/productos`;
   private readonly cacheMs = 20_000;
   private inventarioCache: ResumenInventario | null = null;
   private inventarioCacheCreado = 0;

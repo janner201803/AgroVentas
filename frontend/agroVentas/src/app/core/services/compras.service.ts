@@ -1,3 +1,4 @@
+import { API_URL } from '../api.config';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, timeout } from 'rxjs';
@@ -37,7 +38,7 @@ export interface CompraCliente {
 @Injectable({ providedIn: 'root' })
 export class ComprasService {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3001/api/cartera/mis-compras';
+  private readonly apiUrl = `${API_URL}/cartera/mis-compras`;
 
   listarPropias(): Observable<CompraCliente[]> {
     return this.http.get<CompraCliente[]>(this.apiUrl).pipe(timeout({ first: 20_000 }));

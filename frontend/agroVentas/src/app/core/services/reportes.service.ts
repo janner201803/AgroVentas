@@ -1,3 +1,4 @@
+import { API_URL } from '../api.config';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, timeout } from 'rxjs';
@@ -17,7 +18,7 @@ export interface ReporteResumen {
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3001/api/reportes';
+  private readonly apiUrl = `${API_URL}/reportes`;
 
   resumen(desde: string, hasta: string): Observable<ReporteResumen> {
     return this.http.get<ReporteResumen>(this.apiUrl, { params: { desde, hasta } }).pipe(timeout({ first: 25_000 }));

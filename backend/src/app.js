@@ -14,7 +14,7 @@ const reportesRoutes = require('./presentation/routes/reportesRoutes');
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:4200'
+  origin: ['http://localhost:4200', 'https://agroventass.netlify.app']
 }));
 
 app.use(express.json());

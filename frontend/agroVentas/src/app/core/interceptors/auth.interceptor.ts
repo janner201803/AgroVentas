@@ -2,7 +2,7 @@
 import { from, switchMap, timeout } from 'rxjs';
 import { supabase } from '../services/supabase.config';
 
-const API_URL = 'http://localhost:3001/api';
+import { API_URL } from '../api.config';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Solo se agrega el token a las peticiones hacia tu backend

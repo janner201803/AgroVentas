@@ -1,3 +1,4 @@
+import { API_URL } from '../api.config';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, finalize, map, of, shareReplay, tap, timeout } from 'rxjs';
@@ -77,8 +78,8 @@ export interface HorarioEntrega {
 export class PedidoService {
   private http = inject(HttpClient);
 
-  private apiUrl = 'http://localhost:3001/api/pedidos';
-  private inventarioUrl = 'http://localhost:3001/api/inventario?disponibles=true';
+  private apiUrl = `${API_URL}/pedidos`;
+  private inventarioUrl = `${API_URL}/inventario?disponibles=true`;
   private readonly vigenciaProductosMs = 30_000;
   private readonly vigenciaHorariosMs = 10_000;
   private productosCache: { productos: ProductoPedido[]; vence: number } | null = null;

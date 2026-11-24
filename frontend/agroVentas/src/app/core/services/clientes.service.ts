@@ -1,3 +1,4 @@
+import { API_URL } from '../api.config';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, timeout } from 'rxjs';
@@ -52,7 +53,7 @@ export interface DetalleCliente extends ClienteComercial {
 @Injectable({ providedIn: 'root' })
 export class ClientesService {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3001/api/clientes';
+  private readonly apiUrl = `${API_URL}/clientes`;
 
   listar(buscar = '', incluirInactivos = false): Observable<ClienteComercial[]> {
     const params: Record<string, string> = {};

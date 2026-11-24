@@ -1,3 +1,4 @@
+import { API_URL } from '../api.config';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, timeout } from 'rxjs';
@@ -38,7 +39,7 @@ export interface NuevoAbono {
 @Injectable({ providedIn: 'root' })
 export class CarteraService {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:3001/api/cartera';
+  private readonly apiUrl = `${API_URL}/cartera`;
 
   listar(estado = ''): Observable<CuentaCartera[]> {
     const params: Record<string, string> = {};

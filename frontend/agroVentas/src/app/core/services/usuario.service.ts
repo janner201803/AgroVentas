@@ -1,3 +1,4 @@
+import { API_URL } from '../api.config';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map, timeout } from 'rxjs';
@@ -23,7 +24,7 @@ export interface CambioUsuario {
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
   private http = inject(HttpClient);
-  private readonly url = 'http://localhost:3001/api/usuarios';
+  private readonly url = `${API_URL}/usuarios`;
 
   listar(): Observable<UsuarioSistema[]> {
     return this.http.get<UsuarioSistema[]>(this.url).pipe(timeout({ first: 15_000 }));
