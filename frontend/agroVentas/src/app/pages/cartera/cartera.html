@@ -1,94 +1,162 @@
-<app-encabezado-seccion titulo="Cartera" />
-<main aria-label="Cartera de cuentas por cobrar">
-  <div class="acciones-cartera">
-    <a routerLink="/inicio">← Volver a inicio</a>
-    <span>{{ etiquetaRol() }} · {{ usuario()?.email }}</span>
-    <button type="button" class="boton-secundario" (click)="cerrarSesion()">Cerrar sesión</button>
-  </div>
 
-  <p class="introduccion">Consulta las ventas a crédito, los saldos pendientes y los abonos registrados.</p>
+<div class="pagina" aria-label="Cartera de cuentas por cobrar">
 
+  <!-- ───── Resumen ───── -->
   <section class="resumen-cartera" aria-label="Resumen de cartera">
-    <article><span>Cuentas pendientes</span><strong>{{ pendientes }}</strong></article>
-    <article><span>Saldo por cobrar</span><strong>{{ saldoTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></article>
-    <article><span>Abonos registrados</span><strong>{{ recaudado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></article>
-  </section>
-
-  <div class="filtros">
-    <label for="filtro-estado">Estado</label>
-    <select id="filtro-estado" [(ngModel)]="estadoFiltro" (ngModelChange)="consultar()">
-      <option value="">Todas las cuentas</option>
-      <option value="pendiente">Pendientes</option>
-      <option value="parcial">Con abono parcial</option>
-      <option value="pagada">Pagadas</option>
-    </select>
-    <button type="button" class="boton-secundario" [disabled]="cargando()" (click)="consultar()">
-      {{ cargando() ? 'Actualizando…' : 'Actualizar' }}
-    </button>
-  </div>
-
-  <p *ngIf="error()" class="alerta error" role="alert">{{ error() }}</p>
-  <p *ngIf="mensaje()" class="alerta exito" role="status">{{ mensaje() }}</p>
-  <p *ngIf="cargando() && cuentas().length === 0" role="status">Cargando cartera…</p>
-  <p *ngIf="!cargando() && !error() && cuentas().length === 0" class="vacio">No hay cuentas por cobrar para este filtro.</p>
-
-  <section class="lista-cuentas" *ngIf="cuentas().length > 0">
-    <article class="cuenta-cartera" *ngFor="let cuenta of cuentas()">
-      <header class="cabecera-cuenta">
-        <div>
-          <span class="referencia">Cuenta #{{ cuenta.id }} · Pedido #{{ cuenta.pedido_id }}</span>
-          <h2>{{ cuenta.cliente_nombre }}</h2>
-          <span class="contacto">{{ cuenta.cliente_telefono }}</span>
-        </div>
-        <span class="estado" [ngClass]="'estado-' + cuenta.estado">{{ etiquetaEstado(cuenta.estado) }}</span>
-      </header>
-
-      <dl class="datos-cuenta">
-        <div><dt>Valor original</dt><dd>{{ cuenta.valor_original | currency:'COP':'symbol-narrow':'1.0-0' }}</dd></div>
-        <div><dt>Saldo pendiente</dt><dd class="saldo">{{ cuenta.saldo_pendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</dd></div>
-        <div><dt>Emitida</dt><dd>{{ cuenta.fecha_emision | date:'dd/MM/yyyy':'-0500' }}</dd></div>
-        <div><dt>Vencimiento</dt><dd>{{ cuenta.fecha_vencimiento ? (cuenta.fecha_vencimiento | date:'dd/MM/yyyy':'UTC') : 'Sin definir' }}</dd></div>
-        <div *ngIf="cuenta.dias_mora !== null && cuenta.dias_mora > 0"><dt>Mora</dt><dd class="mora">{{ cuenta.dias_mora }} días</dd></div>
-      </dl>
-
-      <details class="detalle-cuenta">
-        <summary>Ver productos y abonos ({{ cuenta.abonos.length }})</summary>
-        <div class="lineas-venta">
-          <strong>Productos de la venta</strong>
-          <p *ngFor="let linea of cuenta.lineas">
-            {{ linea.nombre || ('Producto #' + linea.id_producto) }} · {{ linea.cantidad }} {{ linea.unidad }}
-            <span>{{ linea.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
-          </p>
-        </div>
-        <div class="historial-abonos">
-          <strong>Historial de pagos</strong>
-          <p *ngIf="cuenta.abonos.length === 0" class="sin-abonos">Todavía no se registran abonos.</p>
-          <div class="abono" *ngFor="let abono of cuenta.abonos">
-            <span>{{ abono.registrado_en | date:'dd/MM/yyyy h:mm a':'-0500' }} · {{ metodoPago(abono.metodo_pago) }}</span>
-            <strong>{{ abono.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-            <small *ngIf="abono.registrado_por_nombre">Registrado por {{ abono.registrado_por_nombre }}</small>
-            <small *ngIf="abono.nota">{{ abono.nota }}</small>
-          </div>
-        </div>
-        <button *ngIf="cuenta.estado !== 'pagada'" type="button" (click)="mostrarAbono(cuenta)">
-          {{ cuentaAbono === cuenta.id ? 'Cancelar abono' : 'Registrar abono' }}
-        </button>
-        <form *ngIf="cuentaAbono === cuenta.id" class="form-abono" (ngSubmit)="registrarAbono(cuenta)">
-          <label>Valor del abono
-            <input type="number" name="valor-{{ cuenta.id }}" [(ngModel)]="valorAbono" min="1" [max]="cuenta.saldo_pendiente" step="0.01" required />
-          </label>
-          <label>Método de pago
-            <select name="metodo-{{ cuenta.id }}" [(ngModel)]="metodoAbono" required>
-              <option value="efectivo">Efectivo</option>
-              <option value="transferencia">Transferencia</option>
-            </select>
-          </label>
-          <label>Observación (opcional)
-            <input type="text" name="nota-{{ cuenta.id }}" [(ngModel)]="notaAbono" maxlength="500" />
-          </label>
-          <button type="submit" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Guardar abono' }}</button>
-        </form>
-      </details>
+    <article class="indicador">
+      <span class="indicador-icono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>
+      </span>
+      <div class="indicador-texto">
+        <span>Cuentas pendientes</span>
+        <strong>{{ pendientes }}</strong>
+        <small>Con saldo por cobrar</small>
+      </div>
+    </article>
+    <article class="indicador">
+      <span class="indicador-icono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5" /><path d="M3 10.5h18M7 15h4" /></svg>
+      </span>
+      <div class="indicador-texto">
+        <span>Saldo por cobrar</span>
+        <strong>{{ saldoTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        <small>Suma de saldos pendientes</small>
+      </div>
+    </article>
+    <article class="indicador">
+      <span class="indicador-icono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" /><path d="M9 8h6M9 12h6" /></svg>
+      </span>
+      <div class="indicador-texto">
+        <span>Abonos registrados</span>
+        <strong>{{ recaudado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        <small>Pagos recibidos</small>
+      </div>
     </article>
   </section>
-</main>
+
+  <!-- ───── Cuentas ───── -->
+  <section class="tarjeta">
+    <header class="tarjeta-cabecera">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="6" width="18" height="13" rx="2.5" />
+        <path d="M3 10.5h18M7 15h4" />
+      </svg>
+      <div class="cabecera-textos">
+        <h2>Cuentas por cobrar</h2>
+        <p>Consulta las ventas a crédito, los saldos pendientes y los abonos registrados.</p>
+      </div>
+    </header>
+
+    <div class="tarjeta-cuerpo">
+      <div class="filtros">
+        <div class="selector">
+          <svg class="selector-icono" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 5h16l-6 7v6l-4 2v-8z" />
+          </svg>
+          <select id="filtro-estado" aria-label="Filtrar por estado" [(ngModel)]="estadoFiltro" (ngModelChange)="consultar()">
+            <option value="">Todas las cuentas</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="parcial">Con abono parcial</option>
+            <option value="pagada">Pagadas</option>
+          </select>
+        </div>
+        <button type="button" class="btn-actualizar" aria-label="Actualizar cartera" title="Actualizar" [disabled]="cargando()" (click)="consultar()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" [class.girando]="cargando()">
+            <path d="M20 11a8 8 0 0 0-14.9-3M4 5v4h4" />
+            <path d="M4 13a8 8 0 0 0 14.9 3M20 19v-4h-4" />
+          </svg>
+        </button>
+        <span class="contador">{{ cuentas().length }} cuentas</span>
+      </div>
+
+      <p *ngIf="error()" class="alerta error" role="alert">{{ error() }}</p>
+      <p *ngIf="mensaje()" class="alerta exito" role="status">{{ mensaje() }}</p>
+      <p *ngIf="cargando() && cuentas().length === 0" class="vacio" role="status">Cargando cartera…</p>
+      <p *ngIf="!cargando() && !error() && cuentas().length === 0" class="vacio">No hay cuentas por cobrar para este filtro.</p>
+
+      <div class="lista-cuentas" *ngIf="cuentas().length > 0">
+        <article class="cuenta-cartera" *ngFor="let cuenta of cuentas()">
+          <header class="cabecera-cuenta">
+            <div class="cuenta-titulo">
+              <h3>{{ cuenta.cliente_nombre }}</h3>
+              <span class="referencia">Cuenta #{{ cuenta.id }} · Pedido #{{ cuenta.pedido_id }} · Tel. {{ cuenta.cliente_telefono }}</span>
+            </div>
+            <span class="insignia" [ngClass]="'estado-' + cuenta.estado">{{ etiquetaEstado(cuenta.estado) }}</span>
+          </header>
+
+          <dl class="datos-cuenta">
+            <div>
+              <dt>Valor original</dt>
+              <dd>{{ cuenta.valor_original | currency:'COP':'symbol-narrow':'1.0-0' }}</dd>
+            </div>
+            <div>
+              <dt>Saldo pendiente</dt>
+              <dd class="saldo">{{ cuenta.saldo_pendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</dd>
+            </div>
+            <div>
+              <dt>Emitida</dt>
+              <dd>{{ cuenta.fecha_emision | date:'dd/MM/yyyy':'-0500' }}</dd>
+            </div>
+            <div>
+              <dt>Vencimiento</dt>
+              <dd>{{ cuenta.fecha_vencimiento ? (cuenta.fecha_vencimiento | date:'dd/MM/yyyy':'UTC') : 'Sin definir' }}</dd>
+            </div>
+            <div *ngIf="cuenta.dias_mora !== null && cuenta.dias_mora > 0" class="en-mora">
+              <dt>Mora</dt>
+              <dd class="saldo">{{ cuenta.dias_mora }} días</dd>
+            </div>
+          </dl>
+
+          <details class="detalle-cuenta">
+            <summary>
+              Ver productos y abonos ({{ cuenta.abonos.length }})
+              <svg class="chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+            </summary>
+
+            <div class="detalle-columnas">
+              <div class="lineas-venta">
+                <h4>Productos de la venta</h4>
+                <p *ngFor="let linea of cuenta.lineas">
+                  {{ linea.nombre || ('Producto #' + linea.id_producto) }} · {{ linea.cantidad }} {{ linea.unidad }}
+                  <span>{{ linea.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                </p>
+              </div>
+
+              <div class="historial-abonos">
+                <h4>Historial de pagos</h4>
+                <p *ngIf="cuenta.abonos.length === 0" class="sin-abonos">Todavía no se registran abonos.</p>
+                <div class="abono" *ngFor="let abono of cuenta.abonos">
+                  <span>{{ abono.registrado_en | date:'dd/MM/yyyy h:mm a':'-0500' }} · {{ metodoPago(abono.metodo_pago) }}</span>
+                  <strong>{{ abono.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+                  <small *ngIf="abono.registrado_por_nombre">Registrado por {{ abono.registrado_por_nombre }}</small>
+                  <small *ngIf="abono.nota">{{ abono.nota }}</small>
+                </div>
+              </div>
+            </div>
+
+            <button *ngIf="cuenta.estado !== 'pagada'" type="button" class="btn-abono" (click)="mostrarAbono(cuenta)">
+              {{ cuentaAbono === cuenta.id ? 'Cancelar abono' : 'Registrar abono' }}
+            </button>
+
+            <form *ngIf="cuentaAbono === cuenta.id" class="form-abono" (ngSubmit)="registrarAbono(cuenta)">
+              <label>Valor del abono
+                <input type="number" name="valor-{{ cuenta.id }}" [(ngModel)]="valorAbono" min="1" [max]="cuenta.saldo_pendiente" step="0.01" required />
+              </label>
+              <label>Método de pago
+                <select name="metodo-{{ cuenta.id }}" [(ngModel)]="metodoAbono" required>
+                  <option value="efectivo">Efectivo</option>
+                  <option value="transferencia">Transferencia</option>
+                </select>
+              </label>
+              <label>Observación (opcional)
+                <input type="text" name="nota-{{ cuenta.id }}" [(ngModel)]="notaAbono" maxlength="500" />
+              </label>
+              <button type="submit" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Guardar abono' }}</button>
+            </form>
+          </details>
+        </article>
+      </div>
+    </div>
+  </section>
+</div>

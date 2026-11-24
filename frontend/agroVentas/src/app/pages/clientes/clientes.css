@@ -1,66 +1,584 @@
+/* Registrar cliente: mismo lenguaje visual que Mis pedidos / Gestión de pedidos.
+   El fondo, el menú y la cabecera los pone el layout; aquí solo van las tarjetas. */
+
 :host {
   display: block;
-  min-height: 100vh;
   color: #174b32;
-  background:
-    radial-gradient(ellipse at 90% 18%, rgb(247 250 167), transparent 50%),
-    radial-gradient(ellipse at 10% 80%, rgb(250 252 137), transparent 50%),
-    #fff1c9;
   font-family: Arial, sans-serif;
 }
 
-app-encabezado-seccion { display:block; max-width:1200px; box-sizing:border-box; margin:auto; padding:10px 28px 0; }
-main { width:min(calc(100% - 2rem),36rem); box-sizing:border-box; margin:1rem auto; padding:clamp(1.2rem,4vw,2.4rem); border:1px solid #dfdbc8; border-radius:18px; background:#fffdf5; box-shadow:0 8px 26px #20352212; }
-h1 { margin:1.3rem 0; }
-a { color:#176b43; font-weight:600; }
-form,label { display:grid; gap:.45rem; }
-form { gap:1rem; }
-label { font-weight:600; }
-input,textarea,button { font:inherit; padding:.75rem; border:1px solid #baba9e; border-radius:.6rem; }
-textarea { min-height:4rem; }
-button { color:white; background:#176b43; cursor:pointer; font-weight:700; }
-button:disabled { opacity:.55; cursor:default; }
-:focus-visible { outline:3px solid #8bbc78; outline-offset:2px; }
+* {
+  box-sizing: border-box;
+}
 
-main { width:min(calc(100% - 2rem),72rem); }
-.panel { margin:1rem 0; padding:clamp(1rem,3vw,1.6rem); border:1px solid #dfdbc8; border-radius:16px; background:#fffdf5; box-shadow:0 8px 26px #20352212; }
-.registro { max-width:45rem; margin-inline:auto; }
-.registro p,.titulo-listado p { color:#617064; line-height:1.5; }
-.titulo-listado,.cabecera-cliente { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem; }
-.titulo-listado h2 { margin:.25rem 0; }
-.titulo-listado > span { color:#617064; font-size:.9rem; }
-.busqueda { display:flex; flex-wrap:wrap; align-items:center; gap:.7rem; margin:1rem 0; }
-.busqueda input[type="search"] { flex:1; min-width:14rem; }
-.busqueda .inactivos { display:flex; align-items:center; gap:.4rem; font-weight:400; }
-.busqueda .inactivos input { width:auto; }
-.lista-clientes { display:grid; gap:.8rem; }
-.cliente { padding:1rem; border:1px solid #e8dfc7; border-radius:12px; background:#fff; }
-.cabecera-cliente h3 { margin:.35rem 0 0; color:#174b32; }
-.estado { display:inline-block; padding:.3rem .6rem; border-radius:999px; color:#216239; background:#e5f5e7; font-size:.78rem; font-weight:700; }
-.estado.inactivo { color:#805316; background:#fff0c7; }
-.boton-secundario { border:1px solid #287747; color:#176b43; background:#f0f5dc; }
-.resumen-cliente { display:flex; flex-wrap:wrap; gap:.45rem 1rem; margin-top:.8rem; color:#617064; font-size:.9rem; }
-.resumen-cliente strong { color:#a7442f; }
-.detalle { display:grid; gap:1rem; margin-top:1rem; padding-top:1rem; border-top:1px solid #e3e6d7; }
-.contacto h4,.historial h4 { margin:.2rem 0 .7rem; }
-.contacto p { margin:.35rem 0; overflow-wrap:anywhere; }
-.acciones-ficha { display:flex; flex-wrap:wrap; gap:.6rem; }
-.boton-desactivar { background:#8e3328; }
-.boton-reactivar { background:#176b43; }
-.form-edicion { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr)); gap:.8rem; padding:1rem; border-radius:12px; background:#f4f8ef; }
-.form-edicion label { display:grid; gap:.4rem; }
-.form-edicion textarea { min-height:4rem; }
-.historial { display:grid; gap:.7rem; }
-.venta { display:grid; gap:.35rem; padding:.85rem; border:1px solid #edf0ec; border-radius:10px; background:#fff; }
-.venta header { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.5rem; }
-.venta small { color:#617064; }
-.venta p { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.5rem; margin:.15rem 0; }
-.saldo-venta { color:#a7442f; font-weight:700; }
-.pagos { padding-top:.5rem; border-top:1px solid #edf0ec; }
-.pagos p { justify-content:flex-start; color:#526553; }
-.vacio,.cargando-detalle { padding:.75rem; border-radius:8px; color:#617064; background:#f6f8f4; }
-.alerta { margin:1rem 0; padding:.8rem 1rem; border-radius:9px; }
-.alerta.error { color:#8e3328; background:#ffe0d5; }
-.alerta.exito { color:#28603b; background:#e8f6e8; }
-@media(max-width:560px) { main { width:calc(100% - 1rem); } .panel { padding:1rem; } .busqueda input[type="search"] { min-width:100%; } }
+.pagina {
+  display: grid;
+  gap: 18px;
+  width: 100%;
+}
 
+/* ───── Tarjeta con cabecera verde ───── */
+.tarjeta {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e8dfc7;
+  border-radius: 18px;
+  background: #fffdf5;
+  box-shadow: 0 4px 16px rgb(71 91 36 / 8%);
+}
+
+.tarjeta-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  color: #fff;
+  background: #176b43;
+}
+
+.tarjeta-cabecera svg {
+  flex-shrink: 0;
+}
+
+.cabecera-textos {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tarjeta-cabecera h1,
+.tarjeta-cabecera h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+.tarjeta-cabecera p {
+  margin: 0;
+  color: #e4efc4;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.contador-cabecera {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgb(255 255 255 / 18%);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tarjeta-cuerpo {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+/* ───── Formulario de registro ───── */
+.form-registro {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    'nombre telefono'
+    'direccion observaciones'
+    'correo observaciones'
+    'boton boton';
+  align-items: start;
+  gap: 18px 26px;
+}
+
+.campo-registro {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: #174b32;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.campo-registro > span b {
+  color: #c43f32;
+}
+
+.campo-nombre { grid-area: nombre; }
+.campo-telefono { grid-area: telefono; }
+.campo-direccion { grid-area: direccion; }
+.campo-observaciones { grid-area: observaciones; }
+.campo-correo { grid-area: correo; }
+
+.form-registro input,
+.form-registro textarea,
+.form-edicion input,
+.form-edicion textarea,
+.busqueda input[type='search'] {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid #c5df8b;
+  border-radius: 999px;
+  outline: none;
+  color: #174b32;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-registro textarea,
+.form-edicion textarea {
+  min-height: 96px;
+  border-radius: 18px;
+  resize: vertical;
+}
+
+.form-registro input::placeholder,
+.form-registro textarea::placeholder,
+.busqueda input::placeholder {
+  color: #87958a;
+  opacity: 1;
+}
+
+.form-registro input:focus,
+.form-registro textarea:focus,
+.form-edicion input:focus,
+.form-edicion textarea:focus,
+.busqueda input:focus {
+  border-color: #176b43;
+  box-shadow: 0 0 0 3px rgb(23 107 67 / 12%);
+}
+
+.boton-registro {
+  grid-area: boton;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  gap: 10px;
+  width: min(100%, 310px);
+  min-height: 46px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff9e8;
+  background: #176b43;
+  box-shadow: 0 3px 10px rgb(23 75 50 / 18%);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.boton-registro:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.boton-registro:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ───── Mensajes ───── */
+.alerta {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 14px;
+  line-height: 1.45;
+}
+
+.alerta.error { color: #8e3328; background: #ffe0d5; }
+.alerta.exito { color: #28603b; background: #e8f6e8; }
+
+.vacio,
+.cargando-detalle {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #f3e3b6;
+  border-radius: 12px;
+  color: #82643c;
+  background: #fffaea;
+  line-height: 1.45;
+}
+
+/* ───── Búsqueda ───── */
+.busqueda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3e3b6;
+}
+
+.busqueda input[type='search'] {
+  flex: 1 1 280px;
+  padding-left: 44px;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23176b43' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='10.8' cy='10.8' r='6.8'/%3E%3Cpath d='m16 16 5 5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 15px center;
+  background-size: 18px;
+}
+
+.busqueda .inactivos {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #174b32;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.busqueda .inactivos input {
+  width: 17px;
+  min-height: 0;
+  height: 17px;
+  margin: 0;
+  padding: 0;
+  accent-color: #176b43;
+}
+
+/* ───── Botones (píldora, como en pedidos) ───── */
+.busqueda button,
+.boton-secundario,
+.acciones-ficha button,
+.form-edicion button {
+  min-height: 40px;
+  padding: 9px 18px;
+  border: 1px solid #176b43;
+  border-radius: 999px;
+  color: #fff9e8;
+  background: #176b43;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease, filter 0.2s ease;
+}
+
+.busqueda button:hover:not(:disabled),
+.form-edicion button:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.boton-secundario,
+.acciones-ficha .boton-secundario {
+  color: #176b43;
+  background: transparent;
+}
+
+.boton-secundario:hover:not(:disabled) {
+  background: #f0f5dc;
+}
+
+.busqueda button:disabled,
+.boton-secundario:disabled,
+.acciones-ficha button:disabled,
+.form-edicion button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ───── Lista de fichas ───── */
+.lista-clientes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cliente {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #f3e3b6;
+  border-radius: 18px;
+  background: #fffdf5;
+}
+
+.cabecera-cliente {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.cabecera-cliente > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cabecera-cliente h3 {
+  min-width: 0;
+  margin: 0;
+  color: #174b32;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.estado {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  color: #285d2f;
+  background: #e0f0b6;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.estado.inactivo {
+  color: #805316;
+  background: #fff0c7;
+}
+
+/* Datos resumidos separados por línea, igual que .pedido-meta */
+.resumen-cliente {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #174b32;
+  font-size: 13px;
+}
+
+.resumen-cliente li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-left: 1px solid #f0c98a;
+  overflow-wrap: anywhere;
+}
+
+.resumen-cliente li:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.resumen-cliente svg {
+  flex-shrink: 0;
+  color: #176b43;
+}
+
+.resumen-cliente .saldo-pendiente {
+  margin-left: 6px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  color: #9f3026;
+  background: #ffe4df;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ───── Detalle e historial ───── */
+.detalle {
+  display: grid;
+  gap: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #f3e3b6;
+}
+
+.contacto,
+.historial {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e8dfc7;
+  border-radius: 16px;
+  background: #fffdf5;
+}
+
+.contacto {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.contacto h4,
+.historial h4 {
+  margin: 0 0 2px;
+  color: #174b32;
+  font-size: 16px;
+}
+
+.contacto h4 {
+  grid-column: 1 / -1;
+}
+
+.contacto p {
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid #eee8d7;
+  border-radius: 12px;
+  color: #3f4941;
+  background: #fff;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.contacto p strong {
+  display: block;
+  color: #82643c;
+  font-size: 12px;
+}
+
+.acciones-ficha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.acciones-ficha .boton-desactivar {
+  border-color: #c94235;
+  color: #b53129;
+  background: #fff;
+}
+
+.acciones-ficha .boton-desactivar:hover:not(:disabled) {
+  background: #ffe0d5;
+}
+
+.form-edicion {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #f3e3b6;
+  border-radius: 16px;
+  background: #fff6dc;
+}
+
+.form-edicion label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: #174b32;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.form-edicion input {
+  min-height: 40px;
+}
+
+.form-edicion button {
+  justify-self: start;
+}
+
+.venta {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #eee8d7;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.venta header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 12px;
+  color: #174b32;
+}
+
+.venta small {
+  color: #82643c;
+  overflow-wrap: anywhere;
+}
+
+.venta p {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 5px 12px;
+  margin: 0;
+  color: #174b32;
+}
+
+.venta .saldo-venta {
+  color: #a7442f;
+  font-weight: 700;
+}
+
+.pagos {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #eee8d7;
+}
+
+.pagos p {
+  justify-content: flex-start;
+  color: #52665a;
+}
+
+/* ───── Responsive ───── */
+@media (max-width: 760px) {
+  .form-registro {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'nombre'
+      'telefono'
+      'direccion'
+      'observaciones'
+      'correo'
+      'boton';
+    gap: 14px;
+  }
+
+  .form-edicion,
+  .contacto {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .contacto h4 {
+    grid-column: auto;
+  }
+
+  .busqueda input[type='search'] {
+    flex-basis: 100%;
+  }
+
+  .busqueda button {
+    flex: 1 1 120px;
+  }
+
+  .tarjeta-cabecera {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .tarjeta-cuerpo {
+    padding: 16px 13px;
+  }
+
+  .boton-registro,
+  .cabecera-cliente .boton-secundario {
+    width: 100%;
+  }
+
+  .resumen-cliente li {
+    padding: 0 10px;
+  }
+}

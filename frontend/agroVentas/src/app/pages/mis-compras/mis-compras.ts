@@ -2,13 +2,12 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { finalize, timeout } from 'rxjs';
-import { EncabezadoSeccion } from '../../core/encabezado-seccion';
 import { CompraCliente, ComprasService } from '../../core/services/compras.service';
 
 @Component({
   selector: 'app-mis-compras',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe, RouterLink, EncabezadoSeccion],
+  imports: [CommonModule, CurrencyPipe, DatePipe, RouterLink],
   templateUrl: './mis-compras.html',
   styleUrl: './mis-compras.css'
 })

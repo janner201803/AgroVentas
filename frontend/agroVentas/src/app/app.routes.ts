@@ -44,8 +44,8 @@ export const routes: Routes = [
         loadComponent: () => import('../app/pages/pedidos/pedidos').then(modulo => modulo.Pedidos),
         canActivate: [authGuard],
         data: {
-          etiqueta: 'COORDINA TU RECOGIDA',
-          titulo: 'Haz tu pedido de piña'
+          titulo: 'Realizar pedido',
+          subtitulo: 'Elige tus productos y programa la fecha y hora de entrega.'
         }
       },
       {
@@ -79,41 +79,63 @@ export const routes: Routes = [
         path: 'pedido-interno',
         loadComponent: () => import('../app/pages/pedido-interno/pedido-interno').then(modulo => modulo.PedidoInterno),
         canActivate: [rolGuard('propietario', 'empleado')],
-        data: { titulo: 'Registrar pedido interno' }
+        data: {
+          titulo: 'Registrar pedido interno',
+          subtitulo: 'Registra pedidos recibidos por WhatsApp, teléfono o en persona y coordina su entrega.'
+        }
+      },
+      {
+        path: 'clientes',
+        loadComponent: () => import('./pages/clientes/clientes').then(m => m.Clientes),
+        canActivate: [rolGuard('propietario', 'empleado')],
+        data: {
+          titulo: 'Clientes',
+          subtitulo: 'Registra y consulta la información de tus clientes.'
+        }
+      },
+      {
+        path: 'cartera',
+        loadComponent: () => import('./pages/cartera/cartera').then(m => m.Cartera),
+        canActivate: [rolGuard('propietario', 'empleado')],
+        data: {
+          titulo: 'Cartera',
+          subtitulo: 'Consulta las cuentas por cobrar y los abonos registrados.'
+        }
+      },
+      {
+        path: 'ventas',
+        loadComponent: () => import('./pages/ventas/ventas').then(m => m.Ventas),
+        canActivate: [rolGuard('propietario', 'empleado')],
+        data: {
+          titulo: 'Ventas',
+          subtitulo: 'Consulta las ventas registradas y filtra por fecha o método de pago.'
+        }
+      },
+      {
+        path: 'reportes',
+        loadComponent: () => import('./pages/reportes/reportes').then(m => m.Reportes),
+        canActivate: [rolGuard('propietario')],
+        data: {
+          titulo: 'Tablero del Propietario',
+          subtitulo: 'Resumen general de tus ventas, pedidos e inventario.'
+        }
       },
       {
         path: 'usuarios',
         loadComponent: () => import('../app/pages/usuarios/usuarios').then(modulo => modulo.Usuarios),
-        canActivate: [rolGuard('propietario')]
+        canActivate: [rolGuard('propietario')],
+        data: {
+          titulo: 'Usuarios',
+          subtitulo: 'Consulta las cuentas y administra sus roles y accesos.'
+        }
       }
     ]
   },
 
   {
-    path: 'ventas',
-    loadComponent: () => import('./pages/ventas/ventas').then(m => m.Ventas),
-    canActivate: [rolGuard('propietario', 'empleado')]
-  },
-  {
-    path: 'cartera',
-    loadComponent: () => import('./pages/cartera/cartera').then(m => m.Cartera),
-    canActivate: [rolGuard('propietario', 'empleado')]
-  },
-  {
-    path: 'reportes',
-    loadComponent: () => import('./pages/reportes/reportes').then(m => m.Reportes),
-    canActivate: [rolGuard('propietario')],
-    data: { titulo: 'Tablero y reportes' }
-  },
-  {
     path: 'mis-compras',
     loadComponent: () => import('./pages/mis-compras/mis-compras').then(m => m.MisCompras),
     canActivate: [rolGuard('cliente')]
-  },
-  {
-    path: 'clientes',
-    loadComponent: () => import('./pages/clientes/clientes').then(m => m.Clientes),
-    canActivate: [rolGuard('propietario', 'empleado')]
   },
   {
     path: '',

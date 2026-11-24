@@ -84,7 +84,9 @@
       </a>
 
       <a *ngIf="esAdministrador" routerLink="/reportes" routerLinkActive="activo" class="nav-enlace">
-        <span class="nav-icono" aria-hidden="true">📊</span>
+        <svg class="nav-icono" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 20h16M7 20v-7M12 20V6M17 20v-10" />
+        </svg>
         <span>Tablero y reportes</span>
       </a>
 
@@ -113,9 +115,11 @@
     <header class="barra">
       <div class="titulo-cabecera">
         <ng-container *ngIf="cabecera().titulo">
-          <span class="etiqueta" *ngIf="cabecera().etiqueta">{{ cabecera().etiqueta }}</span>
-          <h1>{{ cabecera().titulo }}</h1>
-          <p class="subtitulo" *ngIf="cabecera().subtitulo">{{ cabecera().subtitulo }}</p>
+          <div class="texto-titulo">
+            <span class="etiqueta" *ngIf="cabecera().etiqueta">{{ cabecera().etiqueta }}</span>
+            <h1>{{ cabecera().titulo }}</h1>
+            <p class="subtitulo" *ngIf="cabecera().subtitulo">{{ cabecera().subtitulo }}</p>
+          </div>
         </ng-container>
       </div>
 

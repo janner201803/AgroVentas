@@ -95,6 +95,7 @@
 }
 
 .barra {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -104,10 +105,17 @@
 }
 
 .titulo-cabecera {
-  grid-column: 1;
-  justify-self: stretch;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(680px, calc(100% - 340px));
+  transform: translate(-50%, -50%);
   min-width: 0;
   text-align: center;
+}
+
+.texto-titulo {
+  min-width: 0;
 }
 
 .etiqueta {
@@ -282,9 +290,12 @@ button:focus-visible {
   }
 
   .titulo-cabecera {
+    position: static;
     grid-column: 1;
     grid-row: 2;
     width: 100%;
+    transform: none;
+    text-align: center;
   }
 
   .acciones-cuenta {
