@@ -1,0 +1,77 @@
+<main class="pagina-interno">
+  <p class="introduccion">Registra los pedidos recibidos por WhatsApp, teléfono o en persona. El pedido queda vinculado a la ficha comercial y al usuario responsable.</p>
+  <p *ngIf="error" class="alerta error" role="alert">{{ error }}</p>
+  <p *ngIf="mensaje" class="alerta exito" role="status">{{ mensaje }} · <a routerLink="/gestion-pedidos">Ver gestión de pedidos</a></p>
+
+  <form class="formulario-interno" (ngSubmit)="registrar()">
+    <section class="panel-interno">
+      <h2>Cliente y canal</h2>
+      <label>Ficha comercial
+        <select name="cliente" [(ngModel)]="clienteId" required [disabled]="cargandoClientes || clientes.length === 0">
+          <option [ngValue]="null">{{ cargandoClientes ? 'Cargando clientes…' : 'Selecciona un cliente' }}</option>
+          <option *ngFor="let cliente of clientes" [ngValue]="cliente.id">{{ cliente.nombre }} · {{ cliente.telefono }}{{ cliente.correo_cuenta ? ' · ' + cliente.correo_cuenta : '' }}</option>
+        </select>
+      </label>
+      <p *ngIf="!cargandoClientes && clientes.length === 0" class="ayuda">No hay fichas activas. Registra o reactiva una ficha en Clientes.</p>
+      <label>Pedido recibido por
+        <select name="canal" [(ngModel)]="canal" required>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="telefono">Teléfono</option>
+          <option value="presencial">En persona</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="panel-interno">
+      <h2>Fecha y hora de entrega</h2>
+      <label>Fecha de entrega<input type="date" name="fecha" [min]="fechaMinima" [ngModel]="fechaEntrega" (ngModelChange)="cambiarFecha($event)" required /></label>
+      <p *ngIf="cargandoHorarios" class="ayuda">Consultando disponibilidad…</p>
+      <div class="horarios-internos">
+        <button type="button" class="hora" *ngFor="let horario of horarios"
+          [class.seleccionada]="horaEntrega === horario.hora.slice(0, 5)"
+          [class.ocupada]="horario.ocupado"
+          [disabled]="!horario.disponible || cargandoHorarios"
+          (click)="horaEntrega = horario.hora.slice(0, 5)">
+          <strong>{{ horario.hora.slice(0, 5) }}</strong>
+          <small>{{ horario.ocupado ? 'Ocupado' : (horario.disponible ? 'Disponible' : 'No disponible') }}</small>
+        </button>
+      </div>
+      <small class="ayuda">Bloques de una hora entre 8:00 a. m. y 4:00 p. m. El servidor valida el bloque al registrar.</small>
+    </section>
+
+    <section class="panel-interno">
+      <h2>Productos</h2>
+      <p *ngIf="cargandoProductos" class="ayuda">Cargando inventario disponible…</p>
+      <p *ngIf="!cargandoProductos && productos.length === 0" class="ayuda">No hay productos con inventario y precio disponibles.</p>
+      <div class="producto-carrito-form">
+        <label>Producto
+          <select name="producto" [(ngModel)]="productoId" [disabled]="cargandoProductos || !productos.length">
+            <option [ngValue]="null">Selecciona un producto</option>
+            <option *ngFor="let producto of productos" [ngValue]="producto.id">{{ producto.nombre }} · {{ producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }}/{{ producto.und }} · Disponible: {{ producto.cantidad }}</option>
+          </select>
+        </label>
+        <label>Cantidad {{ productoSeleccionado ? '(' + productoSeleccionado.und + ')' : '' }}
+          <input type="number" name="cantidad" [(ngModel)]="cantidad" [min]="productoSeleccionado?.und === 'und' ? 1 : 0.1" [max]="disponibleSeleccionado" [step]="productoSeleccionado?.und === 'und' ? 1 : 0.1" />
+        </label>
+        <button type="button" class="boton-secundario" (click)="agregarProducto()" [disabled]="cargandoProductos">Agregar al carrito</button>
+      </div>
+      <p *ngIf="productoSeleccionado" class="ayuda">{{ productoSeleccionado.precio | currency:'COP':'symbol-narrow':'1.0-0' }} por {{ productoSeleccionado.und }} · Disponible para agregar: {{ disponibleSeleccionado }} {{ productoSeleccionado.und }}</p>
+      <div class="carrito-interno" *ngIf="carrito.length">
+        <article class="linea-interna" *ngFor="let linea of carrito">
+          <div><strong>{{ linea.producto.nombre }}</strong><small>{{ linea.cantidad }} {{ linea.producto.und }} × {{ linea.producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</small></div>
+          <strong>{{ (linea.cantidad * linea.producto.precio) | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <button type="button" class="quitar" (click)="quitarProducto(linea.producto.id)">Quitar</button>
+        </article>
+        <div class="total-interno"><span>Total estimado</span><strong>{{ totalCarrito | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></div>
+      </div>
+      <p *ngIf="!carrito.length" class="ayuda">Agrega productos; el inventario se reservará en la misma operación que registra el pedido.</p>
+    </section>
+
+    <div class="acciones-interno">
+      <button type="submit" [disabled]="enviando || cargandoClientes || cargandoProductos || !horaEntrega || !carrito.length">
+        {{ enviando ? 'Registrando pedido…' : 'Registrar pedido interno' }}
+      </button>
+      <a routerLink="/gestion-pedidos" class="boton-secundario enlace">Volver a gestión de pedidos</a>
+    </div>
+  </form>
+</main>

@@ -62,6 +62,29 @@ class PedidoRepository {
     return data;
   }
 
+  async crearInterno(pedido, client = supabase) {
+    const { data, error } = await client.rpc('crear_pedido_interno', {
+      p_id_pedido: pedido.id,
+      p_cliente_id: pedido.cliente_id,
+      p_lineas: pedido.lineas,
+      p_fecha_entrega: pedido.fecha_entrega,
+      p_hora_entrega: pedido.hora_entrega,
+      p_canal_origen: pedido.canal_origen
+    });
+    if (error) {
+      if (FUNCION_NO_INSTALADA.includes(error.code)) {
+        const setupError = new Error('Falta instalar la migración 20261128_hu11_pedidos_internos.sql en Supabase.');
+        setupError.status = 503;
+        throw setupError;
+      }
+      const fallo = errorSupabase(error, 'registrar el pedido interno');
+      if (error.code === '23505') fallo.message = 'Ese horario acaba de ser ocupado. Selecciona otro.';
+      else if (error.code === 'P0001') fallo.message = error.message || 'El inventario disponible cambió. Revisa las cantidades.';
+      throw fallo;
+    }
+    return data;
+  }
+
   async listarPorUsuario(idUsuario, client = supabase) {
     const { data, error } = await client
       .from('pedidos')

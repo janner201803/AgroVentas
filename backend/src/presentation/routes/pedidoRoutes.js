@@ -19,6 +19,10 @@ router.post('/', verificarToken, (req, res) =>
   pedidoController.crear(req, res)
 );
 
+router.post('/internos', verificarToken, soloPersonal, (req, res) =>
+  pedidoController.crearInterno(req, res)
+);
+
 router.get('/', verificarToken, (req, res) =>
   pedidoController.listar(req, res)
 );
