@@ -64,7 +64,7 @@ describe('Usuarios', () => {
   it('lista las cuentas ordenadas por rol: Propietario, Empleado y Cliente', () => {
     expect(component.usuariosFiltrados().map(u => u.id))
       .toEqual([ID_PROPIO, 'u-empleado', 'u-cliente', 'u-inactivo']);
-    expect(html().querySelectorAll('article.usuario').length).toBe(4);
+    expect(html().querySelectorAll('article.fila-usuario').length).toBe(4);
   });
 
   it('cuenta y filtra por rol e inactivos', () => {
@@ -82,7 +82,7 @@ describe('Usuarios', () => {
 
   it('bloquea los controles de la cuenta propia', () => {
     fixture.detectChanges();
-    const propia = html().querySelector('article.usuario')!;
+    const propia = html().querySelector('article.fila-usuario')!;
     expect(propia.textContent).toContain('Tú');
     expect(propia.querySelector('select')!.disabled).toBe(true);
     expect(propia.querySelector('button')!.disabled).toBe(true);
