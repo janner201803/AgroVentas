@@ -50,3 +50,9 @@ La pantalla está en `/cartera` y se enlaza desde Inicio. Muestra ventas a créd
 ## HU-09 · Historial de compras y saldo del cliente
 
 Después de instalar las migraciones de cuentas por cobrar y abonos, ejecuta `migrations/20261126_hu09_compras_cliente.sql`. Crea `mis_compras_cliente()`, que filtra las ventas por `pedidos.id_usuario = auth.uid()` y devuelve productos, fecha de entrega, método de pago, saldo y abonos asociados. El backend ofrece `GET /api/cartera/mis-compras` solo a cuentas con rol Cliente; no acepta identificadores de cliente desde el navegador. En el frontend está en Inicio → **Mis compras y pagos** (`/mis-compras`).
+
+## HU-03 / HU-04 · Consultar, editar y desactivar clientes
+
+Después de las migraciones de clientes, ventas y cartera, ejecuta `migrations/20261127_hu03_04_gestion_clientes.sql`. Agrega el indicador `clientes.activo` y las funciones protegidas para buscar/listar clientes, consultar sus compras y actualizar sus datos o estado. El backend expone `GET /api/clientes`, `GET /api/clientes/:id`, `POST /api/clientes` y `PATCH /api/clientes/:id`; requiere rol Propietario o Empleado. Desactivar conserva las fichas relacionadas, ventas, pedidos y abonos; no se borran registros.
+
+La pantalla **Clientes** (`/clientes`) conserva el alta e incorpora búsqueda, contacto, resumen de ventas/saldo, historial de compras y abonos, edición y reactivación de fichas.

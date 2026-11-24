@@ -1,0 +1,90 @@
+<app-encabezado-seccion titulo="Clientes" />
+<main aria-label="Gestión de clientes comerciales">
+  <section class="panel registro">
+    <h1>Registrar cliente</h1>
+    <p>Registra la ficha comercial y, si el cliente tiene cuenta en el portal, vincúlala con su correo para habilitar compras a crédito.</p>
+    <form #formRegistro="ngForm" (ngSubmit)="formRegistro.valid && registrar()">
+      <label>Nombre comercial
+        <input required minlength="2" maxlength="120" name="nombre" [(ngModel)]="nuevo.nombre" />
+      </label>
+      <label>Teléfono
+        <input required type="tel" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" name="telefono" [(ngModel)]="nuevo.telefono" />
+      </label>
+      <label>Dirección
+        <input required minlength="2" maxlength="250" name="direccion" [(ngModel)]="nuevo.direccion" />
+      </label>
+      <label>Observaciones
+        <textarea maxlength="500" name="observaciones" [(ngModel)]="nuevo.observaciones"></textarea>
+      </label>
+      <label>Correo de la cuenta del portal (opcional)
+        <input type="email" email name="correo" [(ngModel)]="nuevo.correo" />
+      </label>
+      <button type="submit" [disabled]="formRegistro.invalid || guardando()">{{ guardando() ? 'Guardando…' : 'Registrar cliente' }}</button>
+    </form>
+  </section>
+
+  <p *ngIf="error()" class="alerta error" role="alert">{{ error() }}</p>
+  <p *ngIf="mensaje()" class="alerta exito" role="status">{{ mensaje() }}</p>
+
+  <section class="panel listado">
+    <div class="titulo-listado"><div><h2>Fichas comerciales</h2><p>Busca por nombre, teléfono, dirección o correo de la cuenta.</p></div><span>{{ clientes().length }} resultados</span></div>
+    <form class="busqueda" (ngSubmit)="consultar()">
+      <input type="search" aria-label="Buscar clientes" placeholder="Buscar cliente…" name="buscar" [(ngModel)]="buscar" maxlength="120" />
+      <label class="inactivos"><input type="checkbox" name="incluirInactivos" [(ngModel)]="incluirInactivos" (ngModelChange)="consultar()" /> Incluir inactivos</label>
+      <button type="submit" [disabled]="cargando()">{{ cargando() ? 'Buscando…' : 'Buscar' }}</button>
+    </form>
+
+    <p *ngIf="cargando()" role="status">Cargando clientes…</p>
+    <p *ngIf="!cargando() && clientes().length === 0" class="vacio">No se encontraron fichas con esa búsqueda.</p>
+
+    <div class="lista-clientes">
+      <article class="cliente" *ngFor="let cliente of clientes()">
+        <header class="cabecera-cliente">
+          <div><span class="estado" [class.inactivo]="!cliente.activo">{{ cliente.activo ? 'Activo' : 'Inactivo' }}</span><h3>{{ cliente.nombre }}</h3></div>
+          <button type="button" class="boton-secundario" (click)="verDetalle(cliente)">{{ detalle()?.id === cliente.id ? 'Cerrar ficha' : 'Ver ficha e historial' }}</button>
+        </header>
+        <div class="resumen-cliente">
+          <span>Tel. {{ cliente.telefono }}</span><span>{{ cliente.correo_cuenta || 'Sin cuenta del portal vinculada' }}</span>
+          <span>{{ cliente.ventas_cantidad }} ventas · {{ cliente.ventas_total | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          <strong>Saldo pendiente: {{ cliente.saldo_pendiente_total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+        <p *ngIf="cargandoDetalle() && detalle() === null" class="cargando-detalle">Cargando ficha…</p>
+
+        <section class="detalle" *ngIf="detalle()?.id === cliente.id && detalle() as ficha">
+          <div class="contacto">
+            <h4>Datos de contacto</h4>
+            <p><strong>Dirección:</strong> {{ ficha.direccion }}</p>
+            <p><strong>Correo portal:</strong> {{ ficha.correo_cuenta || 'No vinculado' }}</p>
+            <p *ngIf="ficha.observaciones"><strong>Observaciones:</strong> {{ ficha.observaciones }}</p>
+            <p><strong>Registrado:</strong> {{ ficha.creado_en | date:'dd/MM/yyyy':'-0500' }}</p>
+          </div>
+
+          <div class="acciones-ficha">
+            <button type="button" class="boton-secundario" (click)="editando() ? editando.set(false) : iniciarEdicion(ficha)">{{ editando() ? 'Cancelar edición' : 'Editar datos' }}</button>
+            <button type="button" [class.boton-reactivar]="!ficha.activo" [class.boton-desactivar]="ficha.activo" (click)="cambiarActivo(ficha)">{{ ficha.activo ? 'Desactivar ficha' : 'Reactivar ficha' }}</button>
+          </div>
+
+          <form *ngIf="editando()" class="form-edicion" #formEdicion="ngForm" (ngSubmit)="formEdicion.valid && guardarEdicion(ficha)">
+            <label>Nombre comercial<input required minlength="2" maxlength="120" name="editNombre" [(ngModel)]="edicion.nombre" /></label>
+            <label>Teléfono<input required type="tel" pattern="[0-9]{10}" maxlength="10" name="editTelefono" [(ngModel)]="edicion.telefono" /></label>
+            <label>Dirección<input required minlength="2" maxlength="250" name="editDireccion" [(ngModel)]="edicion.direccion" /></label>
+            <label>Observaciones<textarea maxlength="500" name="editObservaciones" [(ngModel)]="edicion.observaciones"></textarea></label>
+            <button type="submit" [disabled]="formEdicion.invalid || guardando()">{{ guardando() ? 'Guardando…' : 'Guardar cambios' }}</button>
+          </form>
+
+          <div class="historial">
+            <h4>Historial de compras y pagos ({{ ficha.ventas.length }})</h4>
+            <p *ngIf="ficha.ventas.length === 0" class="vacio">Este cliente aún no tiene ventas registradas.</p>
+            <article class="venta" *ngFor="let venta of ficha.ventas">
+              <header><strong>Pedido #{{ venta.pedido_id }}</strong><strong>{{ venta.total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></header>
+              <small>{{ venta.creado_en | date:'dd/MM/yyyy h:mm a':'-0500' }} · {{ etiquetaPago(venta.metodo_pago) }}</small>
+              <p *ngFor="let linea of venta.lineas">{{ linea.nombre || ('Producto #' + linea.id_producto) }} · {{ linea.cantidad }} {{ linea.unidad }} <span>{{ linea.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span></p>
+              <p *ngIf="venta.metodo_pago === 'credito'" class="saldo-venta">{{ venta.estado_cuenta === 'pagada' ? 'Pagada' : 'Saldo pendiente: ' + (saldo(venta) | currency:'COP':'symbol-narrow':'1.0-0') }}</p>
+              <div class="pagos" *ngIf="venta.abonos.length > 0"><strong>Abonos</strong><p *ngFor="let abono of venta.abonos">{{ abono.registrado_en | date:'dd/MM/yyyy':'-0500' }} · {{ etiquetaPago(abono.metodo_pago) }} · {{ abono.valor | currency:'COP':'symbol-narrow':'1.0-0' }}<small *ngIf="abono.nota"> — {{ abono.nota }}</small></p></div>
+            </article>
+          </div>
+        </section>
+      </article>
+    </div>
+  </section>
+</main>

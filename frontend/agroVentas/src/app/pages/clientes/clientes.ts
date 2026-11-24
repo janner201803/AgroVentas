@@ -1,53 +1,131 @@
-import { Component, signal } from '@angular/core';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EncabezadoSeccion } from '../../core/encabezado-seccion';
-import { supabase } from '../../core/services/supabase.config';
+import {
+  ClienteComercial,
+  ClientesService,
+  DatosCliente,
+  DetalleCliente,
+  VentaClienteComercial
+} from '../../core/services/clientes.service';
 
 @Component({
   standalone: true,
-  imports: [FormsModule, EncabezadoSeccion],
-  template: `
-    <app-encabezado-seccion titulo="Registrar cliente" /><main aria-label="Registrar cliente">
-      <form #form="ngForm" (ngSubmit)="form.valid && guardar()">
-        <label>Nombre comercial <input required name="nombre" [(ngModel)]="nombre"></label>
-        <label>Teléfono <input required type="tel" pattern="[0-9]{10}" name="telefono" [(ngModel)]="telefono"></label>
-        <label>Dirección <input required name="direccion" [(ngModel)]="direccion"></label>
-        <label>Observaciones <textarea name="notas" [(ngModel)]="notas"></textarea></label>
-        <label>Correo de la cuenta del portal (opcional)
-          <input type="email" email name="correo" [(ngModel)]="correo">
-        </label>
-        <small>Vincula la cuenta para habilitar crédito en sus pedidos.</small>
-        <button [disabled]="form.invalid || ocupado()">Registrar cliente</button>
-      </form>
-      <p role="status">{{ mensaje() }}</p>
-    </main>`,
+  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe, EncabezadoSeccion],
+  templateUrl: './clientes.html',
   styleUrl: './clientes.css'
 })
-export class Clientes {
-  nombre = '';
-  telefono = '';
-  direccion = '';
-  notas = '';
-  correo = '';
-  ocupado = signal(false);
-  mensaje = signal('');
+export class Clientes implements OnInit {
+  private clientesService = inject(ClientesService);
 
-  async guardar() {
-    if (this.ocupado()) return;
-    this.ocupado.set(true);
-    try {
-      const {error} = await supabase.rpc('registrar_cliente_comercial', {
-        p_nombre: this.nombre, p_telefono: this.telefono, p_direccion: this.direccion,
-        p_observaciones: this.notas, p_correo: this.correo
-      });
-      if (error) throw error;
-      this.nombre = this.telefono = this.direccion = this.notas = this.correo = '';
-      this.mensaje.set('Cliente registrado.');
-    } catch (error) {
-      this.mensaje.set((error as {message?: string}).message || 'No fue posible registrar al cliente.');
-    } finally {
-      this.ocupado.set(false);
+  nuevo: DatosCliente & { correo: string } = { nombre: '', telefono: '', direccion: '', observaciones: '', correo: '' };
+  edicion: DatosCliente = { nombre: '', telefono: '', direccion: '', observaciones: '' };
+  buscar = '';
+  incluirInactivos = false;
+  clientes = signal<ClienteComercial[]>([]);
+  detalle = signal<DetalleCliente | null>(null);
+  cargando = signal(false);
+  cargandoDetalle = signal(false);
+  guardando = signal(false);
+  error = signal('');
+  mensaje = signal('');
+  editando = signal(false);
+
+  ngOnInit(): void { this.consultar(); }
+
+  consultar(): void {
+    this.error.set('');
+    this.cargando.set(true);
+    this.clientesService.listar(this.buscar, this.incluirInactivos).subscribe({
+      next: lista => this.clientes.set(lista ?? []),
+      error: error => this.error.set(error?.error?.mensaje || 'No fue posible consultar las fichas comerciales.'),
+      complete: () => this.cargando.set(false)
+    }).add(() => this.cargando.set(false));
+  }
+
+  registrar(): void {
+    if (this.guardando()) return;
+    this.error.set('');
+    this.mensaje.set('');
+    this.guardando.set(true);
+    this.clientesService.registrar({ ...this.nuevo }).subscribe({
+      next: respuesta => {
+        this.mensaje.set(respuesta.mensaje || 'Ficha comercial registrada.');
+        this.nuevo = { nombre: '', telefono: '', direccion: '', observaciones: '', correo: '' };
+        this.consultar();
+      },
+      error: error => this.error.set(error?.error?.mensaje || 'No fue posible registrar la ficha comercial.'),
+      complete: () => this.guardando.set(false)
+    }).add(() => this.guardando.set(false));
+  }
+
+  verDetalle(cliente: ClienteComercial): void {
+    if (this.detalle()?.id === cliente.id) {
+      this.detalle.set(null);
+      this.editando.set(false);
+      return;
     }
+    this.error.set('');
+    this.detalle.set(null);
+    this.editando.set(false);
+    this.cargandoDetalle.set(true);
+    this.clientesService.detalle(cliente.id).subscribe({
+      next: detalle => this.detalle.set(detalle),
+      error: error => this.error.set(error?.error?.mensaje || 'No fue posible cargar el historial del cliente.'),
+      complete: () => this.cargandoDetalle.set(false)
+    }).add(() => this.cargandoDetalle.set(false));
+  }
+
+  iniciarEdicion(cliente: DetalleCliente): void {
+    this.edicion = {
+      nombre: cliente.nombre,
+      telefono: cliente.telefono,
+      direccion: cliente.direccion,
+      observaciones: cliente.observaciones ?? ''
+    };
+    this.editando.set(true);
+    this.error.set('');
+  }
+
+  guardarEdicion(cliente: DetalleCliente, activo = cliente.activo): void {
+    if (this.guardando()) return;
+    this.error.set('');
+    this.mensaje.set('');
+    this.guardando.set(true);
+    this.clientesService.actualizar(cliente.id, { ...this.edicion, activo }).subscribe({
+      next: respuesta => {
+        this.mensaje.set(respuesta.mensaje || 'Ficha comercial actualizada.');
+        this.editando.set(false);
+        this.consultar();
+        this.detalle.set(null);
+        this.verDetalle({...cliente, ...this.edicion, activo});
+      },
+      error: error => this.error.set(error?.error?.mensaje || 'No fue posible actualizar la ficha comercial.'),
+      complete: () => this.guardando.set(false)
+    }).add(() => this.guardando.set(false));
+  }
+
+  cambiarActivo(cliente: DetalleCliente): void {
+    const nuevoEstado = !cliente.activo;
+    const accion = nuevoEstado ? 'reactivar' : 'desactivar';
+    if (!confirm(`¿Quieres ${accion} la ficha de ${cliente.nombre}? Sus ventas, pedidos y abonos se conservarán.`)) return;
+    this.edicion = {
+      nombre: cliente.nombre,
+      telefono: cliente.telefono,
+      direccion: cliente.direccion,
+      observaciones: cliente.observaciones ?? ''
+    };
+    this.guardarEdicion(cliente, nuevoEstado);
+  }
+
+  etiquetaPago(metodo: string): string {
+    if (metodo === 'credito') return 'Crédito';
+    if (metodo === 'transferencia' || metodo === 'consignacion') return 'Transferencia';
+    return 'Efectivo';
+  }
+
+  saldo(cliente: VentaClienteComercial): number {
+    return Number(cliente.saldo_pendiente ?? 0);
   }
 }
-
