@@ -44,10 +44,10 @@
           <dl class="producto-datos">
             <div><dt>Unidad</dt><dd>{{ item.und }}</dd></div>
             <div><dt>Precio</dt><dd>{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ item.und }}</dd></div>
-            <div><dt>Disponible</dt><dd>{{ item.cantidad }} {{ item.und }}</dd></div>
+            <div><dt>Disponible</dt><dd>{{ item.cantidad | number:'1.0-1' }} {{ item.und }}</dd></div>
             <ng-container *ngIf="!migracionPendiente">
-              <div><dt>Comprometido en pedidos</dt><dd>{{ item.comprometido ?? 0 }} {{ item.und }}</dd></div>
-              <div><dt>Total en bodega</dt><dd>{{ item.total ?? item.cantidad }} {{ item.und }}</dd></div>
+              <div><dt>Comprometido en pedidos</dt><dd>{{ (item.comprometido ?? 0) | number:'1.0-1' }} {{ item.und }}</dd></div>
+              <div><dt>Total en bodega</dt><dd>{{ (item.total ?? item.cantidad) | number:'1.0-1' }} {{ item.und }}</dd></div>
               <div class="dato-fecha">
                 <dt>Última actualización</dt>
                 <dd>{{ item.actualizado_en ? (item.actualizado_en | date:'dd/MM/yyyy HH:mm') : 'Sin registro' }}</dd>
@@ -113,7 +113,7 @@
           <div *ngIf="productoSeleccionado" class="resumen-stock" aria-live="polite">
             <div><span>Unidad</span><strong>{{ productoSeleccionado.unidad }}</strong></div>
             <div><span>Precio definido en Productos</span><strong>{{ productoSeleccionado.precio | currency:'COP':'symbol-narrow':'1.0-0' }} / {{ productoSeleccionado.unidad }}</strong></div>
-            <div><span>Existencia actual</span><strong>{{ existenciasSeleccionadas }} {{ productoSeleccionado.unidad }}</strong></div>
+            <div><span>Existencia actual</span><strong>{{ existenciasSeleccionadas | number:'1.0-1' }} {{ productoSeleccionado.unidad }}</strong></div>
           </div>
         </form>
       </section>
