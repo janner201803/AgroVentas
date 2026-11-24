@@ -21,7 +21,7 @@ export const NOMBRE_ROL: Record<Rol, string> = {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './usuarios.html',
-  styleUrls: ['../inventario/inventario.css', './usuarios.css']
+  styleUrls: ['./usuarios.css']
 })
 export class Usuarios implements OnInit {
   private usuarioService = inject(UsuarioService);
@@ -48,6 +48,8 @@ export class Usuarios implements OnInit {
   filtro = signal<FiltroRol>('todos');
   busqueda = signal('');
   cerrandoSesion = signal(false);
+  readonly usuariosPorPagina = 6;
+  paginaActual = signal(1);
 
   usuariosFiltrados = computed(() => {
     const termino = normalizar(this.busqueda());
@@ -57,6 +59,14 @@ export class Usuarios implements OnInit {
       .filter(u => !termino || [u.correo, u.nombre, u.celular].some(valor => normalizar(valor).includes(termino)))
       .sort(compararUsuarios);
   });
+
+  totalPaginas = computed(() => Math.max(1, Math.ceil(this.usuariosFiltrados().length / this.usuariosPorPagina)));
+  usuariosPagina = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.usuariosPorPagina;
+    return this.usuariosFiltrados().slice(inicio, inicio + this.usuariosPorPagina);
+  });
+  desdeUsuario = computed(() => this.usuariosFiltrados().length ? (this.paginaActual() - 1) * this.usuariosPorPagina + 1 : 0);
+  hastaUsuario = computed(() => Math.min(this.paginaActual() * this.usuariosPorPagina, this.usuariosFiltrados().length));
 
   contadores = computed(() => {
     const lista = this.usuarios();
@@ -73,6 +83,20 @@ export class Usuarios implements OnInit {
     return usuario.id;
   }
 
+  cambiarFiltro(filtro: FiltroRol): void {
+    this.filtro.set(filtro);
+    this.paginaActual.set(1);
+  }
+
+  cambiarBusqueda(busqueda: string): void {
+    this.busqueda.set(busqueda);
+    this.paginaActual.set(1);
+  }
+
+  irPagina(pagina: number): void {
+    this.paginaActual.set(Math.min(Math.max(1, pagina), this.totalPaginas()));
+  }
+
   esCuentaPropia(usuario: UsuarioSistema): boolean {
     return usuario.id === this.usuario()?.id;
   }
@@ -86,6 +110,7 @@ export class Usuarios implements OnInit {
     this.usuarioService.listar().subscribe({
       next: usuarios => {
         this.usuarios.set(usuarios);
+        this.paginaActual.set(1);
         this.error.set('');
         this.cargando.set(false);
       },
@@ -151,6 +176,7 @@ export class Usuarios implements OnInit {
 
   private reemplazar(actualizado: UsuarioSistema): void {
     this.usuarios.update(lista => lista.map(u => (u.id === actualizado.id ? actualizado : u)));
+    this.paginaActual.set(1);
   }
 
   private marcarGuardando(id: string, activo: boolean): void {

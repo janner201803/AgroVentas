@@ -1,0 +1,94 @@
+<main class="pagina-ventas" aria-label="Ventas">
+  <section class="panel-filtros" aria-label="Filtros de ventas">
+    <div class="panel-filtros-titulo">
+      <h2>Filtrar ventas</h2>
+      <p>Elige un método de pago y un período para consultar.</p>
+    </div>
+
+    <form class="form-filtros" (ngSubmit)="consultar(1)">
+      <label class="campo-filtro">
+        <span>Método de pago</span>
+        <select name="pago" [(ngModel)]="pago">
+          <option value="">Todos los métodos</option>
+          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option>
+          <option value="credito">Crédito</option>
+        </select>
+      </label>
+
+      <label class="campo-filtro">
+        <span>Desde</span>
+        <input type="date" name="desde" [(ngModel)]="desde" />
+      </label>
+
+      <label class="campo-filtro">
+        <span>Hasta</span>
+        <input type="date" name="hasta" [(ngModel)]="hasta" />
+      </label>
+
+      <button class="btn-aplicar" type="submit" [disabled]="cargando()">
+        {{ cargando() ? 'Consultando…' : 'Aplicar filtros' }}
+      </button>
+    </form>
+  </section>
+
+  @if (cargando()) {
+    <p class="estado-consulta" role="status">Cargando ventas…</p>
+  } @else if (error()) {
+    <p class="estado-consulta error" role="alert">{{ error() }}</p>
+  } @else {
+    <section class="lista-ventas" aria-label="Ventas registradas">
+      @for (v of ventas(); track v.id) {
+        <article class="venta-card">
+          <header class="venta-cabecera">
+            <div class="venta-cliente">
+              <span class="venta-referencia">Venta #{{ v.id }} · Pedido #{{ v.pedido_id }}</span>
+              <h2>{{ v.cliente_nombre || 'Cliente sin nombre registrado' }}</h2>
+            </div>
+            <div class="venta-total">
+              <span>Total de venta</span>
+              <strong>{{ v.total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+          </header>
+
+          <dl class="datos-venta">
+            <div>
+              <dt>Fecha de venta</dt>
+              <dd>{{ v.creado_en | date:'dd/MM/yyyy HH:mm':'-0500' }}</dd>
+            </div>
+            <div>
+              <dt>Método de pago</dt>
+              <dd>
+                <span class="metodo-pago" [class.credito]="v.metodo_pago === 'credito'">
+                  {{ v.metodo_pago === 'credito' ? 'Crédito' : (v.metodo_pago === 'transferencia' ? 'Transferencia' : 'Efectivo') }}
+                </span>
+              </dd>
+            </div>
+          </dl>
+
+          <details class="detalle-venta">
+            <summary>Productos ({{ v.lineas.length }})</summary>
+            <div class="lineas-venta">
+              @for (linea of v.lineas; track linea.id_producto) {
+                <p>
+                  <span>{{ linea.nombre || 'Producto #' + linea.id_producto }} · {{ linea.cantidad }} {{ linea.unidad }}</span>
+                  <strong>{{ linea.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+                </p>
+              }
+            </div>
+          </details>
+        </article>
+      } @empty {
+        <p class="estado-consulta">No hay ventas con estos filtros.</p>
+      }
+
+      @if (paginas() > 1) {
+        <nav class="paginacion-ventas" aria-label="Paginación de ventas">
+          <button type="button" [disabled]="pagina() === 1" (click)="consultar(pagina()-1, false)">Anterior</button>
+          <span>Página {{ pagina() }} de {{ paginas() }}</span>
+          <button type="button" [disabled]="pagina() >= paginas()" (click)="consultar(pagina()+1, false)">Siguiente</button>
+        </nav>
+      }
+    </section>
+  }
+</main>

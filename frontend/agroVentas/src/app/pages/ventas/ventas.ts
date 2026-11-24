@@ -1,52 +1,13 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { EncabezadoSeccion } from '../../core/encabezado-seccion';
 import { supabase } from '../../core/services/supabase.config';
 
 interface LineaVenta { id_producto:number; nombre?:string; cantidad:number; unidad?:string; subtotal:number }
 interface Venta { cliente_nombre:string | null; lineas:LineaVenta[]; id:number; pedido_id:string; total:number; metodo_pago:string; creado_en:string }
 @Component({
-  imports: [EncabezadoSeccion, FormsModule, CurrencyPipe, DatePipe],
-  template: `<app-encabezado-seccion titulo="Ventas" /><main aria-label="Ventas">
-    <form (ngSubmit)="consultar(1)">
-      <label>Método de pago <select name="pago" [(ngModel)]="pago">
-        <option value="">Todos</option><option value="efectivo">Efectivo</option>
-        <option value="transferencia">Transferencia</option><option value="credito">Crédito</option>
-      </select></label>
-      <label>Desde <input type="date" name="desde" [(ngModel)]="desde"></label>
-      <label>Hasta <input type="date" name="hasta" [(ngModel)]="hasta"></label>
-      <button>Aplicar filtros</button>
-    </form>
-    @if (cargando()) { <p role="status">Cargando ventas…</p> }
-    @else if (error()) { <p role="alert">{{ error() }}</p> }
-    @else {
-      @for (v of ventas(); track v.id) {
-        <article>
-          <header>
-            <div><small>Cliente · Venta #{{ v.id }}</small><h2>{{ v.cliente_nombre || 'Cliente sin nombre registrado' }}</h2></div>
-            <div class="importe"><small>Total de venta</small><strong>{{ v.total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></div>
-          </header>
-          <dl>
-            <div><dt>Pedido</dt><dd>#{{ v.pedido_id }}</dd></div>
-            <div><dt>Fecha de venta</dt><dd>{{ v.creado_en | date:'dd/MM/yyyy HH:mm':'-0500' }}</dd></div>
-            <div><dt>Método de pago</dt><dd>{{ v.metodo_pago === 'credito' ? 'Crédito' : (v.metodo_pago === 'transferencia' ? 'Transferencia' : 'Efectivo') }}</dd></div>
-          </dl>
-          <details><summary>Productos ({{ v.lineas.length }})</summary>
-            @for (linea of v.lineas; track linea.id_producto) {
-              <p>{{ linea.nombre || 'Producto #' + linea.id_producto }} · {{ linea.cantidad }} {{ linea.unidad }}
-                <strong>{{ linea.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></p>
-            }
-          </details>
-        </article>
-      } @empty { <p>No hay ventas con estos filtros.</p> }
-      @if (paginas() > 1) { <nav aria-label="Paginación de ventas">
-        <button [disabled]="pagina() === 1" (click)="consultar(pagina()-1, false)">Anterior</button>
-        Página {{ pagina() }} de {{ paginas() }}
-        <button [disabled]="pagina() >= paginas()" (click)="consultar(pagina()+1, false)">Siguiente</button>
-      </nav> }
-    }
-  </main>`,
+  imports: [FormsModule, CurrencyPipe, DatePipe],
+  templateUrl: './ventas.html',
   styleUrls: ['../clientes/clientes.css','./ventas.css']
 })
 export class Ventas implements OnInit {

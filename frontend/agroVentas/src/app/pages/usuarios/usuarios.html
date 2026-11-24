@@ -1,36 +1,37 @@
-<main class="pagina">
-  <header class="encabezado">
-    <a routerLink="/inicio" class="marca" aria-label="Volver al inicio">
-      <img src="/img/logo.png" alt="Logo de AgroVentas" class="brand-logo" />
-    </a>
-    <h1 class="titulo-pagina">Usuarios</h1>
-    <div class="acciones-cuenta">
-      <a routerLink="/inicio" class="volver">← Volver a inicio</a>
-      <div class="cuenta">
-        <span class="encabezado-etiqueta">PANEL ADMINISTRATIVO</span>
-        <strong>{{ usuario()?.email }}</strong>
-      </div>
-      <button type="button" class="cerrar-sesion" [disabled]="cerrandoSesion()" (click)="cerrarSesion()">
-        {{ cerrandoSesion() ? 'Cerrando…' : 'Cerrar sesión' }}
-      </button>
+<main class="pagina-usuarios" aria-label="Gestión de usuarios">
+  <section class="panel-usuarios" aria-label="Cuentas registradas">
+    <div class="acciones-listado">
+      <span class="contador">{{ usuariosFiltrados().length }} de {{ usuarios().length }} usuarios</span>
     </div>
-  </header>
 
-  <section class="intro">
-    <p>
-      Asigna el rol de cada cuenta y desactiva el acceso de quien ya no deba entrar.
-      Para sumar un empleado, pídele que cree su cuenta en el registro y luego cámbiale el rol aquí.
+    <div class="fila-busqueda">
+      <label class="buscador" for="buscar-usuario">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 5 5" />
+        </svg>
+        <input
+          id="buscar-usuario"
+          name="buscar-usuario"
+          type="search"
+          [ngModel]="busqueda()"
+          (ngModelChange)="cambiarBusqueda($event)"
+          placeholder="Buscar usuario por nombre o correo…"
+          autocomplete="off"
+        />
+        <button *ngIf="busqueda()" type="button" class="limpiar-busqueda" (click)="busqueda.set('')">Limpiar</button>
+      </label>
+      <a routerLink="/register" class="btn-agregar">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="8" r="3.5" />
+          <path d="M2.5 20c0-3.6 2.9-6 6.5-6 2.2 0 4 .7 5.2 1.9M19 8v6M16 11h6" />
+        </svg>
+        Agregar usuario
+      </a>
+    </div>
+
+    <p class="ayuda-registro">
+      Para agregar una cuenta, regístrala primero y luego asígnale el rol correspondiente.
     </p>
-  </section>
-
-  <div *ngIf="error()" class="alerta error" role="alert">{{ error() }}</div>
-  <div *ngIf="mensaje()" class="alerta exito" role="status">{{ mensaje() }}</div>
-
-  <section class="panel listado">
-    <div class="listado-titulo">
-      <h2>Cuentas registradas</h2>
-      <span class="contador">{{ usuariosFiltrados().length }} de {{ usuarios().length }} cuentas</span>
-    </div>
 
     <div class="filtros-rol" role="group" aria-label="Filtrar por rol">
       <button
@@ -39,61 +40,66 @@
         class="filtro"
         [class.activo]="filtro() === opcion.valor"
         [attr.aria-pressed]="filtro() === opcion.valor"
-        (click)="filtro.set(opcion.valor)"
+        (click)="cambiarFiltro(opcion.valor)"
       >
         {{ opcion.etiqueta }} <span>{{ contadores()[opcion.valor] }}</span>
       </button>
     </div>
 
-    <div class="buscador">
-      <label for="buscar-usuario">Buscar cuenta</label>
-      <div class="buscador-campo">
-        <input
-          id="buscar-usuario"
-          name="buscar-usuario"
-          type="search"
-          [ngModel]="busqueda()"
-          (ngModelChange)="busqueda.set($event)"
-          placeholder="Correo, nombre o celular"
-          autocomplete="off"
-        />
-        <button *ngIf="busqueda()" type="button" class="limpiar-busqueda" (click)="busqueda.set('')">Limpiar</button>
-      </div>
-    </div>
-
-    <p *ngIf="cargando()">Cargando usuarios…</p>
-    <p *ngIf="!cargando() && !error() && usuarios().length === 0" class="vacio">Todavía no hay cuentas registradas.</p>
-    <p *ngIf="!cargando() && usuarios().length > 0 && usuariosFiltrados().length === 0" class="vacio" role="status">
+    <div *ngIf="error()" class="aviso error" role="alert">{{ error() }}</div>
+    <div *ngIf="mensaje()" class="aviso exito" role="status">{{ mensaje() }}</div>
+    <p *ngIf="cargando()" class="estado-listado" role="status">Cargando usuarios…</p>
+    <p *ngIf="!cargando() && !error() && usuarios().length === 0" class="estado-listado">Todavía no hay cuentas registradas.</p>
+    <p *ngIf="!cargando() && usuarios().length > 0 && usuariosFiltrados().length === 0" class="estado-listado" role="status">
       Ninguna cuenta coincide con el filtro.
     </p>
 
-    <div class="usuarios" *ngIf="!cargando() && usuariosFiltrados().length > 0">
+    <div class="tabla-usuarios" *ngIf="!cargando() && usuariosFiltrados().length > 0" role="table" aria-label="Usuarios registrados">
+      <div class="tabla-encabezado" role="row">
+        <span role="columnheader">Nombre</span>
+        <span role="columnheader">Correo</span>
+        <span role="columnheader">Rol</span>
+        <span role="columnheader">Estado</span>
+        <span role="columnheader">Acciones</span>
+      </div>
+
       <article
-        class="usuario"
-        *ngFor="let item of usuariosFiltrados(); trackBy: porId"
+        class="fila-usuario"
+        *ngFor="let item of usuariosPagina(); trackBy: porId"
         [class.inactivo]="!item.activo"
+        role="row"
       >
-        <div class="usuario-identidad">
-          <h3>
-            {{ item.nombre || 'Sin nombre' }}
-            <span *ngIf="esCuentaPropia(item)" class="etiqueta-propia">Tú</span>
-          </h3>
-          <p class="usuario-correo">{{ item.correo || 'Sin correo' }}</p>
-          <p *ngIf="item.celular" class="usuario-celular">Cel. {{ item.celular }}</p>
+        <div class="identidad-usuario" role="cell">
+          <span class="avatar-usuario" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.1 3.4-7 8-7s8 2.9 8 7" /></svg>
+          </span>
+          <div class="datos-identidad">
+            <strong>
+              {{ item.nombre || 'Sin nombre' }}
+              <span *ngIf="esCuentaPropia(item)" class="etiqueta-propia">Tú</span>
+            </strong>
+            <span class="correo-movil">{{ item.correo || 'Sin correo' }}</span>
+          </div>
         </div>
 
-        <div class="usuario-controles">
-          <label [for]="'rol-' + item.id">Rol</label>
+        <span class="correo-usuario" role="cell">{{ item.correo || 'Sin correo' }}</span>
+
+        <label class="control-rol" role="cell" [attr.aria-label]="'Rol de ' + (item.nombre || item.correo || 'usuario')">
           <select
             #selectorRol
-            [id]="'rol-' + item.id"
+            [value]="item.rol"
             (change)="cambiarRol(item, selectorRol)"
             [disabled]="esCuentaPropia(item) || estaGuardando(item)"
           >
-            <option *ngFor="let rol of roles" [value]="rol" [selected]="rol === item.rol">{{ nombreRol[rol] }}</option>
+            <option *ngFor="let rol of roles" [value]="rol">{{ nombreRol[rol] }}</option>
           </select>
+        </label>
 
-          <span class="estado" [class.estado-inactivo]="!item.activo">{{ item.activo ? 'Activa' : 'Desactivada' }}</span>
+        <span class="estado-usuario" [class.estado-inactivo]="!item.activo" role="cell">
+          {{ item.activo ? 'Activo' : 'Desactivado' }}
+        </span>
+
+        <div class="acciones-usuario" role="cell">
           <button
             type="button"
             class="boton-estado"
@@ -107,5 +113,18 @@
         </div>
       </article>
     </div>
+
+    <footer class="pie-paginacion" *ngIf="!cargando() && usuariosFiltrados().length > 0">
+      <span>Mostrando {{ desdeUsuario() }}–{{ hastaUsuario() }} de {{ usuariosFiltrados().length }} usuarios</span>
+      <nav class="paginacion" aria-label="Paginación de usuarios">
+        <button type="button" aria-label="Página anterior" [disabled]="paginaActual() === 1" (click)="irPagina(paginaActual() - 1)">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <span class="pagina-actual" aria-current="page">{{ paginaActual() }}</span>
+        <button type="button" aria-label="Página siguiente" [disabled]="paginaActual() >= totalPaginas()" (click)="irPagina(paginaActual() + 1)">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+        </button>
+      </nav>
+    </footer>
   </section>
 </main>

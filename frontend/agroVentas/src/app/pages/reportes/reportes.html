@@ -1,60 +1,191 @@
-<main class="pagina-reportes">
-  <section class="filtros panel-reportes">
-    <div><h2>Tablero del Propietario</h2><p>Ventas del período y situación actual de cartera, pedidos e inventario.</p></div>
+<div class="pagina-reportes">
+
+  <!-- ───── Período ───── -->
+  <section class="panel-periodo">
     <form (ngSubmit)="consultar()">
-      <label>Desde<input type="date" name="desde" [(ngModel)]="desde" [max]="hoy" required /></label>
-      <label>Hasta<input type="date" name="hasta" [(ngModel)]="hasta" [max]="hoy" required /></label>
-      <button type="submit" [disabled]="cargando()">{{ cargando() ? 'Consultando…' : 'Aplicar período' }}</button>
+      <label class="campo-periodo">
+        <span>Desde</span>
+        <input type="date" name="desde" [(ngModel)]="desde" [max]="hoy" required />
+      </label>
+      <label class="campo-periodo">
+        <span>Hasta</span>
+        <input type="date" name="hasta" [(ngModel)]="hasta" [max]="hoy" required />
+      </label>
+      <button type="submit" class="btn-periodo" [disabled]="cargando()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M7 20v-7M12 20V6M17 20v-10" /></svg>
+        {{ cargando() ? 'Consultando…' : 'Aplicar período' }}
+      </button>
     </form>
   </section>
 
   <p *ngIf="error()" class="aviso error" role="alert">{{ error() }}</p>
-  <p *ngIf="cargando() && !reporte()" role="status">Cargando tablero…</p>
+  <p *ngIf="cargando() && !reporte()" class="aviso info" role="status">Cargando tablero…</p>
 
   <ng-container *ngIf="reporte() as datos">
     <div class="barra-acciones">
       <span>Período: {{ datos.desde }} al {{ datos.hasta }}</span>
-      <div><button type="button" class="secundario" (click)="exportarCsv()">Exportar CSV</button><button type="button" class="secundario" (click)="imprimir()">Imprimir</button></div>
+      <div>
+        <button type="button" class="secundario" (click)="exportarCsv()">Exportar CSV</button>
+        <button type="button" class="secundario" (click)="imprimir()">Imprimir</button>
+      </div>
     </div>
 
+    <!-- ───── Indicadores de ventas y cartera ───── -->
     <section class="indicadores" aria-label="Indicadores de ventas">
-      <article class="indicador"><span>Ventas del período</span><strong>{{ datos.ventas.total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong><small>{{ datos.ventas.cantidad }} ventas registradas</small></article>
-      <article class="indicador"><span>Promedio por venta</span><strong>{{ datos.ventas.promedio | currency:'COP':'symbol-narrow':'1.0-0' }}</strong><small>Promedio del período</small></article>
-      <article class="indicador"><span>Saldo de cartera</span><strong>{{ datos.cartera.saldo_pendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</strong><small>{{ datos.cartera.cuentas_abiertas }} cuentas abiertas</small></article>
-      <article class="indicador" [class.alerta-indicador]="datos.cartera.cuentas_en_mora > 0"><span>Saldo en mora</span><strong>{{ datos.cartera.saldo_en_mora | currency:'COP':'symbol-narrow':'1.0-0' }}</strong><small>{{ datos.cartera.cuentas_en_mora }} cuentas vencidas</small></article>
+      <article class="indicador">
+        <span class="indicador-icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5" /><circle cx="18" cy="20" r="1.5" /><path d="M2 3h3l2.5 12h11l2-8H6" /></svg>
+        </span>
+        <div class="indicador-texto">
+          <span>Ventas del período</span>
+          <strong>{{ datos.ventas.total | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <small>{{ datos.ventas.cantidad }} ventas registradas</small>
+        </div>
+      </article>
+
+      <article class="indicador">
+        <span class="indicador-icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2" /><circle cx="12" cy="12" r="2.6" /><path d="M6 9.5v.01M18 14.5v.01" /></svg>
+        </span>
+        <div class="indicador-texto">
+          <span>Promedio por venta</span>
+          <strong>{{ datos.ventas.promedio | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <small>Promedio del período</small>
+        </div>
+      </article>
+
+      <article class="indicador">
+        <span class="indicador-icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" /><path d="M9 8h6M9 12h6" /></svg>
+        </span>
+        <div class="indicador-texto">
+          <span>Saldo de cartera</span>
+          <strong>{{ datos.cartera.saldo_pendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <small>{{ datos.cartera.cuentas_abiertas }} cuentas abiertas</small>
+        </div>
+      </article>
+
+      <article class="indicador" [class.alerta-indicador]="datos.cartera.cuentas_en_mora > 0">
+        <span class="indicador-icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5" /><path d="M3 10.5h18M7 15h4" /></svg>
+        </span>
+        <div class="indicador-texto">
+          <span>Saldo en mora</span>
+          <strong>{{ datos.cartera.saldo_en_mora | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <small>{{ datos.cartera.cuentas_en_mora }} cuentas vencidas</small>
+        </div>
+      </article>
     </section>
 
-    <section class="indicadores secundarios-indicadores" aria-label="Pedidos e inventario">
-      <article class="indicador"><span>Pedidos pendientes</span><strong>{{ datos.pedidos.pendientes }}</strong><small>Por iniciar preparación</small></article>
-      <article class="indicador"><span>En preparación</span><strong>{{ datos.pedidos.en_preparacion }}</strong><small>Pedidos activos</small></article>
-      <article class="indicador"><span>Entregas para hoy</span><strong>{{ datos.pedidos.entregas_hoy }}</strong><small>Pendientes o en preparación</small></article>
-      <article class="indicador" [class.alerta-indicador]="datos.inventario.productos_sin_existencias > 0"><span>Sin existencias</span><strong>{{ datos.inventario.productos_sin_existencias }}</strong><small>Productos con cero disponible</small></article>
+    <!-- ───── Indicadores de pedidos e inventario ───── -->
+    <section class="indicadores" aria-label="Pedidos e inventario">
+      <article class="indicador">
+        <span class="indicador-icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>
+        </span>
+        <div class="indicador-texto">
+          <span>Pedidos pendientes</span>
+          <strong>{{ datos.pedidos.pendientes }}</strong>
+          <small>Por iniciar preparación</small>
+        </div>
+      </article>
+
+      <article class="indicador">
+        <span class="indicador-icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+        </span>
+        <div class="indicador-texto">
+          <span>En preparación</span>
+          <strong>{{ datos.pedidos.en_preparacion }}</strong>
+          <small>Pedidos activos</small>
+        </div>
+      </article>
+
+      <article class="indicador">
+        <span class="indicador-icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" /><path d="M4 7.5l8 4.5 8-4.5M12 12v9" /></svg>
+        </span>
+        <div class="indicador-texto">
+          <span>Entregas para hoy</span>
+          <strong>{{ datos.pedidos.entregas_hoy }}</strong>
+          <small>Pendientes o en preparación</small>
+        </div>
+      </article>
+
+      <article class="indicador" [class.alerta-indicador]="datos.inventario.productos_sin_existencias > 0">
+        <span class="indicador-icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l9 16H3z" /><path d="M12 10v4.5M12 17.2v.01" /></svg>
+        </span>
+        <div class="indicador-texto">
+          <span>Sin existencias</span>
+          <strong>{{ datos.inventario.productos_sin_existencias }}</strong>
+          <small>Productos con cero disponible</small>
+        </div>
+      </article>
     </section>
 
+    <!-- ───── Tablas ───── -->
     <section class="tablas-reportes">
-      <article class="panel-reportes">
-        <h2>Ventas por método de pago</h2>
-        <p *ngIf="datos.por_metodo_pago.length === 0" class="vacio">No hay ventas en este período.</p>
-        <div class="tabla-contenedor" *ngIf="datos.por_metodo_pago.length > 0"><table><thead><tr><th>Método</th><th>Ventas</th><th>Total</th></tr></thead><tbody><tr *ngFor="let fila of datos.por_metodo_pago"><td>{{ metodo(fila.metodo_pago) }}</td><td>{{ fila.cantidad }}</td><td>{{ fila.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tbody></table></div>
+      <article class="tarjeta">
+        <header class="tarjeta-cabecera">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5" /><path d="M3 10.5h18M7 15h4" /></svg>
+          <h2>Ventas por método de pago</h2>
+        </header>
+        <div class="tarjeta-cuerpo">
+          <p *ngIf="datos.por_metodo_pago.length === 0" class="vacio">No hay ventas en este período.</p>
+          <div class="tabla-contenedor" *ngIf="datos.por_metodo_pago.length > 0">
+            <table>
+              <thead><tr><th>Método</th><th>Ventas</th><th>Total</th></tr></thead>
+              <tbody><tr *ngFor="let fila of datos.por_metodo_pago"><td>{{ metodo(fila.metodo_pago) }}</td><td>{{ fila.cantidad }}</td><td>{{ fila.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tbody>
+            </table>
+          </div>
+        </div>
       </article>
 
-      <article class="panel-reportes">
-        <h2>Productos más vendidos</h2>
-        <p *ngIf="datos.productos_mas_vendidos.length === 0" class="vacio">No hay ventas de productos en este período.</p>
-        <div class="tabla-contenedor" *ngIf="datos.productos_mas_vendidos.length > 0"><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Total</th></tr></thead><tbody><tr *ngFor="let fila of datos.productos_mas_vendidos"><td>{{ fila.nombre }}</td><td>{{ fila.cantidad }} {{ fila.unidad }}</td><td>{{ fila.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tbody></table></div>
+      <article class="tarjeta">
+        <header class="tarjeta-cabecera">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" /><path d="M4 7.5l8 4.5 8-4.5M12 12v9" /></svg>
+          <h2>Productos más vendidos</h2>
+        </header>
+        <div class="tarjeta-cuerpo">
+          <p *ngIf="datos.productos_mas_vendidos.length === 0" class="vacio">No hay ventas de productos en este período.</p>
+          <div class="tabla-contenedor" *ngIf="datos.productos_mas_vendidos.length > 0">
+            <table>
+              <thead><tr><th>Producto</th><th>Cantidad</th><th>Total</th></tr></thead>
+              <tbody><tr *ngFor="let fila of datos.productos_mas_vendidos"><td>{{ fila.nombre }}</td><td>{{ fila.cantidad }} {{ fila.unidad }}</td><td>{{ fila.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tbody>
+            </table>
+          </div>
+        </div>
       </article>
 
-      <article class="panel-reportes">
-        <h2>Ventas por cliente</h2>
-        <p *ngIf="datos.ventas_por_cliente.length === 0" class="vacio">No hay ventas asociadas a clientes en este período.</p>
-        <div class="tabla-contenedor" *ngIf="datos.ventas_por_cliente.length > 0"><table><thead><tr><th>Cliente</th><th>Ventas</th><th>Total</th></tr></thead><tbody><tr *ngFor="let fila of datos.ventas_por_cliente"><td>{{ fila.nombre }}</td><td>{{ fila.ventas }}</td><td>{{ fila.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tbody></table></div>
+      <article class="tarjeta">
+        <header class="tarjeta-cabecera">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2" /><path d="M3 19c0-3.2 2.7-5.2 6-5.2s6 2 6 5.2" /><circle cx="17" cy="9" r="2.4" /><path d="M17 14c2.5 0 4.2 1.6 4.2 4.2" /></svg>
+          <h2>Ventas por cliente</h2>
+        </header>
+        <div class="tarjeta-cuerpo">
+          <p *ngIf="datos.ventas_por_cliente.length === 0" class="vacio">No hay ventas asociadas a clientes en este período.</p>
+          <div class="tabla-contenedor" *ngIf="datos.ventas_por_cliente.length > 0">
+            <table>
+              <thead><tr><th>Cliente</th><th>Ventas</th><th>Total</th></tr></thead>
+              <tbody><tr *ngFor="let fila of datos.ventas_por_cliente"><td>{{ fila.nombre }}</td><td>{{ fila.ventas }}</td><td>{{ fila.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tbody>
+            </table>
+          </div>
+        </div>
       </article>
 
-      <article class="panel-reportes alerta-stock">
-        <h2>Alertas de inventario</h2>
-        <p *ngIf="datos.inventario.productos.length === 0" class="vacio">Todos los productos tienen existencias disponibles.</p>
-        <ul *ngIf="datos.inventario.productos.length > 0"><li *ngFor="let producto of datos.inventario.productos">{{ producto.nombre }} · {{ producto.disponible }} {{ producto.unidad }}</li></ul>
+      <article class="tarjeta">
+        <header class="tarjeta-cabecera">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15z" /><path d="M10 21h4" /></svg>
+          <h2>Alertas de inventario</h2>
+        </header>
+        <div class="tarjeta-cuerpo">
+          <p *ngIf="datos.inventario.productos.length === 0" class="vacio">Todos los productos tienen existencias disponibles.</p>
+          <ul class="lista-alertas" *ngIf="datos.inventario.productos.length > 0">
+            <li *ngFor="let producto of datos.inventario.productos">{{ producto.nombre }} · {{ producto.disponible }} {{ producto.unidad }}</li>
+          </ul>
+        </div>
       </article>
     </section>
   </ng-container>
-</main>
+</div>
