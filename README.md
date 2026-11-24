@@ -188,6 +188,9 @@ Las cuentas y datos de usuarios viven en el Supabase seleccionado. No uses datos
 
 ## Despliegue
 
+- [Abrir AgroVentas en Netlify](https://agroventass.netlify.app/)
+- [Comprobar el estado de la API en Render](https://agroventas-api.onrender.com/)
+
 El frontend Angular es una aplicación estática y se publica en **Netlify**. La API Express es un servicio web persistente y se publica como **Web Service en Render**. Supabase sigue siendo el proveedor de autenticación y base de datos.
 
 > **Importante:** los pasos de hosting pueden desplegar artefactos, pero la aplicación desplegada no funcionará de punta a punta hasta resolver la URL fija `localhost:3001` del frontend y el CORS fijo `localhost:4200` del backend descritos en [Configuración de API pendiente](#frontend). Primero prepara esos cambios en el código, prueba localmente y luego publica ambos servicios.
