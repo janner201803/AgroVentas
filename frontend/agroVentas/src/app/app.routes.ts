@@ -68,6 +68,12 @@ export const routes: Routes = [
         canActivate: [rolGuard('propietario', 'empleado')]
       },
       {
+        path: 'pedido-interno',
+        loadComponent: () => import('../app/pages/pedido-interno/pedido-interno').then(modulo => modulo.PedidoInterno),
+        canActivate: [rolGuard('propietario', 'empleado')],
+        data: { titulo: 'Registrar pedido interno' }
+      },
+      {
         path: 'usuarios',
         loadComponent: () => import('../app/pages/usuarios/usuarios').then(modulo => modulo.Usuarios),
         canActivate: [rolGuard('propietario')]

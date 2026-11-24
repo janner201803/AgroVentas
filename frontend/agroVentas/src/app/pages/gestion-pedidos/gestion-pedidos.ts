@@ -248,8 +248,15 @@ export class GestionPedidos implements OnInit {
     return hora?.slice(0, 5) ?? '';
   }
 
-  etiquetaPago(metodo: string): string {
+  etiquetaPago(metodo: string | null | undefined): string {
     return metodo === 'efectivo' ? 'Efectivo' : metodo === 'consignacion' ? 'Consignación' : (metodo || '—');
+  }
+
+  etiquetaCanal(canal: string | null | undefined): string {
+    if (canal === 'whatsapp') return 'WhatsApp';
+    if (canal === 'telefono') return 'Teléfono';
+    if (canal === 'presencial') return 'Presencial';
+    return 'Portal';
   }
 
   async cerrarSesion(): Promise<void> {

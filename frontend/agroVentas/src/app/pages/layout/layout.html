@@ -43,6 +43,11 @@
         <span>Gestión de pedidos</span>
       </a>
 
+      <a *ngIf="esPersonal" routerLink="/pedido-interno" routerLinkActive="activo" class="nav-enlace">
+        <span class="nav-icono" aria-hidden="true">📞</span>
+        <span>Registrar pedido interno</span>
+      </a>
+
       <a *ngIf="esPersonal" routerLink="/inventario" routerLinkActive="activo" class="nav-enlace">
         <svg class="nav-icono" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />

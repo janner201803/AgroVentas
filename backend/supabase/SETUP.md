@@ -56,3 +56,9 @@ Después de instalar las migraciones de cuentas por cobrar y abonos, ejecuta `mi
 Después de las migraciones de clientes, ventas y cartera, ejecuta `migrations/20261127_hu03_04_gestion_clientes.sql`. Agrega el indicador `clientes.activo` y las funciones protegidas para buscar/listar clientes, consultar sus compras y actualizar sus datos o estado. El backend expone `GET /api/clientes`, `GET /api/clientes/:id`, `POST /api/clientes` y `PATCH /api/clientes/:id`; requiere rol Propietario o Empleado. Desactivar conserva las fichas relacionadas, ventas, pedidos y abonos; no se borran registros.
 
 La pantalla **Clientes** (`/clientes`) conserva el alta e incorpora búsqueda, contacto, resumen de ventas/saldo, historial de compras y abonos, edición y reactivación de fichas.
+
+## HU-11 · Registrar pedido interno
+
+Después de las migraciones de roles, clientes/ventas, clientes activos, estados/historial y carrito (incluida HU-15 si quieres que las ventas a crédito creen cuenta), ejecuta `migrations/20261128_hu11_pedidos_internos.sql`. Agrega a `pedidos` la ficha comercial, canal de origen y usuario responsable. Crea `crear_pedido_interno`, que solo permite al Propietario o Empleado registrar pedidos para una ficha activa recibidos por WhatsApp, teléfono o en persona. Reutiliza la creación transaccional del carrito: valida la fecha/hora, bloquea el horario y descuenta el inventario de forma atómica.
+
+El backend expone `POST /api/pedidos/internos`, protegido para Propietario y Empleado. En el frontend está en **Registrar pedido interno** (`/pedido-interno`); el pedido aparecerá en Gestión de pedidos con su canal y quién lo registró. En la entrega, el empleado elige el método de pago como en un pedido del portal; si elige Crédito, la venta y la cuenta por cobrar quedan vinculadas a la ficha comercial seleccionada.

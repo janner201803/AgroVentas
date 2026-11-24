@@ -11,6 +11,14 @@ export interface NuevoPedido {
   hora_entrega: string;
 }
 
+export interface NuevoPedidoInterno {
+  cliente_id: number;
+  canal_origen: 'whatsapp' | 'telefono' | 'presencial';
+  lineas: { id_producto: number; cantidad: number }[];
+  fecha_entrega: string;
+  hora_entrega: string;
+}
+
 export interface ProductoPedido {
   id: number;
   nombre: string;
@@ -28,7 +36,7 @@ export interface PedidoHistorial {
   cantidad: number;
   valor: number;
   estado: string;
-  metodo_pago: string;
+  metodo_pago: string | null;
   fecha_entrega: string;
   hora_entrega: string;
 }
@@ -36,6 +44,9 @@ export interface PedidoHistorial {
 /** HU-13: pedido visto por el personal, con cliente, producto y último cambio. */
 export interface PedidoGestion extends PedidoHistorial {
   credito_habilitado?: boolean;
+  cliente_id?: number | null;
+  canal_origen?: 'portal' | 'whatsapp' | 'telefono' | 'presencial';
+  registrado_por_nombre?: string | null;
   id_usuario: string | null;
   cliente_nombre: string | null;
   cliente_correo: string | null;
@@ -117,6 +128,16 @@ export class PedidoService {
   crearPedido(pedido: NuevoPedido): Observable<any> {
     return this.http.post(this.apiUrl, pedido).pipe(
       timeout({ first: 25_000 }),
+      tap(() => {
+        this.horariosCache.delete(pedido.fecha_entrega);
+        this.productosCache = null;
+      })
+    );
+  }
+
+  crearPedidoInterno(pedido: NuevoPedidoInterno): Observable<{ mensaje: string; pedido: PedidoHistorial }> {
+    return this.http.post<{ mensaje: string; pedido: PedidoHistorial }>(`${this.apiUrl}/internos`, pedido).pipe(
+      timeout({ first: 35_000 }),
       tap(() => {
         this.horariosCache.delete(pedido.fecha_entrega);
         this.productosCache = null;

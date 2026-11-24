@@ -263,7 +263,9 @@ export class MisPedidos implements OnInit {
     }).format(new Date(`${fecha}T12:00:00Z`));
   }
 
-  etiquetaPago(metodo: string): string {
-    return metodo === 'efectivo' ? 'Efectivo' : 'Consignación';
+  etiquetaPago(metodo: string | null): string {
+    if (metodo === 'efectivo') return 'Efectivo';
+    if (metodo === 'consignacion') return 'Consignación';
+    return metodo || 'Por definir al entregar';
   }
 }

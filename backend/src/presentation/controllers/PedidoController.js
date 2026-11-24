@@ -29,6 +29,24 @@ class PedidoController {
     }
   }
 
+  async crearInterno(req, res) {
+    try {
+      const pedido = await pedidoService.crearInterno(req.body, req.supabase);
+      return res.status(201).json({ mensaje: 'Pedido interno registrado correctamente', pedido });
+    } catch (error) {
+      console.error('[PedidoController.crearInterno] Falló el registro del pedido interno:', {
+        status: error.status || 500,
+        codigo: error.code || null,
+        error: error.message,
+        detalle: error.details || null
+      });
+      return res.status(error.status || (error.code ? 500 : 400)).json({
+        mensaje: error.message || 'No fue posible registrar el pedido interno',
+        codigo: error.code || undefined
+      });
+    }
+  }
+
   async horarios(req, res) {
     try {
       const horarios = await pedidoService.horariosDisponibles(req.query.fecha, req.supabase);

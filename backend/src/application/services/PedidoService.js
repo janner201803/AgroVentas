@@ -1,6 +1,7 @@
 const { randomUUID } = require('crypto');
 const pedidoRepository = require('../../infraestructure/repositories/PedidoRepository');
 const CrearPedidoDTO = require('../dto/CrearPedidoDTO');
+const CrearPedidoInternoDTO = require('../dto/CrearPedidoInternoDTO');
 const { esEstadoValido } = require('../../domain/entities/EstadoPedido');
 
 function errorValidacion(mensaje) {
@@ -41,6 +42,24 @@ class PedidoService {
       metodo_pago: dto.metodo_pago
     };
     return pedidoRepository.crearConReserva(pedido, client);
+  }
+
+  async crearInterno(datos, client) {
+    const dto = new CrearPedidoInternoDTO(datos).validar();
+    if (dto.fecha_entrega < this.fechaActualColombia()) {
+      throw errorValidacion('La fecha de entrega no puede estar en el pasado');
+    }
+    if (!this.cumpleAnticipacion(dto.fecha_entrega, dto.hora_entrega)) {
+      throw errorValidacion(`Los pedidos para hoy se registran con al menos ${ANTICIPACION_MINUTOS} minutos de anticipación. Selecciona una hora posterior.`);
+    }
+    return pedidoRepository.crearInterno({
+      id: randomUUID(),
+      cliente_id: dto.cliente_id,
+      canal_origen: dto.canal_origen,
+      lineas: dto.lineas,
+      fecha_entrega: dto.fecha_entrega,
+      hora_entrega: dto.hora_entrega
+    }, client);
   }
 
   async horariosDisponibles(fecha, client) {
