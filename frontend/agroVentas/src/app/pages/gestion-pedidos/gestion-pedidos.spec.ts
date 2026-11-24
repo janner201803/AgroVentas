@@ -119,10 +119,11 @@ describe('GestionPedidos', () => {
   });
 
   it('destaca los pedidos urgentes en pantalla', () => {
-    const texto = html().textContent ?? '';
-    expect(texto).toContain('Atrasado');
-    expect(texto).toContain('Entrega hoy');
-    expect(html().querySelector('article.es-atrasado h3')?.textContent).toContain('#ATRASADO');
+    const atrasado = html().querySelector('h3[title="atrasado"]')?.closest('article');
+    const entregaHoy = html().querySelector('h3[title="hoy"]')?.closest('article');
+
+    expect(atrasado?.textContent ?? '').toContain('Atrasado');
+    expect(entregaHoy?.textContent ?? '').toContain('Entrega hoy');
   });
 
   it('filtra por cliente, por fecha y solo urgentes', () => {

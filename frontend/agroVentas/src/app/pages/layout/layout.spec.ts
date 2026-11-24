@@ -22,4 +22,11 @@ describe('Layout', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('muestra en el menú principal un enlace a Inicio', () => {
+    const html: HTMLElement = fixture.nativeElement;
+    const enlace = html.querySelector('nav[aria-label="Menú principal"] a[href="/inicio"]');
+
+    expect(enlace?.textContent?.trim()).toBe('Inicio');
+  });
 });
