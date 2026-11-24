@@ -28,6 +28,10 @@ class CarteraService {
     if (nota.length > 500) throw errorValidacion('La nota no puede superar 500 caracteres');
     return carteraRepository.registrarAbono(cuentaId, { valor, metodo_pago: datos.metodo_pago, nota: nota || null }, client);
   }
+
+  async listarMisCompras(client) {
+    return carteraRepository.listarMisCompras(client);
+  }
 }
 
 module.exports = new CarteraService();

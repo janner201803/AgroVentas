@@ -30,6 +30,10 @@ export class Inicio {
     return this.authService.esPersonal();
   }
 
+  get esCliente(): boolean {
+    return this.authService.tieneRol('cliente');
+  }
+
   async cerrarSesion(): Promise<void> {
     if (this.cerrandoSesion) return;
 

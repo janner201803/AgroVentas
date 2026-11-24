@@ -1,0 +1,37 @@
+:host { display:block; min-height:100vh; color:#174b32; background:radial-gradient(ellipse at 90% 18%,rgb(247 250 167),transparent 50%),radial-gradient(ellipse at 10% 80%,rgb(250 252 137),transparent 50%),#fff1c9; font-family:Arial,sans-serif; }
+main { width:min(calc(100% - 2rem),68rem); margin:1rem auto 2rem; padding:clamp(1rem,3vw,2rem); border:1px solid #dfdbc8; border-radius:18px; background:#fffdf5; box-shadow:0 8px 26px #20352212; }
+.acciones { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:.7rem; }
+.acciones a { color:#176b43; font-weight:700; text-decoration:none; }
+button { min-height:42px; padding:.65rem .8rem; border:0; border-radius:.6rem; color:#fff9e8; background:#176b43; font:inherit; font-weight:700; cursor:pointer; }
+button:disabled { opacity:.6; cursor:wait; }
+.boton-secundario { border:1px solid #287747; color:#176b43; background:#f0f5dc; }
+.introduccion { color:#617064; line-height:1.5; }
+.resumen { display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); gap:.8rem; margin:1rem 0; }
+.resumen article { display:grid; gap:.4rem; padding:1rem; border:1px solid #e8dfc7; border-radius:12px; background:#fff; }
+.resumen span,dt,.referencia,.subtitulo { color:#617064; font-size:.88rem; }
+.resumen strong { color:#176b43; font-size:1.2rem; }
+.lista-compras { display:grid; gap:1rem; }
+.compra { padding:clamp(1rem,3vw,1.5rem); border:1px solid #e8dfc7; border-radius:14px; background:#fff; overflow-wrap:anywhere; }
+.cabecera-compra { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.8rem; }
+h2 { margin:.25rem 0; font-size:1.2rem; }
+.subtitulo { display:block; }
+.total-compra { color:#176b43; font-size:1.25rem; }
+.datos-compra { display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:.8rem; margin:1rem 0; }
+.datos-compra dd { margin:.25rem 0 0; font-weight:700; }
+details { border-top:1px solid #e3e6d7; padding-top:.8rem; }
+summary { color:#176b43; font-weight:700; cursor:pointer; }
+.detalle-lista { display:grid; gap:.35rem; margin:1rem 0; }
+.detalle-lista p,.abono { display:grid; grid-template-columns:1fr auto; gap:.25rem .8rem; margin:0; padding:.55rem 0; border-bottom:1px solid #edf0ec; }
+.estado-cuenta { display:grid; gap:.4rem; margin-top:1rem; padding:1rem; border:1px solid #e8dfc7; border-radius:12px; background:#fffdf5; }
+.estado-cuenta header { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.5rem; }
+.estado { padding:.35rem .65rem; border-radius:999px; font-size:.8rem; font-weight:700; }
+.estado-pendiente { color:#805316; background:#fff0c7; }
+.estado-parcial { color:#24528a; background:#e7f0ff; }
+.estado-pagada { color:#216239; background:#e5f5e7; }
+.saldo,.mora { color:#a7442f; }
+.abono small { grid-column:1/-1; color:#617064; }
+.sin-pagos,.pago-completo { color:#617064; }
+.aviso,.vacio { padding:.8rem 1rem; border-radius:9px; }
+.error { color:#8e3328; background:#ffe0d5; }
+.vacio { color:#617064; background:#f6f8f4; }
+@media(max-width:560px) { main { width:calc(100% - 1rem); padding:1rem; } }

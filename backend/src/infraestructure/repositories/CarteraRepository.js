@@ -32,6 +32,20 @@ class CarteraRepository {
     if (error) errorSupabase(error, 'registrar el abono');
     return data;
   }
+
+  async listarMisCompras(client = supabase) {
+    const { data, error } = await client.rpc('mis_compras_cliente');
+    if (error) {
+      const noInstalada = ['PGRST202', '42883'].includes(error.code);
+      const fallo = new Error(noInstalada
+        ? 'Falta instalar la migración 20261126_hu09_compras_cliente.sql en Supabase.'
+        : error.message || 'No fue posible consultar tus compras');
+      fallo.code = error.code;
+      fallo.status = noInstalada ? 503 : error.code === '42501' ? 403 : 500;
+      throw fallo;
+    }
+    return data ?? [];
+  }
 }
 
 module.exports = new CarteraRepository();

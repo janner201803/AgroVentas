@@ -46,3 +46,7 @@ Después de aplicar `migrations/20261122_clientes_ventas.sql`, ejecuta `migratio
 Después de la migración de cuentas por cobrar, ejecuta `migrations/20261125_hu16_cartera_abonos.sql`. Crea `public.abonos_cuenta` y las funciones `cartera_personal` y `registrar_abono_cuenta`. El backend expone `GET /api/cartera` (filtro opcional `?estado=pendiente|parcial|pagada`) y `POST /api/cartera/:id/abonos`; ambas rutas requieren una sesión activa de Propietario o Empleado. El abono y el recálculo del saldo/estado ocurren en una única transacción y se rechazan pagos mayores al saldo.
 
 La pantalla está en `/cartera` y se enlaza desde Inicio. Muestra ventas a crédito, saldo, estado, vencimiento si fue definido e historial de pagos. Los pagos registrados son abonos reales; no se generan cuotas programadas porque todavía no se ha definido una frecuencia/plazo comercial.
+
+## HU-09 · Historial de compras y saldo del cliente
+
+Después de instalar las migraciones de cuentas por cobrar y abonos, ejecuta `migrations/20261126_hu09_compras_cliente.sql`. Crea `mis_compras_cliente()`, que filtra las ventas por `pedidos.id_usuario = auth.uid()` y devuelve productos, fecha de entrega, método de pago, saldo y abonos asociados. El backend ofrece `GET /api/cartera/mis-compras` solo a cuentas con rol Cliente; no acepta identificadores de cliente desde el navegador. En el frontend está en Inicio → **Mis compras y pagos** (`/mis-compras`).

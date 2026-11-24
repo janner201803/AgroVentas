@@ -10,6 +10,15 @@ class CarteraController {
     }
   }
 
+  async listarMisCompras(req, res) {
+    try {
+      return res.status(200).json(await carteraService.listarMisCompras(req.supabase));
+    } catch (error) {
+      console.error('[CarteraController.listarMisCompras] Falló la consulta:', { codigo: error.code, error: error.message });
+      return res.status(error.status || 500).json({ mensaje: error.message || 'No fue posible consultar tus compras' });
+    }
+  }
+
   async registrarAbono(req, res) {
     try {
       const abono = await carteraService.registrarAbono(req.params.id, req.body, req.supabase);
