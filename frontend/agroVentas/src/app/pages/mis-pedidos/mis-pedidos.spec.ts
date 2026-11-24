@@ -51,19 +51,27 @@ describe('MisPedidos (HU-08)', () => {
   /** Pulsa un botón por su texto, como lo haría el cliente, y espera a que la vista se actualice. */
   async function pulsar(textoBoton: string): Promise<void> {
     const botones = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'));
-    const boton = botones.find(item => item.textContent?.includes(textoBoton));
+    const boton = botones.find(item => item.textContent?.includes(textoBoton) || item.title === textoBoton);
     if (!boton) throw new Error(`No se encontró el botón "${textoBoton}"`);
     boton.click();
     await fixture.whenStable();
   }
 
+  async function filtrar(valor: string): Promise<void> {
+    const selector = (fixture.nativeElement as HTMLElement).querySelector<HTMLSelectElement>('select[aria-label="Filtrar por estado"]')!;
+    selector.value = valor;
+    selector.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+  }
+
   const texto = (): string => (fixture.nativeElement as HTMLElement).textContent ?? '';
-  const tarjetas = (): NodeListOf<Element> => (fixture.nativeElement as HTMLElement).querySelectorAll('.pedido-card');
+  const tarjetas = (): NodeListOf<Element> => (fixture.nativeElement as HTMLElement).querySelectorAll('.pedido-item');
 
   it('muestra cada pedido con producto, cantidad, entrega, valor y estado', async () => {
     await crear(of([pedido({ estado: 'en_preparacion' })]));
 
     expect(tarjetas().length).toBe(1);
+    await pulsar('Ver detalles');
     const tarjeta = tarjetas()[0].textContent ?? '';
     expect(tarjeta).toContain('Piña pepa');
     expect(tarjeta).toContain('Pedido #P-1');
@@ -81,7 +89,7 @@ describe('MisPedidos (HU-08)', () => {
 
     expect(tarjetas().length).toBe(0);
     expect(texto()).toContain('Aún no tienes pedidos');
-    expect(texto()).toContain('0 pedidos');
+    expect(component.totalEnSemana).toBe(0);
   });
 
   it('filtra por grupo de estado y cuenta los pedidos de cada grupo', async () => {
@@ -98,7 +106,7 @@ describe('MisPedidos (HU-08)', () => {
     expect(component.contar('entregados')).toBe(1);
     expect(component.contar('cancelados')).toBe(2);
 
-    await pulsar('Cancelados');
+    await filtrar('cancelados');
 
     expect(component.pedidosFiltrados.map(item => item.id)).toEqual(['d', 'e']);
     expect(tarjetas().length).toBe(2);
@@ -119,10 +127,10 @@ describe('MisPedidos (HU-08)', () => {
   it('informa cuando ningún pedido coincide con el filtro elegido', async () => {
     await crear(of([pedido({ estado: 'pendiente' })]));
 
-    await pulsar('Entregados');
+    await filtrar('entregados');
 
     expect(tarjetas().length).toBe(0);
-    expect(texto()).toContain('No tienes pedidos en este estado');
+    expect(texto()).toContain('No hay pedidos con estos filtros');
   });
 
   it('muestra un estado desconocido tal como llega y solo dentro de "Todos"', async () => {

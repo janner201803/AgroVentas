@@ -15,11 +15,11 @@ interface OpcionFiltro {
   etiqueta: string;
 }
 
-/**
- * Los cuatro estados de HU-08/HU-12 agrupados para el filtro. Los nombres antiguos
- * (confirmado, preparado, rechazado) se convierten con normalizarEstado.
- * Un estado desconocido solo aparece en "Todos".
- */
+interface OpcionSemana {
+  valor: string;
+  etiqueta: string;
+}
+
 const ESTADOS_POR_FILTRO: Record<Exclude<FiltroPedidos, 'todos'>, readonly EstadoPedido[]> = {
   activos: ['pendiente', 'en_preparacion'],
   entregados: ['entregado'],
@@ -28,16 +28,14 @@ const ESTADOS_POR_FILTRO: Record<Exclude<FiltroPedidos, 'todos'>, readonly Estad
 
 /**
  * HU-08 — Consultar estado de pedidos.
- * Pantalla de solo consulta: muestra los pedidos del cliente que inició sesión
- * (el backend filtra por el usuario del token) con su estado, datos de entrega y valor.
- * Crear pedidos sigue en `/pedidos` (HU-07).
+ * Pantalla de solo consulta. Se puede filtrar por estado y por semana de entrega
+ * (la semana va de lunes a domingo, igual que el calendario de /pedidos).
  */
 @Component({
   selector: 'app-mis-pedidos',
   standalone: true,
   imports: [Paginador, CommonModule, RouterLink],
   templateUrl: './mis-pedidos.html',
-  // Reutiliza los estilos de la pantalla de pedidos para mantener un solo diseño.
   styleUrls: ['../pedidos/pedidos.css', './mis-pedidos.css']
 })
 export class MisPedidos implements OnInit {
@@ -46,7 +44,7 @@ export class MisPedidos implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   readonly filtros: OpcionFiltro[] = [
-    { valor: 'todos', etiqueta: 'Todos' },
+    { valor: 'todos', etiqueta: 'Todos los estados' },
     { valor: 'activos', etiqueta: 'En curso' },
     { valor: 'entregados', etiqueta: 'Entregados' },
     { valor: 'cancelados', etiqueta: 'Cancelados' }
@@ -54,16 +52,19 @@ export class MisPedidos implements OnInit {
 
   pedidos: PedidoHistorial[] = [];
   filtro: FiltroPedidos = 'todos';
+  /** null = todas las semanas · 0 = esta semana · -1 = la anterior · 1 = la siguiente… */
+  semanaOffset: number | null = null;
   cargando = true;
   actualizando = false;
   error = '';
   ultimaConsulta: Date | null = null;
+  /** Pedidos con el detalle desplegado ("Ver detalles"). */
+  private expandidos = new Set<string>();
 
   ngOnInit(): void {
     this.cargarPedidos();
   }
 
-  /** Primera carga y reintento tras un error: muestra el indicador de carga en lugar de la lista. */
   cargarPedidos(): void {
     this.error = '';
     this.cargando = true;
@@ -91,16 +92,11 @@ export class MisPedidos implements OnInit {
     });
   }
 
-  /** Hora de la última consulta correcta, en formato colombiano (por ejemplo "1:21 p. m."). */
   get ultimaConsultaTexto(): string {
     if (!this.ultimaConsulta) return '';
     return new Intl.DateTimeFormat('es-CO', { hour: 'numeric', minute: '2-digit' }).format(this.ultimaConsulta);
   }
 
-  /**
-   * Botón "Actualizar" (aporte del PR #19): vuelve a consultar sin ocultar la lista.
-   * Si falla, muestra el error y conserva los pedidos que ya se veían.
-   */
   actualizar(): void {
     if (this.cargando || this.actualizando) return;
     this.actualizando = true;
@@ -125,21 +121,114 @@ export class MisPedidos implements OnInit {
     });
   }
 
-  /** Número corto del pedido (aporte del PR #19): los primeros 8 caracteres del id, en mayúsculas. */
   idCorto(id: string | number | null | undefined): string {
     return String(id ?? '').slice(0, 8).toUpperCase();
   }
+
+  // ───────── Detalle desplegable ─────────
+
+  estaExpandido(id: string | number): boolean {
+    return this.expandidos.has(String(id));
+  }
+
+  alternarDetalle(id: string | number): void {
+    const clave = String(id);
+    if (this.expandidos.has(clave)) this.expandidos.delete(clave);
+    else this.expandidos.add(clave);
+  }
+
+  /** "0.1 Kg", "1 und" o "3 productos" para la fila resumida del pedido. */
+  resumenCantidad(pedido: PedidoHistorial): string {
+    const lineas = pedido.lineas ?? [];
+    if (lineas.length > 1) return `${lineas.length} productos`;
+    if (lineas.length === 1) return `${lineas[0].cantidad} ${lineas[0].unidad}`;
+    return `${pedido.cantidad} ${pedido.producto_unidad || 'unidades'}`;
+  }
+
+  // ───────── Filtro por estado ─────────
 
   seleccionarFiltro(filtro: FiltroPedidos): void {
     this.filtro = filtro;
   }
 
-  get pedidosFiltrados(): PedidoHistorial[] {
-    return this.pedidos.filter(pedido => this.perteneceAFiltro(pedido.estado, this.filtro));
+  // ───────── Filtro por semana ─────────
+
+  /** Valor que usa el selector: "todas" o el desplazamiento (-1, 0, 1…). */
+  get valorSemana(): string {
+    return this.semanaOffset === null ? 'todas' : String(this.semanaOffset);
   }
 
+  seleccionarSemana(valor: string): void {
+    this.semanaOffset = valor === 'todas' ? null : Number(valor);
+  }
+
+  get opcionesSemana(): OpcionSemana[] {
+    const nombres: Record<number, string> = { [-1]: 'Semana pasada', 0: 'Esta semana', 1: 'Próxima semana' };
+    const opciones: OpcionSemana[] = [{ valor: 'todas', etiqueta: 'Todas las semanas' }];
+    for (const offset of [-4, -3, -2, -1, 0, 1, 2]) {
+      const rango = this.rangoSemana(offset);
+      opciones.push({
+        valor: String(offset),
+        etiqueta: nombres[offset] ? `${nombres[offset]} · ${rango}` : rango
+      });
+    }
+    return opciones;
+  }
+
+  limpiarFiltros(): void {
+    this.filtro = 'todos';
+    this.semanaOffset = null;
+  }
+
+  /** Lunes de la semana indicada (a las 12:00 para evitar problemas de zona horaria). */
+  private lunesDeSemana(offset: number): Date {
+    const lunes = new Date();
+    lunes.setHours(12, 0, 0, 0);
+    lunes.setDate(lunes.getDate() - ((lunes.getDay() + 6) % 7) + offset * 7);
+    return lunes;
+  }
+
+  private rangoSemana(offset: number): string {
+    const formato = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short' });
+    const lunes = this.lunesDeSemana(offset);
+    const domingo = new Date(lunes);
+    domingo.setDate(lunes.getDate() + 6);
+    return `${formato.format(lunes)} – ${formato.format(domingo)}`;
+  }
+
+  private enSemanaSeleccionada(fecha: string): boolean {
+    if (this.semanaOffset === null) return true;
+    if (!fecha) return false;
+    const entrega = new Date(`${fecha.slice(0, 10)}T12:00:00`);
+    const lunes = this.lunesDeSemana(this.semanaOffset);
+    const domingo = new Date(lunes);
+    domingo.setDate(lunes.getDate() + 6);
+    return entrega >= lunes && entrega <= domingo;
+  }
+
+  get etiquetaSemana(): string {
+    if (this.semanaOffset === null) return 'Todas las semanas';
+    const rango = this.rangoSemana(this.semanaOffset);
+    return this.semanaOffset === 0 ? `Esta semana · ${rango}` : rango;
+  }
+
+  // ───────── Resultados ─────────
+
+  get pedidosEnSemana(): PedidoHistorial[] {
+    return this.pedidos.filter(pedido => this.enSemanaSeleccionada(pedido.fecha_entrega));
+  }
+
+  get totalEnSemana(): number {
+    return this.pedidosEnSemana.length;
+  }
+
+  get pedidosFiltrados(): PedidoHistorial[] {
+    return this.pedidosEnSemana.filter(pedido => this.perteneceAFiltro(pedido.estado, this.filtro));
+  }
+
+  /** Los contadores respetan la semana elegida. */
   contar(filtro: FiltroPedidos): number {
-    return this.pedidos.filter(pedido => this.perteneceAFiltro(pedido.estado, filtro)).length;
+    return this.pedidosEnSemana.filter(pedido => this.perteneceAFiltro(pedido.estado, filtro)).length;
   }
 
   private perteneceAFiltro(estado: string, filtro: FiltroPedidos): boolean {

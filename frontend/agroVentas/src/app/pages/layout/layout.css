@@ -1,0 +1,306 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  color: #174b32;
+  font-family: Arial, sans-serif;
+  background:
+    radial-gradient(ellipse at 90% 12%, rgb(247, 250, 167), transparent 50%),
+    radial-gradient(ellipse at 10% 80%, rgb(250, 252, 137), transparent 50%),
+    #fff1c9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  max-width: 1760px;
+  min-height: 100vh;
+  margin: 0 auto;
+}
+
+/* ───── Menú lateral claro, de arriba a abajo ───── */
+.menu {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  height: 100vh;
+  padding: 18px 16px;
+  overflow-y: auto;
+  border-right: 1px solid #f3e3b6;
+  background: rgb(255 251 235 / 80%);
+}
+
+.marca {
+  display: block;
+  padding: 0 6px;
+  text-decoration: none;
+}
+
+.brand-logo {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.menu-enlaces {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-enlace {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 52px;
+  padding: 0 16px;
+  border-radius: 14px;
+  color: #174b32;
+  background: #e4efc4;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.nav-icono {
+  flex-shrink: 0;
+}
+
+.nav-enlace:hover {
+  color: #fff9e8;
+  background: #176b43;
+}
+
+.nav-enlace.activo {
+  color: #fff9e8;
+  background: #176b43;
+}
+
+/* ───── Zona principal ───── */
+.principal {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.barra {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  min-height: 96px;
+  padding: 22px 28px 16px;
+}
+
+.titulo-cabecera {
+  grid-column: 1;
+  justify-self: stretch;
+  min-width: 0;
+  text-align: center;
+}
+
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #e96c20;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
+.etiqueta::before {
+  content: '';
+  width: 26px;
+  height: 1px;
+  background: #e96c20;
+}
+
+.titulo-cabecera h1 {
+  margin: 4px 0;
+  color: #176b43;
+  font-size: clamp(24px, 2.5vw, 34px);
+  line-height: 1.1;
+  letter-spacing: -0.8px;
+}
+
+.subtitulo {
+  margin: 4px 0 0;
+  max-width: 640px;
+  color: #174b32;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.acciones-cuenta {
+  grid-column: 2;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.cuenta-datos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  min-width: 0;
+}
+
+.estado-cuenta {
+  color: #000;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.cuenta-datos strong {
+  max-width: 220px;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  color: #174b32;
+}
+
+.cerrar-sesion {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #176b43;
+  color: #fff9e8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgb(23 75 50 / 20%);
+}
+
+.cerrar-sesion:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.cerrar-sesion:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.error-sesion {
+  margin: 0 28px 14px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  color: #8e3328;
+  background: #ffe0d5;
+}
+
+.contenido-pagina {
+  min-width: 0;
+  padding: 0 28px 32px;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid rgb(23 107 67 / 35%);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1100px) {
+  .app {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .nav-enlace {
+    gap: 10px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .barra,
+  .contenido-pagina {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .error-sesion {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+}
+
+/* Celular y tableta: el menú pasa arriba, en filas */
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .menu {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    height: auto;
+    padding: 10px 12px;
+    border-right: 0;
+    border-bottom: 1px solid #f3e3b6;
+  }
+
+  .brand-logo {
+    width: 130px;
+  }
+
+  .menu-enlaces {
+    flex: 1 1 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .nav-enlace {
+    flex: 1 1 calc(50% - 6px);
+    height: 44px;
+    font-size: 13px;
+  }
+
+  .barra {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    min-height: 0;
+    padding: 14px 12px 10px;
+  }
+
+  .titulo-cabecera {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .acciones-cuenta {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .contenido-pagina {
+    padding: 0 12px 24px;
+  }
+
+  .error-sesion {
+    margin: 0 12px 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .cuenta-datos {
+    display: none;
+  }
+}

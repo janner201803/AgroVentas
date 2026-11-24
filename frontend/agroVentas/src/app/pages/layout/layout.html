@@ -1,0 +1,125 @@
+<div class="app">
+
+  <aside class="menu">
+    <a class="marca" routerLink="/inicio" aria-label="Ir al inicio de AgroVentas">
+      <img src="/img/logo.png" alt="Logo de AgroVentas" class="brand-logo" />
+    </a>
+
+    <nav class="menu-enlaces" aria-label="Menú principal">
+      <a routerLink="/inicio" routerLinkActive="activo" class="nav-enlace">
+        <svg class="nav-icono" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 11l9-8 9 8" />
+          <path d="M5 10v10h14V10" />
+          <path d="M10 20v-6h4v6" />
+        </svg>
+        <span>Inicio</span>
+      </a>
+
+      <a routerLink="/pedidos" routerLinkActive="activo" class="nav-enlace">
+        <svg class="nav-icono" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="20" r="1.5" />
+          <circle cx="18" cy="20" r="1.5" />
+          <path d="M2 3h3l2.5 12h11l2-8H6" />
+        </svg>
+        <span>Realizar pedido</span>
+      </a>
+
+      <a routerLink="/mis-pedidos" routerLinkActive="activo" class="nav-enlace">
+        <svg class="nav-icono" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="5" y="4" width="14" height="17" rx="2" />
+          <path d="M9 4h6v3H9z" />
+          <path d="M9 12h6M9 16h6" />
+        </svg>
+        <span>Mis pedidos</span>
+      </a>
+
+      <a *ngIf="esPersonal" routerLink="/gestion-pedidos" routerLinkActive="activo" class="nav-enlace">
+        <svg class="nav-icono" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2 6h11v10H2z" />
+          <path d="M13 9h4l4 4v3h-8z" />
+          <circle cx="7" cy="18" r="1.8" />
+          <circle cx="17" cy="18" r="1.8" />
+        </svg>
+        <span>Gestión de pedidos</span>
+      </a>
+
+      <a *ngIf="esPersonal" routerLink="/inventario" routerLinkActive="activo" class="nav-enlace">
+        <svg class="nav-icono" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />
+          <path d="M4 7.5l8 4.5 8-4.5M12 12v9" />
+        </svg>
+        <span>Inventario</span>
+      </a>
+
+      <a *ngIf="esPersonal" routerLink="/clientes" routerLinkActive="activo" class="nav-enlace">
+        <span class="nav-icono" aria-hidden="true">👤</span>
+        <span>Registrar cliente</span>
+      </a>
+
+      <a *ngIf="esPersonal" routerLink="/ventas" routerLinkActive="activo" class="nav-enlace">
+        <span class="nav-icono" aria-hidden="true">🧾</span>
+        <span>Ventas</span>
+      </a>
+
+      <a *ngIf="esPersonal" routerLink="/cartera" routerLinkActive="activo" class="nav-enlace">
+        <span class="nav-icono" aria-hidden="true">💳</span>
+        <span>Cartera</span>
+      </a>
+
+      <a *ngIf="esCliente" routerLink="/mis-compras" routerLinkActive="activo" class="nav-enlace">
+        <span class="nav-icono" aria-hidden="true">🧾</span>
+        <span>Mis compras y pagos</span>
+      </a>
+
+      <a *ngIf="esAdministrador" routerLink="/usuarios" routerLinkActive="activo" class="nav-enlace">
+        <svg class="nav-icono" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="8" r="3.5" />
+          <path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" />
+          <circle cx="17" cy="9" r="2.5" />
+          <path d="M17 14c2.6 0 4.5 1.8 4.5 4.5" />
+        </svg>
+        <span>Usuarios</span>
+      </a>
+    </nav>
+
+  </aside>
+
+  <div class="principal">
+    <header class="barra">
+      <div class="titulo-cabecera">
+        <ng-container *ngIf="cabecera().titulo">
+          <span class="etiqueta" *ngIf="cabecera().etiqueta">{{ cabecera().etiqueta }}</span>
+          <h1>{{ cabecera().titulo }}</h1>
+          <p class="subtitulo" *ngIf="cabecera().subtitulo">{{ cabecera().subtitulo }}</p>
+        </ng-container>
+      </div>
+
+      <div class="acciones-cuenta">
+        <div class="cuenta-datos">
+          <span class="estado-cuenta">
+            {{ etiquetaRol() }}
+          </span>
+          <strong>{{ usuario()?.email }}</strong>
+        </div>
+
+        <button
+          type="button"
+          class="cerrar-sesion"
+          [disabled]="cerrandoSesion"
+          (click)="cerrarSesion()"
+        >
+          {{ cerrandoSesion ? 'Cerrando...' : 'Cerrar sesión' }}
+        </button>
+      </div>
+    </header>
+
+    <p *ngIf="errorSesion" class="error-sesion" role="alert">
+      {{ errorSesion }}
+    </p>
+
+    <main class="contenido-pagina">
+      <router-outlet />
+    </main>
+  </div>
+
+</div>
